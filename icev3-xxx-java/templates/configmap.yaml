@@ -1,0 +1,20 @@
+{{ if or (.Files.Glob "files/env.txt") .Values.xxxxxx.env }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "xxxxxx.fullname" . }}
+  labels:
+    app: {{ template "xxxxxx.name" . }}
+    chart: {{ template "xxxxxx.chart" . }}
+    release: {{ .Release.Name | quote }}
+    heritage: {{ .Release.Service | quote }}
+data:
+  env.txt: |
+{{- if (.Files.Glob "files/env.txt") }}
+{{ .Files.Get "files/env.txt" | indent 2 }}
+{{- end }}
+{{- if .Values.xxxxxx.env }}
+{{- range $key, $value := default dict .Values.xxxxxx.env }}
+    {{ $key | snakecase }}={{ $value }}
+{{- end }}
+{{ end }}
