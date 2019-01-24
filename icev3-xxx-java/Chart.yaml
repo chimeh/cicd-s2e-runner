@@ -1,15 +1,15 @@
-name: icev3-java
+name: icev3-xxx-java
 version: 0.9.1
 appVersion: 0.1
-description: Chart for nextengine ICE V3 java app.
+description: generic Chart for all nextengine ICE V3 app.
 keywords:
 - nextengine
-- icev3-java
+- icev3-generic-chart
 home: https://www.nx-engine.com/
 icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-110x117.png
 sources:
 - https://www.nx-engine.com/
 maintainers:
 - name: Jimmy Huang
-  email: jimin.huang@nextengine.com
+  email: jimagile@gmail.com
 engine: gotpl

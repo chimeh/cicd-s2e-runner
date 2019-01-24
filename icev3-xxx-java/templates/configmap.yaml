@@ -1,4 +1,5 @@
-{{ if or (.Files.Glob "files/env.txt") .Values.xxxxxx.env }}
+{{- if (index .Values (include "xxxxxx.name" .)) -}}
+{{- if or (.Files.Glob "files/env.txt") (index .Values (include "xxxxxx.name" .) "env.txt") (.Files.Glob "files/override-entrypoint.sh") -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,11 +11,16 @@ metadata:
     heritage: {{ .Release.Service | quote }}
 data:
   env.txt: |
+    ##from template env.txt##
 {{- if (.Files.Glob "files/env.txt") }}
-{{ .Files.Get "files/env.txt" | indent 2 }}
+{{ .Files.Get "files/env.txt" | indent 4 }}
 {{- end }}
-{{- if .Values.xxxxxx.env }}
-{{- range $key, $value := default dict .Values.xxxxxx.env }}
-    {{ $key | snakecase }}={{ $value }}
-{{- end }}
+    ##from valuefile##
+{{- if and (index .Values (include "xxxxxx.name" .)) (index .Values (include "xxxxxx.name" .) "env.txt") }}
+{{ index .Values (include "xxxxxx.name" .) "env.txt" | indent 4 }}
+{{- end -}}
+{{ if (.Files.Glob "files/override-entrypoint.sh") }}
+{{ (.Files.Glob "files/override-entrypoint.sh").AsConfig | indent 2 }}
 {{ end }}
+{{- end -}}
+{{- end -}}

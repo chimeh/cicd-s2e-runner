@@ -1,29 +1,29 @@
 global:
+  rc-fullname: false
   ingress:
     internal:
-      annotations:
-        kubernetes.io/ingress.class: kong-ingress-internal
+      annotations-ingress-class: kong-ingress-internal
       domain: okd.cd
     public:
-      annotations:
-        kubernetes.io/ingress.class: kong-ingress-public
-      domain: nx-code.com    
+      annotations-ingress-class: kong-ingress-public
+      domain: nx-code.com
 icev3-xxx-java:
   replicaCount: 1
   ingress:
     internal: 
       host: {}
-      annotations: {}
     public: 
+      enabled: true
       host: {}
-      annotations: {}
   service:
     type: ClusterIP
     ports:
       - 80
       - 8080
   image: nginx:latest
-  env:
-    - KEY: "VAL"
+  env.txt: |
+    CCC=DDD
+    CCC=DDD
+    CCC=DDD
   
 
