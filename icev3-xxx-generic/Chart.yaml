@@ -1,4 +1,4 @@
-name: icev3-xxx-java
+name: icev3-xxx-generic
 version: 0.9.1
 appVersion: 0.1
 description: generic Chart for all nextengine ICE V3 app.
