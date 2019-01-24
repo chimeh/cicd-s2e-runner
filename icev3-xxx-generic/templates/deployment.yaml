@@ -39,7 +39,7 @@ spec:
         {{- if  (index .Values (include "xxxxxx.name" .) "service" "ports")  }}
         ports:
         {{- range $port := (index .Values (include "xxxxxx.name" .) "service" "ports") }}
-        - name: {{ $port }}-TCP
+        - name: {{ $port }}-tcp
           containerPort: {{ $port }}
           protocol: TCP
         {{- end}}
