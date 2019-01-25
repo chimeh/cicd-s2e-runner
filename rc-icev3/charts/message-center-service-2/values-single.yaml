@@ -1,0 +1,29 @@
+global:
+  rc-fullname: false
+  ingress:
+    internal:
+      annotations-ingress-class: kong-ingress-internal
+      domain: okd.cd
+    public:
+      annotations-ingress-class: kong-ingress-public
+      domain: nx-code.com
+message-center-service-2:
+  replicaCount: 1
+  ingress:
+    internal: 
+      host: {}
+    public: 
+      enabled: true
+      host: {}
+  service:
+    type: LoadBalancer
+    ports:
+      - 80
+      - 8080
+  image: harbor.nxe.local/ice/message-center-service-2:1.0.0-029a0e2
+  env.txt: |
+    CCC=DDD
+    CCC=DDD
+    CCC=DDD
+  
+

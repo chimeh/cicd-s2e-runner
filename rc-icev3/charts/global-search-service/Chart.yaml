@@ -1,0 +1,15 @@
+name: global-search-service
+version: 20190125-18.26.43
+appVersion: 0.1
+description: generic Chart for all nextengine ICE V3 app.
+keywords:
+- nextengine
+- icev3-generic-chart
+home: https://www.nx-engine.com/
+icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-110x117.png
+sources:
+- https://www.nx-engine.com/
+maintainers:
+- name: Jimmy Huang
+  email: jimagile@gmail.com
+engine: gotpl

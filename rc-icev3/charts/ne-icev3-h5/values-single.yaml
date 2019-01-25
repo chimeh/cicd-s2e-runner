@@ -1,0 +1,29 @@
+global:
+  rc-fullname: false
+  ingress:
+    internal:
+      annotations-ingress-class: kong-ingress-internal
+      domain: okd.cd
+    public:
+      annotations-ingress-class: kong-ingress-public
+      domain: nx-code.com
+ne-icev3-h5:
+  replicaCount: 1
+  ingress:
+    internal: 
+      host: {}
+    public: 
+      enabled: true
+      host: {}
+  service:
+    type: LoadBalancer
+    ports:
+      - 80
+      - 8080
+  image: harbor.nxe.local/ice/ne-icev3-h5:1.0.0-866b890
+  env.txt: |
+    CCC=DDD
+    CCC=DDD
+    CCC=DDD
+  
+
