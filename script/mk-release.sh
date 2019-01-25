@@ -47,8 +47,8 @@ while read i; do
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' >${RCNAME}/charts/$name/files/env.txt
     perl -ni -e "s/^name:.+/name: ${name}/g;print" ${RCNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^version:.+/version: ${defaultversion}/g;print" ${RCNAME}/charts/$name/Chart.yaml
-    perl -ni -e "s/^icev3-xxx-generic/$name/g;print" ${RCNAME}/charts/$name/values.yaml 
-    perl -ni -e "s@image:.+@image: $img@g;print"  ${RCNAME}/charts/$name/values.yaml 
+    perl -ni -e "s/^icev3-xxx-generic/$name/g;print" ${RCNAME}/charts/$name/values-single.yaml
+    perl -ni -e "s@image:.+@image: $img@g;print"  ${RCNAME}/charts/$name/values-single.yaml
     echo "dependcies"
 cat >> ${RCNAME}/${requirement_filename} <<EOF
 - name: ${name}
@@ -76,20 +76,21 @@ while read i; do
     img=`kubectl get -n ${SRC_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
 cat >> ${RCNAME}/${vaule_filename} <<EOF
 ${name}:
-  replicaCount: 1
-  ingress:
-    internal: 
-      host: {}
-    public: 
-      enabled: true
-      host: {}
-  service:
-    type: LoadBalancer
-    ports:
-      - 80
-      - 8080
-  image: $img
-  env.txt: |
-    
+  ${name}:
+    replicaCount: 1
+    ingress:
+      internal: 
+        host: {}
+      public: 
+        enabled: true
+        host: {}
+    service:
+      type: LoadBalancer
+      ports:
+        - 80
+        - 8080
+    image: $img
+    env.txt: |
+      #from ${vaule_filename}
 EOF
 done
