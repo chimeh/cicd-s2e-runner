@@ -44,6 +44,7 @@ while read i; do
     echo "auto gen charts for ${SRC_NS}/${name}"
     img=`kubectl get -n ${SRC_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
     cp -rf  $(dirname ${THIS_SCRIPT} )/../icev3-xxx-generic ${RCNAME}/charts/$name
+    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' >${RCNAME}/charts/$name/files/env.txt
     perl -ni -e "s/^name:.+/name: ${name}/g;print" ${RCNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^version:.+/version: ${defaultversion}/g;print" ${RCNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^icev3-xxx-generic/$name/g;print" ${RCNAME}/charts/$name/values.yaml 
