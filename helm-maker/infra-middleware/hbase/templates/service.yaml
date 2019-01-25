@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hbase
+  labels:
+    app.kubernetes.io/name: hbase
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: hbase
+  ports:
+  - name: zookeeper
+    port: 2181
+  - name: master
+    port: 16000
+  - name: regionserver
+    port: 16020
