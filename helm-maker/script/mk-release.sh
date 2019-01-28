@@ -32,7 +32,7 @@ if [ $# -lt 1 ];then
 fi
 projname=release-$1
 CURDATE=$(date +%Y%m%d-%H-%M-%S)
-RCNAME=${TRYTOP}/../${projname}-release-${CURDATE}
+RCNAME=${TRYTOP}/../${projname}-${CURDATE}
 vaule_filename=values-release-apps.yaml
 requirement_filename=requirements.yaml
 defaultversion=${CURDATE}
@@ -46,8 +46,8 @@ if [ $? -ne 0 ];then
 fi
 mkdir -p ${RCNAME}/charts
 cat >> ${RCNAME}/Chart.yaml <<EOF
-name: icev3-depend
-version: ${RCNAME}
+name: ${projname}
+version: ${projname}-${CURDATE}
 appVersion: 0.1
 description: all icev3-dependcies
 keywords:
@@ -95,7 +95,7 @@ global:
       domain: okd.cd
     public:
       annotations-ingress-class: kong-ingress-public
-      domain: nx-code.com
+      domain: nx-ice.com
 EOF
 
 MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|pvc|zookeeper"
@@ -170,3 +170,4 @@ cat >> ${RCNAME}/requirements.yaml <<EOF
   version: ~0.9.1
   repository: "file://charts/infra-middleware"
 EOF
+cp ${MW_VALUEFILE}  ${RCNAME}/values.yaml
