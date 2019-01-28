@@ -30,12 +30,8 @@ if [ $# -lt 1 ];then
   echo "useage: $0 namespace"
   exit 1;
 fi
-if [ $# -gt 1 ];then
-  projname=$2
-else
-  projname=release-icev3
-fi
-CURDATE=$(date +%Y%m%d-%H.%M.%S)
+projname=release-$1
+CURDATE=$(date +%Y%m%d-%H-%M-%S)
 RCNAME=${TRYTOP}/../${projname}-release-${CURDATE}
 vaule_filename=values-release-apps.yaml
 requirement_filename=requirements.yaml
