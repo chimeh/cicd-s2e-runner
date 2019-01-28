@@ -82,3 +82,32 @@ else
     echo "###/cfg/env.txt not found!"
 fi
 ```
+
+# NS 发布与重建举例
+##  确认 K8S 连接
+```aidl
+$ kubectl cluster-info 
+Kubernetes master is running at https://rancher.ops/k8s/clusters/c-rlgsl
+KubeDNS is running at https://rancher.ops/k8s/clusters/c-rlgsl/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+```
+##  利用工具导出NS的helm chart 
+```aidl
+$ ./helm-maker/script/mk-release.sh ice-v3-demo
+```
+## 查看 导出的NS的helm charts
+release-ice-v3-demo-release-20190128-11-05-32就是NS ice-v3-demo的导出helm chart
+```aidl
+$ ls
+helm-maker  rc-icev3  README.md  release-ice-v3-demo-release-20190128-11-05-32
+```
+## 创建新的NS ice-xxx
+
+##  一键重建 中间件
+```aidl
+ $ helm  install --namespace ice-xxx  -n  release-20190128104320   -f values-middleware-all-in-one.yaml  .
+ $ helm  upgrade  release-20190128104320  .    --install  -f values-middleware-all-in-one.yaml  --force
+```
+## 一键重建所有微服务 
+```aidl
+ $ helm  upgrade  release-20190128104320  .    --install  -f values-middleware-all-in-one.yaml  -f values-release-apps.yaml  --force
+```
