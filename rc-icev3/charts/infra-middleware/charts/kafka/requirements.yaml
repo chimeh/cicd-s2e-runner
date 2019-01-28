@@ -1,4 +1,0 @@
-dependencies:
-- name: zookeeper
-  repository: '@nx-engine'
-  version: ~0.0.1

@@ -1,5 +1,0 @@
-image: mongo:3.2
-
-persistence:
-  enabled: false
-  size: 3Gi
