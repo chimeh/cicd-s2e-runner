@@ -36,6 +36,7 @@ RCNAME=${TRYTOP}/../${projname}-${CURDATE}
 vaule_filename=values-release-apps.yaml
 requirement_filename=requirements.yaml
 defaultversion=${CURDATE}
+echo "${projname}-${CURDATE}"
 
 kubectl cluster-info
 SRC_NS=$1
@@ -171,3 +172,13 @@ cat >> ${RCNAME}/requirements.yaml <<EOF
   repository: "file://charts/infra-middleware"
 EOF
 cp ${MW_VALUEFILE}  ${RCNAME}/values.yaml
+
+################# post to repo
+if [ $# -gt 1 ];then
+  echo "post to repo"
+  rm -rf ${RCNAME}/../${projname}
+  /bin/cp -rf ${RCNAME} ${RCNAME}/../${projname}
+  cd ${RCNAME}/..
+  helm package ${projname}
+  curl --data-binary "@${projname}-${CURDATE}.tgz" http://charts.ops/api/charts
+fi
