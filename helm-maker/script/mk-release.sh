@@ -37,7 +37,7 @@ else
 fi
 CURDATE=$(date +%Y%m%d-%H.%M.%S)
 RCNAME=${TRYTOP}/../${projname}-release-${CURDATE}
-vaule_filename=values-release-${CURDATE}.yaml
+vaule_filename=values-release-apps.yaml
 requirement_filename=requirements.yaml
 defaultversion=${CURDATE}
 
