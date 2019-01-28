@@ -47,7 +47,7 @@ fi
 mkdir -p ${RCNAME}/charts
 cat >> ${RCNAME}/Chart.yaml <<EOF
 name: ${projname}
-version: ${projname}-${CURDATE}
+version: ${CURDATE}
 appVersion: 0.1
 description: all icev3-dependcies
 keywords:
