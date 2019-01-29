@@ -24,6 +24,17 @@ echo THIS_SCRIPT=$THIS_SCRIPT
 echo CUR_DIR=$CUR_DIR
 echo TRYTOP=$TRYTOP
 
+if [[ -n ${TEAMCITY_GIT_PATH} ]];then
+    echo "Run on Teamcity"
+    BUILD_COUNTER="t-${BUILD_NUMBER}"
+elif [[ -n ${JENKINS_URL} ]];then
+    echo "Run on Jenkins CI"
+    BUILD_COUNTER="j-${BUILD_NUMBER}"
+else
+    echo "can't detect name"
+    BUILD_COUNTER="none"
+fi
+
 
 ####################################################################
 if [ $# -lt 1 ];then
@@ -32,7 +43,7 @@ if [ $# -lt 1 ];then
 fi
 projname=release-$1
 CURDATE=$(date +%Y%m%d-%H-%M-%S)
-RCNAME=${TRYTOP}/../${projname}-${CURDATE}
+RCNAME=${TRYTOP}/../${projname}-${CURDATE}-${BUILD_COUNTER}
 vaule_filename=values-release-apps.yaml
 requirement_filename=requirements.yaml
 defaultversion=${CURDATE}
@@ -48,7 +59,7 @@ fi
 mkdir -p ${RCNAME}/charts
 cat >> ${RCNAME}/Chart.yaml <<EOF
 name: ${projname}
-version: ${CURDATE}
+version: ${CURDATE}-${BUILD_COUNTER}
 appVersion: 0.1
 description: all icev3-dependcies
 keywords:
@@ -171,8 +182,8 @@ cat >> ${RCNAME}/requirements.yaml <<EOF
   version: ~0.9.1
   repository: "file://charts/infra-middleware"
 EOF
-+cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
-+cat ${MW_VALUEFILE} >> ${RCNAME}/values.yaml
+cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
+cat ${MW_VALUEFILE} >> ${RCNAME}/values.yaml
 
 ################# post to repo
 if [ $# -gt 1 ];then
@@ -181,5 +192,5 @@ if [ $# -gt 1 ];then
   /bin/cp -rf ${RCNAME} ${RCNAME}/../${projname}
   cd ${RCNAME}/..
   helm package ${projname}
-  curl --data-binary "@${projname}-${CURDATE}.tgz" http://charts.ops/api/charts
+  curl --data-binary "@${projname}-${CURDATE}-${BUILD_COUNTER}.tgz" http://charts.ops/api/charts
 fi
