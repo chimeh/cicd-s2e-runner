@@ -171,7 +171,8 @@ cat >> ${RCNAME}/requirements.yaml <<EOF
   version: ~0.9.1
   repository: "file://charts/infra-middleware"
 EOF
-cp ${MW_VALUEFILE}  ${RCNAME}/values.yaml
++cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
++cat ${MW_VALUEFILE} >> ${RCNAME}/values.yaml
 
 ################# post to repo
 if [ $# -gt 1 ];then
