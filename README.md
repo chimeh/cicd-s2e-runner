@@ -63,15 +63,8 @@ $ ./helm-maker/script/mk-release.sh <K8S-NS>
 #  配置注入的ENTRYPOINT要求
 每个镜像的Dockerfile里指定的entrypoint需要包含以下脚本，支持环境变量注入
 ```aidl
-K8S_NS_FILE="/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-if [ -f ${K8S_NS_FILE} ];then
-K8S_NS=`head -n 1 ${K8S_NS_FILE}`
-else
-K8S_NS="cant-get-ns"
-fi
-SVC_NAME=`echo ${K8S_NS}.${HOSTNAME} | rev | cut -d'-'  -f 3- | rev`
-
 mkdir -p /cfg/
+mkdir -p /logs/
 if [ -f /cfg/env.txt ]; then
     echo "###/cfg/env.txt mounted"
     set -a # automatically export all variables
@@ -81,6 +74,33 @@ if [ -f /cfg/env.txt ]; then
 else
     echo "###/cfg/env.txt not found!"
 fi
+
+if [ -z ${HOSTNAME} ];then
+    HOSTNAME=no-name-service
+fi
+
+
+K8S_NS_FILE="/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+if [ -f ${K8S_NS_FILE} ];then
+K8S_NS=`head -n 1 ${K8S_NS_FILE}`
+else
+K8S_NS="cant-get-ns"
+fi
+SVC_NAME=`echo ${K8S_NS}.${HOSTNAME} | rev | cut -d'-'  -f 3- | rev`
+
+PPAGENT=`find /pp-agent/pinpoint-bootstra* |head -n 1`
+if [[ -n ${PPAGENT} ]];then
+  PINPOINT_OPTS="-javaagent:/pp-agent/pinpoint-bootstrap-1.7.2-SNAPSHOT.jar -Dpinpoint.agentId=${HOSTNAME:0:23} -Dpinpoint.applicationName=${SVC_NAME}"
+fi
+# default JAVA_OPTS, you can RESET its value, use JAVA_OPTS="YOU-NEW-VALUE" in /cfg/env.txt" 
+# default JAVA_OPTS, you can APPEND its value, use JAVA_OPTS="${JAVA_OPTS} YOU-APPEND-VALUE" in /cfg/env.txt" 
+
+JAVA_OPTS=""
+#JAVA_OPTS="${PINPOINT_OPTS}"
+JAVA_OPTS="${JAVA_OPTS} ${PINPOINT_OPTS} -XX:+UseG1GC -XX:G1ReservePercent=20 -Xloggc:/logs/gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=2M -XX:-PrintGCDetails -XX:+PrintGCDateStamps -XX:-PrintTenuringDistribution "
+echo "###default JAVA_OPTS=${JAVA_OPTS}"
+echo '###JAVA_OPTS, you can RESET its value, use JAVA_OPTS="YOU-NEW-VALUE" in /cfg/env.txt"'
+echo '###JAVA_OPTS, you can APPEND its value, use JAVA_OPTS="${JAVA_OPTS} YOU-APPEND-VALUE" in /cfg/env.txt" '
 ```
 
 # NS 发布与重建举例
