@@ -26,10 +26,10 @@ echo TRYTOP=$TRYTOP
 
 if [[ -n ${TEAMCITY_GIT_PATH} ]];then
     echo "Run on Teamcity"
-    BUILD_COUNTER="t-${BUILD_NUMBER}"
+    BUILD_COUNTER="t${BUILD_NUMBER}"
 elif [[ -n ${JENKINS_URL} ]];then
     echo "Run on Jenkins CI"
-    BUILD_COUNTER="j-${BUILD_NUMBER}"
+    BUILD_COUNTER="j${BUILD_NUMBER}"
 else
     echo "can't detect name"
     BUILD_COUNTER="none"
