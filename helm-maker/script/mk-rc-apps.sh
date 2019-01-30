@@ -31,23 +31,26 @@ elif [[ -n ${JENKINS_URL} ]];then
     echo "Run on Jenkins CI"
     BUILD_COUNTER="j${BUILD_NUMBER}"
 else
-    echo "can't detect name"
-    BUILD_COUNTER="none"
+    echo "personal rc"
+    BUILD_COUNTER="x"
 fi
 
 
 ####################################################################
+CURDATE=$(date +%Y%m%d%H%M%S)
+CATALOG_NAME=$(echo $1 | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "") 
+VERSION=${CURDATE}-${BUILD_COUNTER}
+echo "CHART name set to ${CATALOG_NAME} ${VERSION}"
+
 if [ $# -lt 1 ];then
   echo "useage: $0 namespace"
   exit 1;
 fi
-projname=release-$1
-CURDATE=$(date +%Y%m%d-%H-%M-%S)
-RCNAME=${TRYTOP}/../${projname}-${CURDATE}-${BUILD_COUNTER}
+
+RCNAME=${TRYTOP}/../${CATALOG_NAME}-${VERSION}
 vaule_filename=values-release-apps.yaml
-requirement_filename=requirements.yaml
-defaultversion=${CURDATE}
-echo "${projname}-${CURDATE}"
+commonchartversion=1.0
+echo "${CATALOG_NAME}-${CURDATE}"
 
 kubectl cluster-info
 SRC_NS=$1
@@ -58,8 +61,8 @@ if [ $? -ne 0 ];then
 fi
 mkdir -p ${RCNAME}/charts
 cat >> ${RCNAME}/Chart.yaml <<EOF
-name: ${projname}
-version: ${CURDATE}-${BUILD_COUNTER}
+name: ${CATALOG_NAME}
+version: ${VERSION}
 appVersion: 0.1
 description: all icev3-dependcies
 keywords:
@@ -86,7 +89,7 @@ while read i; do
     /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${RCNAME}/charts/$name
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' >${RCNAME}/charts/$name/files/env.txt
     perl -ni -e "s/^name:.+/name: ${name}/g;print" ${RCNAME}/charts/$name/Chart.yaml
-    perl -ni -e "s/^version:.+/version: ${defaultversion}/g;print" ${RCNAME}/charts/$name/Chart.yaml
+    perl -ni -e "s/^version:.+/version: ${commonchartversion}/g;print" ${RCNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^icev3-xxx-generic/$name/g;print" ${RCNAME}/charts/$name/values-single.yaml
     perl -ni -e "s@image:.+@image: $img@g;print"  ${RCNAME}/charts/$name/values-single.yaml
     echo "dependcies"
@@ -138,59 +141,16 @@ EOF
 done
 
 echo "##############################################################"
-echo "##########################gen middleware charts, and depencies"
-MWDIR=${RCNAME}/charts/infra-middleware/charts
-MW_VALUEFILE=${RCNAME}/values-middleware-all-in-one.yaml
-
-mkdir -p ${MWDIR}
-/bin/cp -rf  ${TRYTOP}/infra-middleware/* ${MWDIR}
-
-cat  >>  ${MW_VALUEFILE} <<EOF
-infra-middleware:
-EOF
-#################merge mw chart into one
-echo  'dependencies:' > $(dirname ${MWDIR})/requirements.yaml
-for i in `/bin/ls ${MWDIR} `; do 
-    name=$i
-    echo "auto gen charts for middleware ${name}"
-    version=$( cat ${MWDIR}/${name}/Chart.yaml   |egrep "^version" | perl -ne 'print $1 if /^version:[ ]+(.+)/')
-    mv ${MWDIR}/${name}/values.yaml ${MWDIR}/${name}/values-single.yaml
-
-echo " let infra-middleware depend ${name}"
-cat >> $(dirname ${MWDIR})/requirements.yaml <<EOF
-- name: ${name}
-  version: ~${version}
-  repository: "file://charts/${name}"
-  condition: ${name}.enabled
-EOF
-echo " merge ${name} valuefile"
-cat  >>  ${MW_VALUEFILE} <<EOF
-  ${name}:
-    enabled: false
-EOF
-perl  -ne 'print "    $_"' ${MWDIR}/${name}/values-single.yaml  >>  ${MW_VALUEFILE}
-done 
 
 
-
-##################let mw below top chart
-echo "name: infra-middleware" > $(dirname ${MWDIR})/Chart.yaml
-echo "version: 0.9.1" >> $(dirname ${MWDIR})/Chart.yaml
-
-cat >> ${RCNAME}/requirements.yaml <<EOF
-- name: infra-middleware
-  version: ~0.9.1
-  repository: "file://charts/infra-middleware"
-EOF
 cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
-cat ${MW_VALUEFILE} >> ${RCNAME}/values.yaml
 
 ################# post to repo
 if [ $# -gt 1 ];then
   echo "post to repo"
-  rm -rf ${RCNAME}/../${projname}
-  /bin/cp -rf ${RCNAME} ${RCNAME}/../${projname}
+  rm -rf ${RCNAME}/../${CATALOG_NAME}
+  /bin/cp -rf ${RCNAME} ${RCNAME}/../${CATALOG_NAME}
   cd ${RCNAME}/..
-  helm package ${projname}
-  curl --data-binary "@${projname}-${CURDATE}-${BUILD_COUNTER}.tgz" http://charts.ops/api/charts
+  helm package ${CATALOG_NAME}
+  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" http://charts.ops/api/charts
 fi
