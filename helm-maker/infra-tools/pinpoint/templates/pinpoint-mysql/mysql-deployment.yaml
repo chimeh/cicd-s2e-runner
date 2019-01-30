@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinpoint-mysql
+  labels:
+    app: pinpoint-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pinpoint-mysql
+  template:
+    metadata:
+      labels:
+        app: pinpoint-mysql
+    spec:
+      containers:
+      - name: pinpoint-mysql
+        image: pinpointdocker/pinpoint-mysql:1.8.1
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: root123
+        - name: MYSQL_USER
+          value: admin
+        - name: MYSQL_PASSWORD
+          value: admin
+        - name: MYSQL_DATABASE
+          value: pinpoint
+        resources:
+          limits:
+            cpu: "1"
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 512Mi
