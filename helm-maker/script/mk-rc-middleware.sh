@@ -31,40 +31,40 @@ elif [[ -n ${JENKINS_URL} ]];then
     echo "Run on Jenkins CI"
     BUILD_COUNTER="j${BUILD_NUMBER}"
 else
-    echo "can't detect name"
+    echo "personal rc"
     BUILD_COUNTER="none"
 fi
 
 
 ####################################################################
-if [ $# -lt 1 ];then
-  echo "useage: $0 namespace"
-  exit 1;
-fi
-projname=release-$1
 CURDATE=$(date +%Y%m%d-%H-%M-%S)
-RCNAME=${TRYTOP}/../${projname}-${CURDATE}-${BUILD_COUNTER}
-vaule_filename=values-release-apps.yaml
-requirement_filename=requirements.yaml
-defaultversion=${CURDATE}
-echo "${projname}-${CURDATE}"
+CATALOG_NAME="middleware"
 
-kubectl cluster-info
-SRC_NS=$1
-kubectl get ns ${SRC_NS}
-if [ $? -ne 0 ];then
-  echo "NS ${SRC_NS} no exist"
-  exit 2;
+echo "CHART name set to ${CATALOG_NAME}"
+
+if [ $# -ge 1 ];then
+    VERSION=$(echo $1 | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "")   
+    echo "param1= $1"
+
+fi 
+if [[ -z ${VERSION} ]];then
+    VERSION=${CURDATE}-${BUILD_COUNTER}
 fi
+echo "CHART version set to ${VERSION}" 
+
+RCNAME=${TRYTOP}/../${CATALOG_NAME}-${VERSION}
+echo "RC: ${CATALOG_NAME}-${CURDATE}"
+
 mkdir -p ${RCNAME}/charts
 cat >> ${RCNAME}/Chart.yaml <<EOF
-name: ${projname}
-version: ${CURDATE}-${BUILD_COUNTER}
+name: ${CATALOG_NAME}
+version: ${VERSION}
 appVersion: 0.1
-description: all icev3-dependcies
+description: |
+  middleware all in one, $(perl -ne 'print "$1, " if /\s+image:[ ]+(.+)$/' `du -a ${TRYTOP}/infra-middleware | egrep "yaml$" | awk '{print $2}'`   )
 keywords:
 - nextengine
-- icev3-dependcies
+- middleware
 home: https://www.nx-engine.com/
 icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-110x117.png
 sources:
@@ -74,68 +74,10 @@ maintainers:
   email: jimagile@gmail.com
 engine: gotpl
 EOF
-MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|pvc|zookeeper"
 
 echo "##########################gen charts, and depencies"
 echo  'dependencies:' > ${RCNAME}/requirements.yaml
-kubectl get -n ${SRC_NS} deployment  --no-headers |  awk '{print $1}' | egrep -v "${MWARE}" | \
-while read i; do 
-    name=$i
-    echo "auto gen charts for ${SRC_NS}/${name}"
-    img=`kubectl get -n ${SRC_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
-    /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${RCNAME}/charts/$name
-    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' >${RCNAME}/charts/$name/files/env.txt
-    perl -ni -e "s/^name:.+/name: ${name}/g;print" ${RCNAME}/charts/$name/Chart.yaml
-    perl -ni -e "s/^version:.+/version: ${defaultversion}/g;print" ${RCNAME}/charts/$name/Chart.yaml
-    perl -ni -e "s/^icev3-xxx-generic/$name/g;print" ${RCNAME}/charts/$name/values-single.yaml
-    perl -ni -e "s@image:.+@image: $img@g;print"  ${RCNAME}/charts/$name/values-single.yaml
-    echo "dependcies"
-cat >> ${RCNAME}/requirements.yaml <<EOF
-- name: ${name}
-  version: ~${defaultversion}
-  repository: "file://charts/${name}"
-EOF
-done
 
-echo "##########################gen value file"
-cat >> ${RCNAME}/${vaule_filename} <<EOF
-global:
-  rc-fullname: false
-  ingress:
-    internal:
-      annotations-ingress-class: kong-ingress-internal
-      domain: okd.cd
-    public:
-      annotations-ingress-class: kong-ingress-public
-      domain: nx-ice.com
-EOF
-
-MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|pvc|zookeeper"
-
-kubectl get -n ${SRC_NS} deployment  --no-headers |  awk '{print $1}' | egrep -v "${MWARE}" | \
-while read i; do 
-    name=$i
-    img=`kubectl get -n ${SRC_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
-cat >> ${RCNAME}/${vaule_filename} <<EOF
-${name}:
-  ${name}:
-    replicaCount: 1
-    ingress:
-      internal: 
-        host: {}
-      public: 
-        enabled: true
-        host: {}
-    service:
-      type: LoadBalancer
-      ports:
-        - 80
-        - 8080
-    image: $img
-    env.txt: |
-      #from ${vaule_filename}
-EOF
-done
 
 echo "##############################################################"
 echo "##########################gen middleware charts, and depencies"
@@ -182,15 +124,14 @@ cat >> ${RCNAME}/requirements.yaml <<EOF
   version: ~0.9.1
   repository: "file://charts/infra-middleware"
 EOF
-cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
 cat ${MW_VALUEFILE} >> ${RCNAME}/values.yaml
 
 ################# post to repo
 if [ $# -gt 1 ];then
   echo "post to repo"
-  rm -rf ${RCNAME}/../${projname}
-  /bin/cp -rf ${RCNAME} ${RCNAME}/../${projname}
+  rm -rf ${RCNAME}/../${CATALOG_NAME}
+  /bin/cp -rf ${RCNAME} ${RCNAME}/../${CATALOG_NAME}
   cd ${RCNAME}/..
-  helm package ${projname}
-  curl --data-binary "@${projname}-${CURDATE}-${BUILD_COUNTER}.tgz" http://charts.ops/api/charts
+  helm package ${CATALOG_NAME}
+  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" http://charts.ops/api/charts
 fi
