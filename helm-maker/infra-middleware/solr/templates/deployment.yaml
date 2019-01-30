@@ -18,9 +18,6 @@ spec:
       labels:
         app.kubernetes.io/name: solr
     spec:
-      securityContext:
-        runAsUser: 8983
-        fsGroup: 8983
       containers:
       - name: solr
         image: solr:7-alpine
