@@ -113,7 +113,7 @@ global:
       domain: nx-code.com
   containers:
     securityContext:
-      privileged: false
+      privileged: true
 EOF
 
 MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|pvc|zookeeper"
