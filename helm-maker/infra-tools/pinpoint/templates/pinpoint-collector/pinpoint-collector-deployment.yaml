@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinpoint-collector
+  labels:
+    app: pinpoint-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pinpoint-collector
+  template:
+    metadata:
+      labels:
+        app: pinpoint-collector
+    spec:
+      containers:
+      - name: pinpoint-collector
+        image: pinpointdocker/pinpoint-collector:1.8.1
+        env:
+        - name: CLUSTER_ENABLE
+          value: "false"
+        - name: HBASE_HOST
+          value: pinpoint-hbase
+        - name: HBASE_PORT
+          value: "2181"
+        - name: FLINK_CLUSTER_ENABLE
+          value: "false"
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 2Gi
