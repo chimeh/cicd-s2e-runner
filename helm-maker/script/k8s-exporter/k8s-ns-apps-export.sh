@@ -47,7 +47,7 @@ CURDATE=$(date +%Y%m%d%H%M%S)
 VERSION=${CURDATE}-${BUILD_COUNTER}
 echo "NS ${SRC_NS} ${VERSION}"
 
-RCNAME=${TRYTOP}/../${SRC_NS}-${VERSION}
+RCNAME=${TRYTOP}/../export-${SRC_NS}-${VERSION}
 echo "${SRC_NS}-${CURDATE}"
 echo "${RCNAME}"
 
