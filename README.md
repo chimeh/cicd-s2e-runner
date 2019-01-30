@@ -1,8 +1,8 @@
 # helm-release-tool
-helm-release-tool 是一个K8S的 helm chart 自动化生成工具。
+helm-release-tool 是一个K8S的服务导出工具，及 helm chart 自动化生成工具。
 
-通过Kubernetes API, 获取K8S一个Namespace的各微服务的 `image版本, image 环境变量配置, container port`等信息
-从一个 generic helm chart, 派生出各个微服务的helm chart 。生成一个包含多个微服务的helm chart，用于快速重建一个项目
+通过Kubernetes API, 获取K8S一个Namespace的各微服务的 `image版本, image 环境变量配置, container port`等信息生成一个目录。
+根据这个目录，自动生成各个微服务的helm chart 。用于快速重建一个项目
 
 helm-release-tool 有以下特点:
 * 支持外部中间件
@@ -11,31 +11,47 @@ helm-release-tool 有以下特点:
 * 支持服务环境变量覆盖与新增加
 * 所有微服务的部署配置放在统一的单个valuesfile `values-release-apps.yaml`
 * 每个服务的镜像环境变量拆分两部分, 可配置的`values-release-apps.yaml`与固定的`charts/{XXX}/files/env.txt`
+
+# NS 发布与重建举例
+##  确认 K8S 连接
+```aidl
+$ kubectl cluster-info 
+Kubernetes master is running at https://rancher.ops/k8s/clusters/c-rlgsl
+KubeDNS is running at https://rancher.ops/k8s/clusters/c-rlgsl/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+```
+##  利用工具导出NS的TXT树,包含了每个服务的img/env/服务名等关键信息
+```aidl
+$ ./helm-maker/script/k8s-exporter/k8s-ns-apps-export.sh  ice-v3-demo
+```
+ice-v3-demo-20190130164720-x/就是NS ice-v3-demo的信息树
+```aidl
+$ [root@localhost icev3]# ls ice-v3-demo-20190130164720-x/
+  common-data       ev-gb-tcu              location-data-service     ne-evgb-dashboard      ne-inside-gateway
+  ev-gb-center      ev-gb-uploader         message-center-service    ne-evgb-nservice       remote-service
+  ev-gb-dispatcher  file-service           message-center-service-2  ne-external-gateway    simu-ve
+  evgb-dtc          global-search-service  message-push-service      ne-icev3-dashboard     user-core-data
+  evgb-dts          global-search-stream   message-push-service-2    ne-icev3-h5            vehicle-alert-service
+  ev-gb-gateway     global-search-sync     ne-config-server          ne-icev3-nservice      vehicle-core-data
+  evgb-rus          ime-idp                ne-eureka-server          ne-icev3-nservice-sub  vehicle-status-service
+```
+## 将NS的TXT树转换为helm chart
+
+```aidl
+$ ./helm-maker/script/helm-gen/mk-rc-txt2helm.sh ./ice-v3-demo-20190130164720-x/  icev3
+$ ls
+export-ice-v3-demo  helm-maker  icev3-20190130174929-x  icev3-20190130174929-x.tgz  ice-v3-demo-20190130164720-x  README.md
+```
+icev3-20190130174929-x.tgz 就是转换后的helm chart
+
+
 # 目录结构
 ```
 .
 ├── helm-maker             K8S一个NameSpace的helm 生成工具目录
 │   ├── generic            微服务的基础generic helm chart
 │   ├── infra-middleware   中间件的helm
-│   └── script             工具脚本, script/mk-release.sh <NS>
-├── rc-icev3                  项目ice v3的helm 发布仓库
-│   ├── charts                项目ice v3的各个微服务chart
-│   ├── Chart.yaml            
-│   ├── requirements.yaml     项目ice v3的依赖的各微服务
-│   ├── values-middleware-all-in-one.yaml 各服务的helm values
-│   └── values-release-apps.yaml
-├── README.md
-└── release-icev3-release-20190128-09.43.59 script/mk-release.sh <NS> 导出的helm
-    ├── charts
-    ├── Chart.yaml
-    ├── requirements.yaml
-    ├── values-middleware-all-in-one.yaml
-    └── values-release-apps.yaml
-```
-
-#工具用法
-```
-$ ./helm-maker/script/mk-release.sh <K8S-NS>
+│   └── script             工具脚本, script/
+└── README.md
 ```
 
 # generic chart, 派生helm chart 文件说明
@@ -101,36 +117,4 @@ JAVA_OPTS="${JAVA_OPTS} ${PINPOINT_OPTS} -XX:+UseG1GC -XX:G1ReservePercent=20 -X
 echo "###default JAVA_OPTS=${JAVA_OPTS}"
 echo '###JAVA_OPTS, you can RESET its value, use JAVA_OPTS="YOU-NEW-VALUE" in /cfg/env.txt"'
 echo '###JAVA_OPTS, you can APPEND its value, use JAVA_OPTS="${JAVA_OPTS} YOU-APPEND-VALUE" in /cfg/env.txt" '
-```
-
-# NS 发布与重建举例
-##  确认 K8S 连接
-```aidl
-$ kubectl cluster-info 
-Kubernetes master is running at https://rancher.ops/k8s/clusters/c-rlgsl
-KubeDNS is running at https://rancher.ops/k8s/clusters/c-rlgsl/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-```
-##  利用工具导出NS的TXT树,包含了每个服务的img/env/服务名等关键信息
-```aidl
-$ ./helm-maker/script/k8s-exporter/k8s-ns-apps-export.sh  ice-v3-demo
-```
-ice-v3-demo-20190130164720-x/就是NS ice-v3-demo的信息树
-```aidl
-$ [root@localhost icev3]# ls ice-v3-demo-20190130164720-x/
-  common-data       ev-gb-tcu              location-data-service     ne-evgb-dashboard      ne-inside-gateway
-  ev-gb-center      ev-gb-uploader         message-center-service    ne-evgb-nservice       remote-service
-  ev-gb-dispatcher  file-service           message-center-service-2  ne-external-gateway    simu-ve
-  evgb-dtc          global-search-service  message-push-service      ne-icev3-dashboard     user-core-data
-  evgb-dts          global-search-stream   message-push-service-2    ne-icev3-h5            vehicle-alert-service
-  ev-gb-gateway     global-search-sync     ne-config-server          ne-icev3-nservice      vehicle-core-data
-  evgb-rus          ime-idp                ne-eureka-server          ne-icev3-nservice-sub  vehicle-status-service
-```
-## 将NS的TXT树转换为helm chart
-
-```aidl
-./helm-maker/script/helm-gen/mk-rc-txt2helm.sh ./ice-v3-demo-20190130164720-x/  icev3
-```
-## 一键重建所有微服务 
-```aidl
- $ helm  upgrade  release-20190128104320  .    --install  -f values-middleware-all-in-one.yaml  -f values-release-apps.yaml  --force
 ```
