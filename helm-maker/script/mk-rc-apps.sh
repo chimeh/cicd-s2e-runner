@@ -110,7 +110,10 @@ global:
       domain: okd.cd
     public:
       annotations-ingress-class: kong-ingress-public
-      domain: nx-ice.com
+      domain: nx-code.com
+  containers:
+    securityContext:
+      privileged: false
 EOF
 
 MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|pvc|zookeeper"
