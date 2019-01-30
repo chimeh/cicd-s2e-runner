@@ -79,6 +79,7 @@ engine: gotpl
 EOF
 
 echo "##########################gen charts, and depencies"
+echo  'dependencies:' > ${RCNAME}/requirements.yaml
 for i in `/bin/ls ${TXTDIR}`;do \
     name=$i
     echo "gen charts for /${name}"
@@ -95,7 +96,7 @@ for i in `/bin/ls ${TXTDIR}`;do \
     echo "dependcies"
 cat >> ${RCNAME}/requirements.yaml <<EOF
 - name: ${name}
-  version: ~${defaultversion}
+  version: ~${commonchartversion}
   repository: "file://charts/${name}"
 EOF
 done
@@ -158,5 +159,7 @@ if [ $# -gt 1 ];then
   /bin/cp -rf ${RCNAME} ${RCNAME}/../${CATALOG_NAME}
   cd ${RCNAME}/..
   helm package ${CATALOG_NAME}
+  rm -rf ${RCNAME}/../${CATALOG_NAME}
   curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" http://charts.ops/api/charts
+
 fi

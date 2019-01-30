@@ -110,22 +110,25 @@ $ kubectl cluster-info
 Kubernetes master is running at https://rancher.ops/k8s/clusters/c-rlgsl
 KubeDNS is running at https://rancher.ops/k8s/clusters/c-rlgsl/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 ```
-##  利用工具导出NS的helm chart 
+##  利用工具导出NS的TXT树,包含了每个服务的img/env/服务名等关键信息
 ```aidl
-$ ./helm-maker/script/mk-release.sh ice-v3-demo
+$ ./helm-maker/script/k8s-exporter/k8s-ns-apps-export.sh  ice-v3-demo
 ```
-## 查看 导出的NS的helm charts
-release-ice-v3-demo-release-20190128-11-05-32就是NS ice-v3-demo的导出helm chart
+ice-v3-demo-20190130164720-x/就是NS ice-v3-demo的信息树
 ```aidl
-$ ls
-helm-maker  rc-icev3  README.md  release-ice-v3-demo-release-20190128-11-05-32
+$ [root@localhost icev3]# ls ice-v3-demo-20190130164720-x/
+  common-data       ev-gb-tcu              location-data-service     ne-evgb-dashboard      ne-inside-gateway
+  ev-gb-center      ev-gb-uploader         message-center-service    ne-evgb-nservice       remote-service
+  ev-gb-dispatcher  file-service           message-center-service-2  ne-external-gateway    simu-ve
+  evgb-dtc          global-search-service  message-push-service      ne-icev3-dashboard     user-core-data
+  evgb-dts          global-search-stream   message-push-service-2    ne-icev3-h5            vehicle-alert-service
+  ev-gb-gateway     global-search-sync     ne-config-server          ne-icev3-nservice      vehicle-core-data
+  evgb-rus          ime-idp                ne-eureka-server          ne-icev3-nservice-sub  vehicle-status-service
 ```
-## 创建新的NS ice-xxx
+## 将NS的TXT树转换为helm chart
 
-##  一键重建 中间件
 ```aidl
- $ helm  install --namespace ice-xxx  -n  release-20190128104320   -f values-middleware-all-in-one.yaml  .
- $ helm  upgrade  release-20190128104320  .    --install  -f values-middleware-all-in-one.yaml  --force
+./helm-maker/script/helm-gen/mk-rc-txt2helm.sh ./ice-v3-demo-20190130164720-x/  icev3
 ```
 ## 一键重建所有微服务 
 ```aidl
