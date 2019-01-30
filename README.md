@@ -90,14 +90,14 @@ SVC_NAME=`echo ${K8S_NS}.${HOSTNAME} | rev | cut -d'-'  -f 3- | rev`
 
 PPAGENT=`find /pp-agent/pinpoint-bootstra* |head -n 1`
 if [[ -n ${PPAGENT} ]];then
-  PINPOINT_OPTS="-javaagent:/pp-agent/pinpoint-bootstrap-1.7.2-SNAPSHOT.jar -Dpinpoint.agentId=${HOSTNAME:0:23} -Dpinpoint.applicationName=${SVC_NAME}"
+  PINPOINT_OPTS="-javaagent:${PPAGENT} -Dpinpoint.agentId=${HOSTNAME:0:23} -Dpinpoint.applicationName=${SVC_NAME}"
 fi
-# default JAVA_OPTS, you can RESET its value, use JAVA_OPTS="YOU-NEW-VALUE" in /cfg/env.txt" 
-# default JAVA_OPTS, you can APPEND its value, use JAVA_OPTS="${JAVA_OPTS} YOU-APPEND-VALUE" in /cfg/env.txt" 
 
 JAVA_OPTS=""
-#JAVA_OPTS="${PINPOINT_OPTS}"
 JAVA_OPTS="${JAVA_OPTS} ${PINPOINT_OPTS} -XX:+UseG1GC -XX:G1ReservePercent=20 -Xloggc:/logs/gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=2M -XX:-PrintGCDetails -XX:+PrintGCDateStamps -XX:-PrintTenuringDistribution "
+
+# default JAVA_OPTS, you can RESET its value, use JAVA_OPTS="YOU-NEW-VALUE" in /cfg/env.txt" 
+# default JAVA_OPTS, you can APPEND its value, use JAVA_OPTS="${JAVA_OPTS} YOU-APPEND-VALUE" in /cfg/env.txt" 
 echo "###default JAVA_OPTS=${JAVA_OPTS}"
 echo '###JAVA_OPTS, you can RESET its value, use JAVA_OPTS="YOU-NEW-VALUE" in /cfg/env.txt"'
 echo '###JAVA_OPTS, you can APPEND its value, use JAVA_OPTS="${JAVA_OPTS} YOU-APPEND-VALUE" in /cfg/env.txt" '
