@@ -32,23 +32,24 @@ elif [[ -n ${JENKINS_URL} ]];then
     BUILD_COUNTER="j${BUILD_NUMBER}"
 else
     echo "personal rc"
-    BUILD_COUNTER="none"
+    BUILD_COUNTER="x"
 fi
 
 
 ####################################################################
-CURDATE=$(date +%Y%m%d-%H-%M-%S)
+CURDATE=$(date +%Y%m%d%H%M%S)
 CATALOG_NAME="middleware"
 
 echo "CHART name set to ${CATALOG_NAME}"
 
 if [ $# -ge 1 ];then
-    VERSION=$(echo $1 | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "")   
+    GET_VERSION=$(echo $1 | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "")   
     echo "param1= $1"
+    VERSION=${GET_VERSION}-${CURDATE}-${BUILD_COUNTER}
 
 fi 
 if [[ -z ${VERSION} ]];then
-    VERSION=${CURDATE}-${BUILD_COUNTER}
+    VERSION=xxx-${CURDATE}-${BUILD_COUNTER}
 fi
 echo "CHART version set to ${VERSION}" 
 
@@ -67,6 +68,7 @@ keywords:
 - middleware
 home: https://www.nx-engine.com/
 icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-110x117.png
+uuid: $(uuidgen)
 sources:
 - https://www.nx-engine.com/
 maintainers:
