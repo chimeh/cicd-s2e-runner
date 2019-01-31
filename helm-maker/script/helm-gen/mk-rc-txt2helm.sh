@@ -153,7 +153,7 @@ echo "##############################################################"
 cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
 
 ################# post to repo
-if [ $# -gt 1 ];then
+if [ $# -gt 2 ];then
   echo "post to repo"
   rm -rf ${RCNAME}/../${CATALOG_NAME}
   /bin/cp -rf ${RCNAME} ${RCNAME}/../${CATALOG_NAME}
