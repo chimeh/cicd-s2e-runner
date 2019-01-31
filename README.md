@@ -12,37 +12,22 @@ helm-release-tool 有以下特点:
 * 所有微服务的部署配置放在统一的单个valuesfile `values-release-apps.yaml`
 * 每个服务的镜像环境变量拆分两部分, 可配置的`values-release-apps.yaml`与固定的`charts/{XXX}/files/env.txt`
 
-# NS 发布与重建举例
-##  确认 K8S 连接
+# NS 导出成helm chart 命令
 ```aidl
-$ kubectl cluster-info 
-Kubernetes master is running at https://rancher.ops/k8s/clusters/c-rlgsl
-KubeDNS is running at https://rancher.ops/k8s/clusters/c-rlgsl/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+# 确认 helm 工具可以连接K8S
+helm init
+# 删除 k8s-ns-apps-export.sh 导出的NS的 TXT树
+rm -rf export-*
+# 删除 mk-rc-txt2helm.sh  生成的helm chart
+rm -rf icev3-*
+#利用工具导出NS的TXT树,包含了每个服务的img/env/服务名等关键信息
+bash  ./helm-maker/script/k8s-exporter/k8s-ns-apps-export.sh  ice-v3-demo
+# 根据需要修改导出的TXT树, 比如修改某些服务的env配置/mg版本
+# 获取NS的TXT树的目录名
+export_tree=`find . -maxdepth 1  -name export*`
+# 将NS的TXT树转换成单个helm chart
+bash  ./helm-maker/script/helm-gen/mk-rc-txt2helm.sh ${export_tree} icev3
 ```
-##  利用工具导出NS的TXT树,包含了每个服务的img/env/服务名等关键信息
-```aidl
-$ ./helm-maker/script/k8s-exporter/k8s-ns-apps-export.sh  ice-v3-demo
-```
-ice-v3-demo-20190130164720-x/就是NS ice-v3-demo的信息树
-```aidl
-$ [root@localhost icev3]# ls ice-v3-demo-20190130164720-x/
-  common-data       ev-gb-tcu              location-data-service     ne-evgb-dashboard      ne-inside-gateway
-  ev-gb-center      ev-gb-uploader         message-center-service    ne-evgb-nservice       remote-service
-  ev-gb-dispatcher  file-service           message-center-service-2  ne-external-gateway    simu-ve
-  evgb-dtc          global-search-service  message-push-service      ne-icev3-dashboard     user-core-data
-  evgb-dts          global-search-stream   message-push-service-2    ne-icev3-h5            vehicle-alert-service
-  ev-gb-gateway     global-search-sync     ne-config-server          ne-icev3-nservice      vehicle-core-data
-  evgb-rus          ime-idp                ne-eureka-server          ne-icev3-nservice-sub  vehicle-status-service
-```
-## 将NS的TXT树转换为helm chart
-
-```aidl
-$ ./helm-maker/script/helm-gen/mk-rc-txt2helm.sh ./ice-v3-demo-20190130164720-x/  icev3
-$ ls
-export-ice-v3-demo  helm-maker  icev3-20190130174929-x  icev3-20190130174929-x.tgz  ice-v3-demo-20190130164720-x  README.md
-```
-icev3-20190130174929-x.tgz 就是转换后的helm chart
-
 
 # 目录结构
 ```
