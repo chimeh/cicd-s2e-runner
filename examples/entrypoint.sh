@@ -1,6 +1,6 @@
 #!/bin/sh
 # inject config data into container
-#@author jimin.huang
+#@author jimin.huang@nx-engine.com
 
 set -e
 if [[ -f /usr/share/zoneinfo/Asia/Shanghai ]];then
@@ -34,6 +34,27 @@ fi
 SVC_NAME=`echo ${K8S_NS}.${HOSTNAME} | rev | cut -d'-'  -f 3- | rev`
 
 echo "detect NS ${K8S_NS} SVC ${SVC_NAME}"
+
+echo -n '
+#!/bin/sh
+if [[ -f /cfg/env.txt ]];then  
+    # first run
+    if [[ ! -f /tmp/env.pre.md5 ]];then
+        md5sum  /cfg/env.txt > /tmp/env.pre.md5
+        exit 0
+    else
+        md5sum  /cfg/env.txt > /tmp/env.now.md5
+        diff env.pre.md5 env.now.md5
+        # cfg change
+        ret=$?
+        if [[ ${ret} -ne 0 ]];then
+            exit 1
+        fi
+        /bin/cp -f /tmp/env.now.md5 /tmp/env.pre.md5
+     fi
+fi
+' > /tmp/healthy.sh
+chmod +x /tmp/healthy.sh
 
 if [[ ! -z "$(which java)" ]];then
     PPAGENT=`find /pp-agent/pinpoint-bootstra* |head -n 1`
