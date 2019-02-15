@@ -110,7 +110,7 @@ global:
       domain: okd.cd
     public:
       annotations-ingress-class: kong-ingress-public
-      domain: nx-code.com
+      domain: nxengine.cn
   containers:
     securityContext:
       privileged: true
