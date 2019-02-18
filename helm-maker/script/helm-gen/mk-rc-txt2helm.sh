@@ -143,7 +143,7 @@ ${name}:
 EOF
 if [[ -f ${TXTDIR}/${name}/env.txt ]];then
    echo ${TXTDIR}/${name}/env.txt
-    perl -ne "print ' ' x 6;print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/${vaule_filename}
+    perl -ne "chomp(\$_);print ' ' x 6;print \$_;print qq(\n);" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/${vaule_filename}
 fi
 done
 
