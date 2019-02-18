@@ -31,12 +31,18 @@ spec:
       - image:   {{ index .Values (include "xxxxxx.name" .) "image" }}
         imagePullPolicy: IfNotPresent
         name: {{ template "xxxxxx.name" . }}
+        {{- if (index .Values "global") }}
+        {{- if (index .Values "global" "containers") }}
+        {{- if (index .Values "global" "containers" "livenessProbe") }}
         livenessProbe:
           exec:
             command:
             - sh
             - -c
             - if [[ -f /tmp/healthy.sh ]];then . /tmp/healthy.sh;fi
+        {{- end }}
+        {{- end }}
+        {{- end }}
         {{- if (.Files.Glob "files/override-entrypoint.sh") }}
         command:
         - /cfg/override-entrypoint.sh
