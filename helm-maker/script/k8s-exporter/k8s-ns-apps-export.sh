@@ -69,6 +69,7 @@ while read i; do
     img=`kubectl get -n ${SRC_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
     echo ${img} > ${RCNAME}/${name}/img.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' > ${RCNAME}/${name}/env.txt
+    echo 'JAVA_TOOL_OPTIONS="-Xms384m -Xmx512m"' >> ${RCNAME}/${name}/env.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.default-entrypoint\.sh}' 2>/dev/null > ${RCNAME}/${name}/default-entrypoint.sh
     if [[ $(wc -l ${RCNAME}/${name}/default-entrypoint.sh  | awk '{print $1}') -lt 1 ]];then
       rm -f  ${RCNAME}/${name}/default-entrypoint.sh
