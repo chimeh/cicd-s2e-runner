@@ -132,12 +132,24 @@ ${name}:
       public: 
         enabled: true
         host: {}
+    image: $img
     service:
       type: LoadBalancer
+EOF
+if [[ ${name} == "ev-gb-gateway" ]];then
+cat >> ${RCNAME}/${vaule_filename} <<EOF
+      ports:
+        - 8111
+        - 8080
+EOF
+else
+cat >> ${RCNAME}/${vaule_filename} <<EOF
       ports:
         - 80
         - 8080
-    image: $img
+EOF
+fi
+cat >> ${RCNAME}/${vaule_filename} <<EOF
     env.txt: |
       #from ${vaule_filename}
 EOF
