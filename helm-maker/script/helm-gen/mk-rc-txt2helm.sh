@@ -165,6 +165,7 @@ echo "##############################################################"
 cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
 
 ################# post to repo
+#http://charts.ops/api/charts
 if [ $# -gt 2 ];then
   echo "post to repo"
   rm -rf ${RCNAME}/../${CATALOG_NAME}
@@ -172,6 +173,6 @@ if [ $# -gt 2 ];then
   cd ${RCNAME}/..
   helm package ${CATALOG_NAME}
   rm -rf ${RCNAME}/../${CATALOG_NAME}
-  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" http://charts.ops/api/charts
+  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" $3
 
 fi
