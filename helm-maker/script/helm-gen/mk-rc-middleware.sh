@@ -28,26 +28,26 @@ echo TRYTOP=$TRYTOP
 
 if [[ -n ${TEAMCITY_GIT_PATH} ]];then
     echo "Run on Teamcity"
-    BUILD_COUNTER="t${BUILD_NUMBER}"
+    BUILD_COUNTER="-t${BUILD_NUMBER}"
 elif [[ -n ${JENKINS_URL} ]];then
     echo "Run on Jenkins CI"
-    BUILD_COUNTER="j${BUILD_NUMBER}"
+    BUILD_COUNTER="-j${BUILD_NUMBER}"
 else
     echo "personal rc"
-    BUILD_COUNTER="x"
+    BUILD_COUNTER=""
 fi
 
 
 ####################################################################
 CURDATE=$(date +%Y%m%d%H%M%S)
-CATALOG_NAME="middleware"
+CATALOG_NAME="$1"
 
 echo "CHART name set to ${CATALOG_NAME}"
 
 #GET_VERSION=$(echo $1 | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "")   
 
 if [[ -z ${VERSION} ]];then
-    VERSION=${CURDATE}-${BUILD_COUNTER}
+    VERSION=${CURDATE}${BUILD_COUNTER}
 fi
 echo "CHART version set to ${VERSION}" 
 
@@ -127,7 +127,7 @@ EOF
 cat ${MW_VALUEFILE} >> ${RCNAME}/values.yaml
 
 ################# post to repo
-if [ $# -ge 1 ];then
+if [ $# -ge 2 ];then
   echo "post to repo"
   rm -rf ${RCNAME}/../${CATALOG_NAME}
   /bin/cp -rf ${RCNAME} ${RCNAME}/../${CATALOG_NAME}
