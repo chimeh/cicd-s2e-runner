@@ -27,13 +27,13 @@ echo TRYTOP=$TRYTOP
 
 if [[ -n ${TEAMCITY_GIT_PATH} ]];then
     echo "Run on Teamcity"
-    BUILD_COUNTER="t${BUILD_NUMBER}"
+    BUILD_COUNTER="-t${BUILD_NUMBER}"
 elif [[ -n ${JENKINS_URL} ]];then
     echo "Run on Jenkins CI"
-    BUILD_COUNTER="j${BUILD_NUMBER}"
+    BUILD_COUNTER="-j${BUILD_NUMBER}"
 else
     echo "personal rc"
-    BUILD_COUNTER="x"
+    BUILD_COUNTER=""
 fi
 
 ####################################################################
@@ -43,18 +43,20 @@ if [ $# -lt 1 ];then
   exit 1;
 fi
 if [ $# -ge 2 ];then
-  CATALOG_NAME=$(echo $2 | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "")
+#  CATALOG_NAME=$(echo $2 | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._-][a-z][A-Z]" "")
+  CATALOG_NAME=$(echo $2 | tr '[A-Z]' '[a-z]')
 else
-  CATALOG_NAME=$(echo $(basename $1) | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "")
+#  CATALOG_NAME=$(echo $(basename $1) | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "")
+  CATALOG_NAME=$(echo $(basename $1) | tr '[A-Z]' '[a-z]' )
 fi
 
-VERSION=${CURDATE}-${BUILD_COUNTER}
+VERSION=${CURDATE}${BUILD_COUNTER}
 
 echo "CHART name set to ${CATALOG_NAME} ${VERSION}"
 
 
 TXTDIR=$(realpath ${1})
-RCNAME=${TRYTOP}/../${CATALOG_NAME}-${VERSION}
+RCNAME=${TRYTOP}/../${CATALOG_NAME}-helm-${VERSION}
 vaule_filename=values-release-txt2helm.yaml
 commonchartversion=1.0
 echo "${CATALOG_NAME}-${VERSION}"
@@ -69,7 +71,7 @@ description: gen helm from  $(basename $1)
 keywords:
 - $(basename $1)
 home: https://www.nx-engine.com/
-icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-110x117.png
+icon: https://www.nx-engine.com/img/36577051900299436.png
 sources:
 - https://www.nx-engine.com/
 maintainers:
@@ -88,6 +90,11 @@ for i in `/bin/ls ${TXTDIR}`;do \
     if [[ -f ${TXTDIR}/${name}/env.txt ]];then
        echo ${TXTDIR}/${name}/env.txt
         perl -ne "print ' ' x 1;print '#';print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/$name/files/env.txt
+    fi
+    if [[ ${name} == "ne-config-server" ]];then
+       echo ${TXTDIR}/${name}/env.txt
+       echo "" >> ${RCNAME}/charts/$name/files/initdata/xxx-service1.yaml
+       echo "" >> ${RCNAME}/charts/$name/files/initdata/xxx-service2.yaml
     fi
     perl -ni -e "s/^name:.+/name: ${name}/g;print" ${RCNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^version:.+/version: ${commonchartversion}/g;print" ${RCNAME}/charts/$name/Chart.yaml

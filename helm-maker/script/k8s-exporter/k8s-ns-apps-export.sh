@@ -26,13 +26,13 @@ echo TRYTOP=$TRYTOP
 
 if [[ -n ${TEAMCITY_GIT_PATH} ]];then
     echo "Run on Teamcity"
-    BUILD_COUNTER="t${BUILD_NUMBER}"
+    BUILD_COUNTER="-t${BUILD_NUMBER}"
 elif [[ -n ${JENKINS_URL} ]];then
     echo "Run on Jenkins CI"
-    BUILD_COUNTER="j${BUILD_NUMBER}"
+    BUILD_COUNTER="-j${BUILD_NUMBER}"
 else
     echo "personal rc"
-    BUILD_COUNTER="x"
+    BUILD_COUNTER=""
 fi
 
 
@@ -44,10 +44,10 @@ if [ $# -lt 1 ];then
 fi
 SRC_NS=$1
 CURDATE=$(date +%Y%m%d%H%M%S)
-VERSION=${CURDATE}-${BUILD_COUNTER}
+VERSION=${CURDATE}${BUILD_COUNTER}
 echo "NS ${SRC_NS} ${VERSION}"
 
-RCNAME=${TRYTOP}/../export-${SRC_NS}-${VERSION}
+RCNAME=${TRYTOP}/../${SRC_NS}-${VERSION}-txt
 echo "${SRC_NS}-${CURDATE}"
 echo "${RCNAME}"
 
@@ -68,6 +68,7 @@ while read i; do
     mkdir -p ${RCNAME}/${name}
     img=`kubectl get -n ${SRC_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
     echo ${img} > ${RCNAME}/${name}/img.txt
+    perl -ni -e "s@harbor.nxe.local@harbor-chengdu.nx-engine.com@g;print"   ${RCNAME}/${name}/img.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' > ${RCNAME}/${name}/env.txt
     echo -e '\nJAVA_TOOL_OPTIONS="-Xms384m -Xmx512m"' >> ${RCNAME}/${name}/env.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.default-entrypoint\.sh}' 2>/dev/null > ${RCNAME}/${name}/default-entrypoint.sh
