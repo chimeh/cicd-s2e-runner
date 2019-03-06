@@ -1,3 +1,5 @@
 persistence:
   enabled: false
   size: 3Gi
+service:
+  type: LoadBalancer

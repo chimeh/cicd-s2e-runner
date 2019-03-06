@@ -8,6 +8,15 @@ metadata:
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
 spec:
+  {{- if (index .Values "service") }}
+  {{- if (index .Values "service" "type") }}
+  type: {{ .Values.service.type }}
+  {{- else }}
+  type: ClusterIP
+  {{- end }}
+  {{- else }}
+  type: ClusterIP
+  {{- end }}
   ports:
   - name: elasticsearch
     port: 9200

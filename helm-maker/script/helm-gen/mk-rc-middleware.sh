@@ -110,7 +110,7 @@ cat  >>  ${MW_VALUEFILE} <<EOF
   ${name}:
     enabled: false
 EOF
-perl  -ne 'print "    $_"' ${MWDIR}/${name}/values-single.yaml  >>  ${MW_VALUEFILE}
+perl -ne "chomp(\$_);print ' ' x 4;print \$_;print qq(\n);" ${MWDIR}/${name}/values-single.yaml  >>  ${MW_VALUEFILE}
 done 
 
 

@@ -3,6 +3,8 @@ rootPassword: root
 persistence:
   enabled: false
   size: 3Gi
+service:
+  type: LoadBalancer
 
 mysqld.cnf: |
   [mysqld]
