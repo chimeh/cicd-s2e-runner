@@ -149,6 +149,12 @@ cat >> ${RCNAME}/${vaule_filename} <<EOF
         - 8111
         - 8080
 EOF
+elif [[ ${name} == "simu-ve" ]];then
+cat >> ${RCNAME}/${vaule_filename} <<EOF
+      ports:
+        - 8080
+        - 5000
+EOF
 else
 cat >> ${RCNAME}/${vaule_filename} <<EOF
       ports:
