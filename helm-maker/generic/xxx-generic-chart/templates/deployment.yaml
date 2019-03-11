@@ -59,7 +59,7 @@ spec:
         {{- end}}
         resources:
           limits:
-            memory: 1536Mi
+            memory: 512Mi
           requests:
             memory: 256Mi
           {{- if (index .Values "global") }}
