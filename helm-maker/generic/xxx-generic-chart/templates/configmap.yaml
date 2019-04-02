@@ -11,11 +11,9 @@ metadata:
     heritage: {{ .Release.Service | quote }}
 data:
   env.txt: |
-    ##from template env.txt##
 {{- if (.Files.Glob "files/env.txt") }}
 {{ .Files.Get "files/env.txt" | indent 4 }}
 {{- end }}
-    ##from valuefile##
 {{- if and (index .Values (include "xxxxxx.name" .)) (index .Values (include "xxxxxx.name" .) "env.txt") }}
 {{ index .Values (include "xxxxxx.name" .) "env.txt" | indent 4 }}
 {{- end -}}
