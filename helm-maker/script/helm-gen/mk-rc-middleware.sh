@@ -2,7 +2,7 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 # generate helm template for middleware
-echo " usage: $0  [POSTTOREPO]
+echo " usage: $0  [NEWNAME] [POST2REPO]
 "
 
 ###################################################################
@@ -134,4 +134,5 @@ if [ $# -ge 2 ];then
   cd ${RCNAME}/..
   helm package ${CATALOG_NAME}
   curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" http://charts.ops/api/charts
+  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" https://helm-charts.nx-engine.com/api/charts
 fi
