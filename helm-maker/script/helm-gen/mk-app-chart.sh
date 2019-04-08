@@ -2,8 +2,8 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 #convert txtdir to helm 
-USAGE="usage: $0  IMG SVCNAME K8S_NS [PORTS: 80,8080,...] [AUTODEPLOY:0|1]
-       usage: $0 docker.io/nginx:latest nginx  default 80,8080  1"
+USAGE="usage: $0  IMG SVCNAME K8S_NS [PORTS: 80,8080,...] [AUTODEPLOY:0|1] [DOMAIN_INTERNAL] [DOMAIN_PUBLIC]
+       usage: $0 docker.io/nginx:latest nginx  default 80,8080  1 dev-k8s.tx e-engine.cn"
 echo "${USAGE}"
 ###################################################################
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
@@ -23,11 +23,17 @@ WORKDIR=$(pwd)
 if [[ -z ${TRYTOP} ]];then
 TRYTOP=${WORKDIR}
 fi
+if [[ $# -gt 5 ]];then
+    DOMAIN_INTERNAL=$6
+fi
+if [[ $# -gt 6 ]];then
+    DOMAIN_PUBLIC=$7
+fi
 if [[ -z ${DOMAIN_INTERNAL} ]];then
     DOMAIN_INTERNAL=okd.cd
 fi
 if [[ -z ${DOMAIN_PUBLIC} ]];then
-    DOMAIN_PUBLIC=nxengine.cn
+    DOMAIN_PUBLIC=e-engine.cn
 fi
 
 ####################################################################
@@ -112,7 +118,7 @@ for i in ${SVCNAME};do \
     name=$i
     echo "gen charts for ${name}"
     img=${IMG}
-    /bin/cp -rf  ${SCRIPT_DIR}/generic/xxx-generic-chart ${APPNAME}/charts/$name
+    /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${APPNAME}/charts/$name
     if [[ -n ${K8S_NS} ]];then
        echo "get env.txt from ${K8S_NS} "
        touch ${APPNAME}/charts/${name}/env.txt.old

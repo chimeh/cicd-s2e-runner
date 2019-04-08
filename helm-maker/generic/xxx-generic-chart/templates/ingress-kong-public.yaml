@@ -20,7 +20,7 @@ metadata:
     {{- end }}
     {{- end }}
   labels:
-    qcloud-app: {{ template "xxxxxx.name" . }}
+    app: {{ template "xxxxxx.name" . }}
   name: {{ template "xxxxxx.name" . }}-public
 spec:
   rules:
