@@ -5,7 +5,7 @@ kind: ConfigMap
 metadata:
   name: {{ template "xxxxxx.fullname" . }}-initdata
   labels:
-    app: {{ template "xxxxxx.name" . }}
+    qcloud-app: {{ template "xxxxxx.name" . }}
     chart: {{ template "xxxxxx.chart" . }}
     release: {{ .Release.Name | quote }}
     heritage: {{ .Release.Service | quote }}

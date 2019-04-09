@@ -67,7 +67,7 @@ cat >> ${RCNAME}/Chart.yaml <<EOF
 name: ${CATALOG_NAME}
 version: ${VERSION}
 appVersion: 0.1
-description: gen helm from  $(basename $1)
+description: gen helm from  $(basename $1) ${VERSION}
 keywords:
 - $(basename $1)
 home: https://www.nx-engine.com/
@@ -89,7 +89,7 @@ for i in `/bin/ls ${TXTDIR}`;do \
     /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${RCNAME}/charts/$name
     if [[ -f ${TXTDIR}/${name}/env.txt ]];then
        echo ${TXTDIR}/${name}/env.txt
-        perl -ne "print ' ' x 1;print '#';print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/$name/files/env.txt
+        perl -ne "print ' ' x 0;print '#';print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/$name/files/env.txt
     fi
     if [[ ${name} == "ne-config-server" ]];then
        echo ${TXTDIR}/${name}/env.txt
@@ -141,7 +141,7 @@ ${name}:
         host: {}
     image: $img
     service:
-      type: LoadBalancer
+      type: ClusterIP
 EOF
 if [[ ${name} == "ev-gb-gateway" ]];then
 cat >> ${RCNAME}/${vaule_filename} <<EOF
@@ -155,6 +155,11 @@ cat >> ${RCNAME}/${vaule_filename} <<EOF
         - 8080
         - 5000
 EOF
+elif [[ -f ${TXTDIR}/${name}/ports.txt ]];then
+cat >> ${RCNAME}/${vaule_filename} <<EOF
+      ports:
+        - $(perl -ne "chomp(\$_);print ' ' x 0;print \$_;print qq(\n);" ${TXTDIR}/${name}/ports.txt | head -n 1)
+EOF
 else
 cat >> ${RCNAME}/${vaule_filename} <<EOF
       ports:
@@ -165,6 +170,7 @@ fi
 cat >> ${RCNAME}/${vaule_filename} <<EOF
     env.txt: |
       #from ${vaule_filename}
+      JAVA_TOOL_OPTIONS="-Xms384m -Xmx512m"
 EOF
 if [[ -f ${TXTDIR}/${name}/env.txt ]];then
    echo ${TXTDIR}/${name}/env.txt
@@ -186,6 +192,7 @@ if [ $# -gt 2 ];then
   cd ${RCNAME}/..
   helm package ${CATALOG_NAME}
   rm -rf ${RCNAME}/../${CATALOG_NAME}
+  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" https://helm-charts.nx-engine.com/api/charts
   curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" $3
 
 fi

@@ -6,7 +6,7 @@ kind: Service
 metadata:
   name: {{ template "xxxxxx.fullname" . }}
   labels:
-    app: {{ template "xxxxxx.name" . }}
+    qcloud-app: {{ template "xxxxxx.name" . }}
     chart: {{ template "xxxxxx.chart" . }}
     release: {{ .Release.Name | quote }}
     heritage: {{ .Release.Service | quote }}
@@ -30,7 +30,7 @@ spec:
     protocol: TCP
   {{- end}}
   selector:
-    app: {{ template "xxxxxx.name" . }}
+    qcloud-app: {{ template "xxxxxx.name" . }}
   sessionAffinity: None
 {{- end }}
 {{- end }}

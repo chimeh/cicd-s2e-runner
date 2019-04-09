@@ -5,17 +5,15 @@ kind: ConfigMap
 metadata:
   name: {{ template "xxxxxx.fullname" . }}
   labels:
-    app: {{ template "xxxxxx.name" . }}
+    qcloud-app: {{ template "xxxxxx.name" . }}
     chart: {{ template "xxxxxx.chart" . }}
     release: {{ .Release.Name | quote }}
     heritage: {{ .Release.Service | quote }}
 data:
   env.txt: |
-    
 {{- if (.Files.Glob "files/env.txt") }}
 {{ .Files.Get "files/env.txt" | indent 4 }}
 {{- end }}
-    
 {{- if and (index .Values (include "xxxxxx.name" .)) (index .Values (include "xxxxxx.name" .) "env.txt") }}
 {{ index .Values (include "xxxxxx.name" .) "env.txt" | indent 4 }}
 {{- end -}}

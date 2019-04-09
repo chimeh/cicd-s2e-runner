@@ -133,7 +133,7 @@ ${name}:
         enabled: true
         host: {}
     service:
-      type: LoadBalancer
+      type: ClusterIP
       ports:
         - 80
         - 8080

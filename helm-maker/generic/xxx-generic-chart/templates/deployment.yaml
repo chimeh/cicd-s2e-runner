@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: "{{ template "xxxxxx.fullname" . }}"
   labels:
-    app: "{{ template "xxxxxx.name" . }}"
+    qcloud-app: "{{ template "xxxxxx.name" . }}"
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -15,7 +15,7 @@ spec:
   {{- end}}
   selector:
     matchLabels:
-      app: {{ template "xxxxxx.name" . }}
+      qcloud-app: {{ template "xxxxxx.name" . }}
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "xxxxxx.name" . }}
+        qcloud-app: {{ template "xxxxxx.name" . }}
         release: {{ .Release.Name }}
     spec:
       containers:
@@ -59,9 +59,11 @@ spec:
         {{- end}}
         resources:
           limits:
-            memory: 1Gi
+            cpu: 200m
+            memory: 768Mi
           requests:
-            memory: 256Mi
+            cpu: 200m
+            memory: 768Mi
           {{- if (index .Values "global") }}
           {{- if (index .Values "global" "containers") }}
           {{- if (index .Values "global" "containers" "securityContext") }}
