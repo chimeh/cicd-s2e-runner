@@ -36,6 +36,7 @@ EOF
 fi
 
 echo "##########################################"
+echo "TRYTOP=${TRYTOP}"
 env |egrep -v LS_COLORS
 echo "##########################################"
 echo "start build"
