@@ -170,7 +170,7 @@ fi
 echo "DOCKFILE=${DOCKFILE}"
 echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
 
-SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' | awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ni "s/(.+)\,$/\1/g;print" )
+SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
 
 if [[ -z ${SVC_PORTS} ]];then
     echo "warn, no EXPOSE in ${DOCKFILE}"
