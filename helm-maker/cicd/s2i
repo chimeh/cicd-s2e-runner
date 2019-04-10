@@ -1,8 +1,29 @@
-#!/bin/bash -xv
+#!/bin/bash
 #author: jimin.huang
 #email: jimin.huang@nx-engine.com
+USAGE="usage: $0 /path/to/srctop
+       usage: $0 "
+echo "${USAGE}"
+###################################################################
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+TRYTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do \
+        xdir=`cd ../;pwd`;                       \
+        if [ "$xdir" = "/" ] ; then             \
+           echo  1>&2; \
+           break;                              \
+        fi ;                                    \
+        cd $xdir;                               \
+        done ;                                  \
+        pwd;)
 
-if [[ $# -ne 1 ]];then
+WORKDIR=$(pwd)
+if [[ -z ${TRYTOP} ]];then
+TRYTOP=${WORKDIR}
+fi
+
+if [[ $# -lt 1 ]];then
     cat <<EOF
     usage:
     a build runner for java|nodejs|... source
@@ -12,27 +33,12 @@ if [[ $# -ne 1 ]];then
 EOF
     exit 1
 fi
+
+echo "##########################################"
+env |egrep -v LS_COLORS
+echo "##########################################"
 echo "start build"
 GAVE_SRC_TOP=$(realpath $1)
-export NEXUS_REPO='http://maven-hh.nxengine.cn/repository/maven-public/'
-export NEXUS_RELEASE='http://maven-hh.nxengine.cn/repository/maven-releases/'
-
-#PAAS_SPEC_URL=http://git.nx-code.com/paas/specs.git
-
-echo "PWD=$(realpath `pwd`)"
-echo "##########################################"
-env
-echo "##########################################"
-if [[ -z ${DOCKER_REPO} ]];then
-    DOCKER_REPO=${DOCKER_REPO:-docker-hh.nxengine.cn}
-fi
-if [[ -z ${DOCKER_NS} ]];then
-    DOCKER_NS=iov
-fi
-
-echo "DOCKER_REPO=${DOCKER_REPO}"
-echo "DOCKER_NS=${DOCKER_NS}"
-
 
 # try to guest java or nodejs
 echo "auto try to detect java or nodejs source and its topdir"
@@ -67,7 +73,10 @@ elif [[ -n $(eval ${DETECT_DEFAULT_TOP}) ]];then
     SRC_TYPE=none
     SRC_VERSION="v"
 else
+    SRC_TYPE=none
+    SRC_VERSION="cant-detect-version"
     echo "Error can't detect SRC_TOP !!!!"
+    exit 1
 fi
 SRC_GIT_COMMIT_ID="-$(cd ${SRC_TOP};git rev-parse --short HEAD )"
 if [[ -n ${TEAMCITY_GIT_PATH} ]];then
@@ -85,36 +94,66 @@ elif [[ -n ${GITLAB_CI} ]];then
 else
     echo "can't detect name"
     DOCKER_IMAGE_NAME=$(basename $(realpath ${SRC_TOP}))
-    BUILD_COUNTER="-1"
+    BUILD_COUNTER="-custom-1"
 fi
+
+echo "##########################################"
+echo "SRC_TOP=${SRC_TOP}"
+echo "SRC_TYPE=${SRC_TYPE}"
+echo "SRC_VERSION=${SRC_VERSION}"
+echo "SRC_VERSION=${SRC_VERSION}"
 echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}"
 echo "BUILD_COUNTER=${BUILD_COUNTER}"
-
-if [[ -z ${SRC_VERSION} ]]; then
-    SRC_VERSION="cant-detect-version"
+echo "SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
+if [[ -z ${NEXUS_REPO} ]];then
+    NEXUS_REPO=${NEXUS_REPO:-'http://nexus.nx-code.com/content/groups/ne-server-maven'}
 fi
-
-if [[ -z ${SVCNAMES} ]];then
-    SVCNAMES=${DOCKER_IMAGE_NAME}
+    export NEXUS_REPO
+if [[ -z ${NEXUS_RELEASE} ]];then
+    export NEXUS_RELEASE=${DOCKER_REPO:-'http://nexus.nx-code.com/content/repositories/ne-server-maven-release'}
+fi
+    export NEXUS_RELEASE
+if [[ -z ${NEXUS_SNAPSHOT} ]];then
+    export NEXUS_SNAPSHOT=${DOCKER_REPO:-'http://nexus.nx-code.com/content/repositories/ne-server-maven-snapshot'}
+fi
+    export NEXUS_SNAPSHOT
+if [[ -z ${DOCKER_REPO} ]];then
+    DOCKER_REPO=${DOCKER_REPO:-harbor-chengdu.nx-engine.com}
+fi
+if [[ -z ${DOCKER_NS} ]];then
+    DOCKER_NS=ice
+fi
+if [[ -z ${K8S_AUTOCD} ]];then
+    K8S_AUTOCD=0
 fi
 if [[ -z ${K8S_NS} ]];then
-    K8S_NS=iov-dev
+    K8S_NS=icev3-dev
 fi
-echo "SVCNAMES=${DOCKER_IMAGE_NAME}"
-echo " SVCNAMES=${DOCKER_NS}"
+if [[ -z ${K8S_SVCNAMES} ]];then
+    K8S_SVCNAMES=${DOCKER_IMAGE_NAME}
+fi
+if [[ -z ${K8S_DOMAIN_INTERNAL} ]];then
+    K8S_DOMAIN_INTERNAL=okd.cd
+fi
+if [[ -z ${K8S_DOMAIN_PUBLIC} ]];then
+    K8S_DOMAIN_PUBLIC=nxengine.cn
+fi
+echo "##########################################"
+echo "NEXUS_REPO=${NEXUS_REPO}"
+echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
+echo "DOCKER_REPO=${DOCKER_REPO}"
+echo "DOCKER_NS=${DOCKER_NS}"
+echo "K8S_AUTOCD=${K8S_AUTOCD}"
+echo "K8S_NS=${DOCKER_NS}"
+echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
+echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
+echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
 
 
-echo "SRC_TYPE=${SRC_TYPE}"
-echo "SRC_TOP=${SRC_TOP}"
-echo "SRC_VERSION=${SRC_VERSION}"
-echo "SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
 echo "##########################################"
-ls -lh ${SRC_TOP}/*
+#ls -lh ${SRC_TOP}/*
 echo "##########################################"
-#PAAS_SPEC_TOP=${SRC_TOP}/.paas_spec
-#rm -rf ${PAAS_SPEC_TOP}
-#mkdir -p ${PAAS_SPEC_TOP}
-#git clone ${PAAS_SPEC_URL} ${PAAS_SPEC_TOP}
+
 
 echo "detect Dockerfile"
 DETECT_DOCKERFILE="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname Dockerfile"
@@ -126,15 +165,21 @@ else
     echo "can't detect Dockerfile"
     exit -1
 fi
-egrep EXPOSE  -r ${DOCKFILE}
-if [[ $? -ne 0 ]];then
-    echo "EXPOSE 80" >>  ${DOCKFILE}
-    echo "EXPOSE 8080" >>  ${DOCKFILE}
+echo "DOCKFILE=${DOCKFILE}"
+echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
+
+SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' | awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ni "s/(.+)\,$/\1/g;print" )
+
+if [[ -z ${SVC_PORTS} ]];then
+    echo "warn, no EXPOSE in ${DOCKFILE}"
+    SVC_PORTS=80
 fi
+echo "##########################################"
 DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMAGE_NAME}:${SRC_VERSION}${BUILD_COUNTER}
 echo "DOCKFILE=${DOCKFILE}"
 echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
 echo "DOCKER_URL=${DOCKER_URL}"
+echo "SVC_PORTS=${SVC_PORTS}"
 
 function do_nodejs_s2i()
 {
@@ -182,14 +227,13 @@ echo "##########################################"
 docker build -f ${DOCKFILE} -t ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${SRC_TOP}
 docker tag ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
 
-#k8s_templatemaker.py  -t deployment -i  ${DOCKER_URL} -n  ${DOCKER_IMAGE_NAME} > deployment.yaml
-#k8s_templatemaker.py  -t service -i  ${DOCKER_URL} -n  ${DOCKER_IMAGE_NAME} > service.yaml
-#kubectl apply -f deployment.yaml -n iov-dev
-#kubectl apply -f services.yaml -n iov-dev
 
 
 docker push ${DOCKER_URL}
 docker rmi ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER}
-for SVCNAME in ${SVCNAMES};do
-    bash /data/icev3-helm-chart/helm-maker/script/helm-gen/mk-app-chart.sh ${DOCKER_URL} ${SVCNAME} ${K8S_NS} 8080 1
-done
+set -xv
+if [ ${K8S_AUTOCD} -gt 0 ];then
+    for SVCNAME in ${K8S_SVCNAMES};do
+        bash ${TRYTOP}/script/helm-gen/mk-app-chart.sh ${DOCKER_URL} ${SVCNAME} ${K8S_NS} ${SVC_PORTS} ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
+    done
+fi

@@ -2,7 +2,7 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 #convert txtdir to helm 
-USAGE="usage: $0  IMG SVCNAME K8S_NS [PORTS: 80,8080,...] [AUTODEPLOY:0|1] [DOMAIN_INTERNAL] [DOMAIN_PUBLIC]
+USAGE="usage: $0  IMG SVCNAME K8S_NS [PORTS: 80,8080,...] [K8S_AUTOCD:0|1] [DOMAIN_INTERNAL] [DOMAIN_PUBLIC]
        usage: $0 docker.io/nginx:latest nginx  default 80,8080  1 dev-k8s.tx e-engine.cn"
 echo "${USAGE}"
 ###################################################################
@@ -51,9 +51,9 @@ else
     PORTS=8080
 fi
 if [[ $# -gt 4 ]];then
-    AUTODEPLOY=1
+    K8S_AUTOCD=$4
 else
-    AUTODEPLOY=0
+    K8S_AUTOCD=$4
 fi
 
 CATALOG_NAME=$(echo ${SVCNAME} | tr '[A-Z]' '[a-z]')
@@ -64,7 +64,7 @@ COMMONCHARTVERSION=1.0
 echo "IMG=${IMG}"
 echo "SVCNAME=${SVCNAME}"
 echo "K8S_NS=${K8S_NS}"
-echo "AUTODEPLOY=${AUTODEPLOY}"
+echo "K8S_AUTOCD=${K8S_AUTOCD}"
 echo "CATALOG_NAME=${CATALOG_NAME}"
 echo "VERSION=${VERSION}"
 echo "APPNAME=${APPNAME}"
@@ -200,7 +200,7 @@ EOF
 done
 /bin/cp -f ${APPNAME}/${VAULE_FILENAME}  ${APPNAME}/values.yaml
 echo "###########################################helm chart gen done"
-if [[ ${AUTODEPLOY} -gt 0 ]];then
+if [[ ${K8S_AUTOCD} -gt 0 ]];then
    echo "###########################################auto deploy"
    helm upgrade  --install  --namespace ${K8S_NS} ${SVCNAME} ${APPNAME}
 fi

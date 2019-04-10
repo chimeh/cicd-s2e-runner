@@ -1,0 +1,5 @@
+build:
+    script:
+     - s2i .
+    only:
+     - master
