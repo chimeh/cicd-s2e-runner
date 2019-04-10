@@ -5,7 +5,7 @@ if [[ ! -f /usr/local/bin/kubectl ]];then
   wget -q https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl 
 chmod +x /usr/local/bin/*
 fi
-if [[ ! -f /usr/local/bin/helm]];then
+if [[ ! -f /usr/local/bin/helm ]];then
   wget -q https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm
 chmod +x /usr/local/bin/*
 fi
