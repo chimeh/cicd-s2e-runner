@@ -18,6 +18,7 @@ TRYTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do
         done ;                                  \
         pwd;)
 
+bash ${SCRIPT_DIR}/s2i-depend
 WORKDIR=$(pwd)
 if [[ -z ${TRYTOP} ]];then
 TRYTOP=${WORKDIR}
