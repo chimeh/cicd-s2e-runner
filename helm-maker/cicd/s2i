@@ -233,6 +233,7 @@ docker tag ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
 
 docker push ${DOCKER_URL}
 docker rmi ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER}
+docker rmi ${DOCKER_URL}
 set -xv
 if [ ${K8S_AUTOCD} -gt 0 ];then
     for SVCNAME in ${K8S_SVCNAMES};do
