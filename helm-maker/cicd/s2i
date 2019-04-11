@@ -35,8 +35,9 @@ if [[ $# -lt 1 ]];then
 EOF
     exit 1
 fi
-
+NE_BOOT_MATCH='ne-boot*'
 echo "##########################################"
+echo "NE_BOOT_MATCH=${NE_BOOT_MATCH}"
 echo "TRYTOP=${TRYTOP}"
 env |egrep -v LS_COLORS
 echo "##########################################"
@@ -175,7 +176,7 @@ function do_java_s2i()
 {
         echo "soure2image begin, java source, to jar, to docker image"
         pushd ${SRC_TOP}
-        if [[ "${DOCKER_IMAGE_NAME}" =~ "ne-boot*" ]];then
+        if [[ "${DOCKER_IMAGE_NAME}" =~ ${NE_BOOT_MATCH} ]];then
             mvn clean package deploy
             exit 0
         else
