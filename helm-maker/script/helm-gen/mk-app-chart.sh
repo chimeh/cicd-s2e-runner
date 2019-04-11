@@ -190,7 +190,7 @@ cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
       ports:
 EOF
 
-echo -n ${PORTS} | perl -ni  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}'  >> ${APPNAME}/${VAULE_FILENAME}
+echo -n ${PORTS} | perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}'  >> ${APPNAME}/${VAULE_FILENAME}
 fi
 
 cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
