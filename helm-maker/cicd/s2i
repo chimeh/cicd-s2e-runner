@@ -175,7 +175,7 @@ function do_java_s2i()
 {
         echo "soure2image begin, java source, to jar, to docker image"
         pushd ${SRC_TOP}
-        if [[ ${DOCKER_IMAGE_NAME} =~ "ne-boot*" ]];then
+        if [[ "${DOCKER_IMAGE_NAME}" =~ "ne-boot*" ]];then
             mvn clean package deploy
             exit 0
         else
@@ -197,6 +197,10 @@ case ${SRC_TYPE} in
         ;;
     
 esac
+if [[ "${DOCKER_IMAGE_NAME}" =~ "ne-boot*" ]];then
+    exit 0
+
+fi
 
 echo "detect Dockerfile"
 DETECT_DOCKERFILE="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname Dockerfile"
