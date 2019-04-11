@@ -124,7 +124,7 @@ if [[ -z ${DOCKER_REPO} ]];then
     DOCKER_REPO=${DOCKER_REPO:-harbor-chengdu.nx-engine.com}
 fi
 if [[ -z ${DOCKER_NS} ]];then
-    DOCKER_NS=ice
+    DOCKER_NS=icev3
 fi
 if [[ -z ${K8S_AUTOCD} ]];then
     K8S_AUTOCD=0
