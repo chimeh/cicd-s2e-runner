@@ -204,6 +204,7 @@ function do_java_s2i()
         pushd ${SRC_TOP}
         if [[ ${DOCKER_IMAGE_NAME} =~ "ne-boot*" ]];then
             mvn clean package deploy
+            exit 0
         else
             mvn clean package sonar:sonar
         fi
