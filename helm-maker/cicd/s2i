@@ -157,33 +157,6 @@ echo "##########################################"
 #ls -lh ${SRC_TOP}/*
 echo "##########################################"
 
-
-echo "detect Dockerfile"
-DETECT_DOCKERFILE="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname Dockerfile"
-eval ${DETECT_DOCKERFILE}
-if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
-    DOCKFILE=$(realpath `echo $(eval ${DETECT_DOCKERFILE})| head -n 1`)
-    DOCKFILE_DIR=$(dirname ${DOCKFILE})
-else
-    echo "can't detect Dockerfile"
-    exit -1
-fi
-echo "DOCKFILE=${DOCKFILE}"
-echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
-
-SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
-
-if [[ -z ${SVC_PORTS} ]];then
-    echo "warn, no EXPOSE in ${DOCKFILE}"
-    SVC_PORTS=80
-fi
-echo "##########################################"
-DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMAGE_NAME}:${SRC_VERSION}${BUILD_COUNTER}
-echo "DOCKFILE=${DOCKFILE}"
-echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
-echo "DOCKER_URL=${DOCKER_URL}"
-echo "SVC_PORTS=${SVC_PORTS}"
-
 function do_nodejs_s2i()
 {
         echo "soure2image begin, nodejs source, webpack, to docker image"
@@ -224,6 +197,33 @@ case ${SRC_TYPE} in
         ;;
     
 esac
+
+echo "detect Dockerfile"
+DETECT_DOCKERFILE="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname Dockerfile"
+eval ${DETECT_DOCKERFILE}
+if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
+    DOCKFILE=$(realpath `echo $(eval ${DETECT_DOCKERFILE})| head -n 1`)
+    DOCKFILE_DIR=$(dirname ${DOCKFILE})
+else
+    echo "can't detect Dockerfile"
+    exit -1
+fi
+echo "DOCKFILE=${DOCKFILE}"
+echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
+
+SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
+
+if [[ -z ${SVC_PORTS} ]];then
+    echo "warn, no EXPOSE in ${DOCKFILE}"
+    SVC_PORTS=80
+fi
+echo "##########################################"
+DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMAGE_NAME}:${SRC_VERSION}${BUILD_COUNTER}
+echo "DOCKFILE=${DOCKFILE}"
+echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
+echo "DOCKER_URL=${DOCKER_URL}"
+echo "SVC_PORTS=${SVC_PORTS}"
+
 
 echo "##########################################"
 echo "build docker image"
