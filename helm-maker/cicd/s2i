@@ -124,13 +124,13 @@ if [[ -z ${DOCKER_REPO} ]];then
     DOCKER_REPO=${DOCKER_REPO:-harbor-chengdu.nx-engine.com}
 fi
 if [[ -z ${DOCKER_NS} ]];then
-    DOCKER_NS=icev3
+    DOCKER_NS=default
 fi
 if [[ -z ${K8S_AUTOCD} ]];then
     K8S_AUTOCD=0
 fi
 if [[ -z ${K8S_NS} ]];then
-    K8S_NS=icev3-dev
+    K8S_NS=sanbox
 fi
 if [[ -z ${K8S_SVCNAMES} ]];then
     K8S_SVCNAMES=${DOCKER_IMAGE_NAME}
