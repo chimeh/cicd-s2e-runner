@@ -177,7 +177,7 @@ function do_java_s2i()
         echo "soure2image begin, java source, to jar, to docker image"
         pushd ${SRC_TOP}
         if [[ "${DOCKER_IMAGE_NAME}" =~ ${NE_BOOT_MATCH} ]];then
-            mvn clean package deploy
+            mvn clean deploy
             exit 0
         else
             mvn clean package sonar:sonar
