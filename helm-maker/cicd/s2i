@@ -35,9 +35,8 @@ if [[ $# -lt 1 ]];then
 EOF
     exit 1
 fi
-NE_BOOT_MATCH='ne-boot*'
+
 echo "##########################################"
-echo "NE_BOOT_MATCH=${NE_BOOT_MATCH}"
 echo "TRYTOP=${TRYTOP}"
 env |egrep -v LS_COLORS
 echo "##########################################"
@@ -99,6 +98,13 @@ else
     echo "can't detect name"
     DOCKER_IMAGE_NAME=$(basename $(realpath ${SRC_TOP}))
     BUILD_COUNTER="-custom-1"
+fi
+
+NE_BOOT_MATCH='ne-boot*'
+echo "NE_BOOT_MATCH=${NE_BOOT_MATCH}"
+if [[ -z ${ARTIFACT_DEPLOY} ]];then
+    ARTIFACT_DEPLOY=0
+else
 fi
 
 echo "##########################################"
@@ -170,12 +176,21 @@ function do_java_s2i()
 {
         echo "soure2image begin, java source, to jar, to docker image"
         pushd ${SRC_TOP}
-        if [[ "${DOCKER_IMAGE_NAME}" =~ ${NE_BOOT_MATCH} ]];then
-            mvn clean deploy
-            exit 0
+        if [[ ${ENABLE_SONAR} -gt 0 ]];then
+            if [[ "${DOCKER_IMAGE_NAME}" =~ ${NE_BOOT_MATCH} ]];then
+                mvn clean deploy sonar:sonar
+                exit 0
+            else
+                mvn clean package sonar:sonar
+            fi
         else
-            mvn clean package sonar:sonar
-        fi
+            if [[ "${DOCKER_IMAGE_NAME}" =~ ${NE_BOOT_MATCH} ]];then
+                mvn clean deploy
+                exit 0
+            else
+                mvn clean package
+            fi
+        if
 }
 
 
