@@ -1,4 +1,4 @@
-ARG SHELL_BASE_IMG="alpine:3.8"
+ARG SHELL_BASE_IMG=alpine:3.8
 FROM ${SHELL_IMG_BASE}
 
 RUN  cat /etc/apk/repositories \
