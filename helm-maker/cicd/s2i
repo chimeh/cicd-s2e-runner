@@ -102,9 +102,10 @@ fi
 
 NE_BOOT_MATCH='ne-boot*'
 echo "NE_BOOT_MATCH=${NE_BOOT_MATCH}"
-if [[ -z ${ARTIFACT_DEPLOY} ]];then
-    ARTIFACT_DEPLOY=0
+if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
+    ARTIFACT_DEPLOY=1
 else
+    ARTIFACT_DEPLOY=0
 fi
 
 echo "##########################################"
@@ -158,6 +159,7 @@ echo "K8S_NS=${DOCKER_NS}"
 echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
 echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
 echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
+echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
 
 
 echo "##########################################"
