@@ -192,7 +192,7 @@ function do_java_s2i()
             else
                 mvn clean package
             fi
-        if
+        fi
 }
 
 
