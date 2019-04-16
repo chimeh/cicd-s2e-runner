@@ -152,6 +152,8 @@ fi
 echo "##########################################"
 echo "NEXUS_REPO=${NEXUS_REPO}"
 echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
+echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
+echo "ENABLE_SONAR=${ENABLE_SONAR}"
 echo "DOCKER_REPO=${DOCKER_REPO}"
 echo "DOCKER_NS=${DOCKER_NS}"
 echo "K8S_AUTOCD=${K8S_AUTOCD}"
@@ -159,7 +161,6 @@ echo "K8S_NS=${DOCKER_NS}"
 echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
 echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
 echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
-echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
 
 
 echo "##########################################"
