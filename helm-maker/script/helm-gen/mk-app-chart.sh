@@ -202,6 +202,6 @@ done
 echo "###########################################helm chart gen done"
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
    echo "###########################################auto deploy"
-   helm upgrade  --install  --namespace ${K8S_NS} ${APPNAME} ${APPNAME}
+echo   helm upgrade  --install  --namespace ${K8S_NS} ${k8S_NS}-${SVCNAME} ${APPNAME}
 fi
 
