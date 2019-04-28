@@ -58,7 +58,7 @@ fi
 
 CATALOG_NAME=$(echo ${SVCNAME} | tr '[A-Z]' '[a-z]')
 VERSION=${CURDATE}${BUILD_COUNTER}
-APPNAME=$(realpath ${WORKDIR}/${SVCNAME})
+APPNAME=$(realpath ${WORKDIR}/${K8S_NS}-${SVCNAME})
 VAULE_FILENAME=values-${SVCNAME}.yaml
 COMMONCHARTVERSION=1.0
 echo "IMG=${IMG}"
@@ -202,6 +202,6 @@ done
 echo "###########################################helm chart gen done"
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
    echo "###########################################auto deploy"
-   helm upgrade  --install  --namespace ${K8S_NS} ${SVCNAME} ${APPNAME}
+   helm upgrade  --install  --namespace ${K8S_NS} ${APPNAME} ${APPNAME}
 fi
 
