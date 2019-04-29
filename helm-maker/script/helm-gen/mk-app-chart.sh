@@ -203,7 +203,7 @@ echo "###########################################helm chart gen done"
 set -xv
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
    echo "###########################################auto deploy"
-   helm template ${APPNAME} | tee /dev/stderr | kubectl apply --validate=false -n ${K8S_NS} -f -
+   helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
 fi
 set +xv
 
