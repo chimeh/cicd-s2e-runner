@@ -171,7 +171,7 @@ function do_nodejs_s2i()
 {
         echo "soure2image begin, nodejs source, webpack, to docker image"
         pushd ${SRC_TOP}
-        npm install
+        npm install -verbose
         npm run build
         popd
 }
