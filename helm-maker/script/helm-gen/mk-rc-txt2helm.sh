@@ -2,7 +2,7 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 #convert txtdir to helm 
-echo "usage: $0  txtdir [NEWNAME] "
+USAGE="usage: $0  txtdir [NEWNAME] "
 
 ###################################################################
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
@@ -39,7 +39,7 @@ fi
 ####################################################################
 CURDATE=$(date +%Y%m%d%H%M%S)
 if [ $# -lt 1 ];then
-  echo "useage: $0 txtdir"
+  echo ${USAGE}
   exit 1;
 fi
 if [ $# -ge 2 ];then
@@ -56,7 +56,7 @@ echo "CHART name set to ${CATALOG_NAME} ${VERSION}"
 
 
 TXTDIR=$(realpath ${1})
-RCNAME=${TRYTOP}/../${CATALOG_NAME}-helm-${VERSION}
+RCNAME=$(pwd)/${CATALOG_NAME}-helm-${VERSION}
 vaule_filename=values-release-txt2helm.yaml
 commonchartversion=1.0
 echo "${CATALOG_NAME}-${VERSION}"
