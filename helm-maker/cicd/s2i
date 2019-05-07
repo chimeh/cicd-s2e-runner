@@ -45,7 +45,7 @@ GAVE_SRC_TOP=$(realpath $1)
 
 # try to guest java or nodejs
 echo "auto try to detect java or nodejs source and its topdir"
-DETECT_JAVA="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname pom.xml"
+DETECT_JAVA="find ${GAVE_SRC_TOP}   -maxdepth 1 -iname pom.xml"
 DETECT_NODEJS="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname package.json"
 DETECT_DEFAULT_TOP="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .TOP"
 DETECT_DEFAULT_GIT="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .git"
