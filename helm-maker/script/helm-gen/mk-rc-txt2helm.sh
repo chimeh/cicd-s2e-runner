@@ -52,14 +52,16 @@ fi
 
 VERSION=${CURDATE}${BUILD_COUNTER}
 
-echo "CHART name set to ${CATALOG_NAME} ${VERSION}"
 
 
 TXTDIR=$(realpath ${1})
-RCNAME=$(pwd)/${CATALOG_NAME}-helm-${VERSION}
+RCNAME=${PWD}/${CATALOG_NAME}-helm-${VERSION}
 vaule_filename=values-release-txt2helm.yaml
 commonchartversion=1.0
-echo "${CATALOG_NAME}-${VERSION}"
+
+echo "CATALOG_NAME=${CATALOG_NAME}"
+echo "VERSION=${VERSION}"
+echo "RCNAME=${RCNAME}"
 
 
 mkdir -p ${RCNAME}/charts
@@ -89,7 +91,14 @@ for i in `/bin/ls ${TXTDIR}`;do \
     /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${RCNAME}/charts/$name
     if [[ -f ${TXTDIR}/${name}/env.txt ]];then
        echo ${TXTDIR}/${name}/env.txt
-        perl -ne "print ' ' x 0;print '#';print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/$name/files/env.txt
+        perl -ne "print ' ' x 0;print '';print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/$name/files/env.txt
+    fi
+    if [[ -f ${TXTDIR}/${name}/override-entrypoint.sh ]];then
+       echo ${TXTDIR}/${name}/override-entrypoint.sh
+        perl -ne "print ' ' x 0;print '';print \$_" ${TXTDIR}/${name}/override-entrypoint.sh >> ${RCNAME}/charts/$name/files/override-entrypoint.sh
+    fi
+    if [[ -d ${TXTDIR}/${name}/initdata ]];then
+       /bin/cp -rf  ${TXTDIR}/${name}/initdata ${RCNAME}/charts/$name/files/
     fi
     if [[ ${name} == "ne-config-server" ]];then
        echo ${TXTDIR}/${name}/env.txt
@@ -158,8 +167,8 @@ EOF
 elif [[ -f ${TXTDIR}/${name}/ports.txt ]];then
 cat >> ${RCNAME}/${vaule_filename} <<EOF
       ports:
-        - $(perl -ne "chomp(\$_);print ' ' x 0;print \$_;print qq(\n);" ${TXTDIR}/${name}/ports.txt | head -n 1)
 EOF
+perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}' ${TXTDIR}/${name}/ports.txt  >> ${RCNAME}/${vaule_filename} 
 else
 cat >> ${RCNAME}/${vaule_filename} <<EOF
       ports:
@@ -169,7 +178,6 @@ EOF
 fi
 cat >> ${RCNAME}/${vaule_filename} <<EOF
     env.txt: |
-      #from ${vaule_filename}
       JAVA_TOOL_OPTIONS="-Xms384m -Xmx512m"
 EOF
 if [[ -f ${TXTDIR}/${name}/env.txt ]];then
