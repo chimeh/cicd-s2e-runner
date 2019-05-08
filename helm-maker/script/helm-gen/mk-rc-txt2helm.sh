@@ -55,7 +55,7 @@ VERSION=${CURDATE}${BUILD_COUNTER}
 
 
 TXTDIR=$(realpath ${1})
-RCNAME=${PWD}/${CATALOG_NAME}-helm-${VERSION}
+RCNAME=${PWD}/${CATALOG_NAME}-helm
 vaule_filename=values-release-txt2helm.yaml
 commonchartversion=1.0
 

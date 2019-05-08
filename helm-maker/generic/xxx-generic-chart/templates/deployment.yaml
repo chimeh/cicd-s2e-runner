@@ -81,7 +81,6 @@ spec:
           name: {{ template "xxxxxx.name" . }}       
        {{- end }}
        {{- if or (.Files.Glob "files/initdata/*")  }}
-        volumeMounts:
         - mountPath: /cfg/initdata/
           name: {{ template "xxxxxx.name" . }}-initdata       
        {{- end }}         
