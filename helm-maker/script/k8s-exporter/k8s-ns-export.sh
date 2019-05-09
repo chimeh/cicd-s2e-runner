@@ -2,7 +2,7 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 #get info from k8s namespace, then generate helm template for all services in the NS
-USAGE="usage: $0 K8S_NS"
+USAGE="usage: $0 K8S_NS [O_DIR]"
 
 ###################################################################
 THIS_SCRIPT=$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0})
@@ -40,15 +40,17 @@ fi
 ####################################################################
 
 if [ $# -lt 1 ];then
-  echo "useage: $0 namespace"
+  echo "${USAGE}"
   exit 1;
 fi
 SRC_NS=$1
 CURDATE=$(date +%Y%m%d%H%M%S)
 VERSION=${CURDATE}${BUILD_COUNTER}
 echo "NS ${SRC_NS}"
-
 RCNAME=$(pwd)/${SRC_NS}-txt
+if [ $# -gt 1 ];then         
+  RCNAME=$2
+fi 
 echo "${SRC_NS}-${CURDATE}"
 echo "${RCNAME}"
 
