@@ -2,7 +2,7 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 #convert txtdir to helm 
-USAGE="usage: $0  txtdir [NEWNAME] "
+USAGE="usage: $0  txtdir [NEWNAME] [VERSION]"
 
 ###################################################################
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
@@ -38,11 +38,14 @@ fi
 
 ####################################################################
 CURDATE=$(date +%Y%m%d%H%M%S)
-VERSION=${CURDATE}${BUILD_COUNTER}
 if [ $# -lt 1 ];then
   echo ${USAGE}
   exit 1;
 fi
+VERSION=${CURDATE}${BUILD_COUNTER}
+if [ $# -gt 2 ];then                                                                                                   
+  VERSION=$3
+fi  
 if [ $# -ge 2 ];then
 #  CATALOG_NAME=$(echo $2 | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._-][a-z][A-Z]" "")
   CATALOG_NAME=$(echo $2 | tr '[A-Z]' '[a-z]')
@@ -55,7 +58,7 @@ fi
 
 
 TXTDIR=$(realpath ${1})
-RCNAME=${PWD}/${CATALOG_NAME}-helm
+RCNAME=${PWD}/${CATALOG_NAME}
 vaule_filename=values-release-txt2helm.yaml
 commonchartversion=1.0
 
@@ -193,7 +196,7 @@ cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
 
 ################# post to repo
 #http://charts.ops/api/charts
-if [ $# -gt 2 ];then
+if [ $# -gt 3 ];then
   echo "post to repo"
   rm -rf ${RCNAME}/../${CATALOG_NAME}
   /bin/cp -rf ${RCNAME} ${RCNAME}/../${CATALOG_NAME}
