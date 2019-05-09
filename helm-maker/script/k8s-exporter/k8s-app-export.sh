@@ -76,6 +76,15 @@ while read i; do
     mkdir -p ${RCNAME}/${name}
     img=`kubectl get -n ${SRC_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
     echo ${img} > ${RCNAME}/${name}/img.txt
+    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  &> /dev/null
+    if [[ $? -eq 0 ]];then
+    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  > ${RCNAME}/${name}/ports.txt
+    fi
+    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  &> /dev/null
+    if [[ $? -eq 0 ]];then                                                                                             
+    echo -n ',' >> ${RCNAME}/${name}/ports.txt
+    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  >> ${RCNAME}/${name}/ports.txt               
+    fi  
     perl -ni -e "s@harbor.nxe.local@harbor-chengdu.nx-engine.com@g;print"   ${RCNAME}/${name}/img.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' > ${RCNAME}/${name}/env.txt
     echo -e '\nJAVA_TOOL_OPTIONS="-Xms384m -Xmx512m"' >> ${RCNAME}/${name}/env.txt

@@ -38,6 +38,7 @@ fi
 
 ####################################################################
 CURDATE=$(date +%Y%m%d%H%M%S)
+VERSION=${CURDATE}${BUILD_COUNTER}
 if [ $# -lt 1 ];then
   echo ${USAGE}
   exit 1;
@@ -47,10 +48,9 @@ if [ $# -ge 2 ];then
   CATALOG_NAME=$(echo $2 | tr '[A-Z]' '[a-z]')
 else
 #  CATALOG_NAME=$(echo $(basename $1) | tr '[A-Z]' '[a-z]' |tr -csd  "[0-9._][a-z][A-Z]" "")
-  CATALOG_NAME=$(echo $(basename $1) | tr '[A-Z]' '[a-z]' )
+  CATALOG_NAME=$(echo $(basename $1) | tr '[A-Z]' '[a-z]' )-${VERSION}
 fi
 
-VERSION=${CURDATE}${BUILD_COUNTER}
 
 
 
