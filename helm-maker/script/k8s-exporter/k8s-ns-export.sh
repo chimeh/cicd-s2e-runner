@@ -2,6 +2,7 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 #get info from k8s namespace, then generate helm template for all services in the NS
+USAGE="usage: $0 K8S_NS"
 
 ###################################################################
 THIS_SCRIPT=$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0})
@@ -45,9 +46,9 @@ fi
 SRC_NS=$1
 CURDATE=$(date +%Y%m%d%H%M%S)
 VERSION=${CURDATE}${BUILD_COUNTER}
-echo "NS ${SRC_NS} ${VERSION}"
+echo "NS ${SRC_NS}"
 
-RCNAME=${TRYTOP}/../${SRC_NS}-${VERSION}-txt
+RCNAME=$(pwd)/${SRC_NS}-txt
 echo "${SRC_NS}-${CURDATE}"
 echo "${RCNAME}"
 
@@ -82,6 +83,16 @@ while read i; do
     kubectl get -n ${SRC_NS} --export cm ${name}-initdata -o=yaml >${RCNAME}/${name}/${name}-initdata.yaml 2>/dev/null
     if [[ $(wc -l ${RCNAME}/${name}/${name}-initdata.yaml  | awk '{print $1}') -lt 1 ]];then
       rm -f  ${RCNAME}/${name}/${name}-initdata.yaml
+    fi
+    
+    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  &> /dev/null
+    if [[ $? -eq 0 ]];then
+    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  > ${RCNAME}/${name}/ports.txt
+    fi
+    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  &> /dev/null
+    if [[ $? -eq 0 ]];then
+    echo -n ',' >> ${RCNAME}/${name}/ports.txt
+    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  >> ${RCNAME}/${name}/ports.txt               
     fi
 done
 
