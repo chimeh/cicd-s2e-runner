@@ -201,6 +201,7 @@ done
 /bin/cp -f ${APPNAME}/${VAULE_FILENAME}  ${APPNAME}/values.yaml
 echo "###########################################helm chart gen done"
 set -xv
+set -e
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
    echo "###########################################auto deploy"
    helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
