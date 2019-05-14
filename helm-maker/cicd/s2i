@@ -63,6 +63,9 @@ elif [[ -n $(eval ${DETECT_NODEJS}) ]];then
     SRC_TOP=$(realpath $(dirname ${package}))
     SRC_TYPE=nodejs
     SRC_VERSION=$(cd ${SRC_TOP};npm run packageVersion |tail -n 1)
+    if [[ -z ${SRC_VERSION} ]];then
+    SRC_VERSION=1.0.0
+    fi
 elif [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
     echo "detect SRC_TOP from file .TOP"
     topfile=`echo $(eval ${DETECT_DEFAULT_GIT}) | head -n 1 | awk '{print $1}'`
