@@ -175,13 +175,11 @@ perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x
 else
 cat >> ${RCNAME}/${vaule_filename} <<EOF
       ports:
-        - 80
         - 8080
 EOF
 fi
 cat >> ${RCNAME}/${vaule_filename} <<EOF
     env.txt: |
-      JAVA_TOOL_OPTIONS="-Xms384m -Xmx512m"
 EOF
 if [[ -f ${TXTDIR}/${name}/env.txt ]];then
    echo ${TXTDIR}/${name}/env.txt
