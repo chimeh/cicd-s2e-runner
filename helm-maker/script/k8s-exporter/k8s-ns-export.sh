@@ -73,7 +73,7 @@ while read i; do
     echo ${img} > ${RCNAME}/${name}/img.txt
     perl -ni -e "s@harbor.nxe.local@harbor-chengdu.nx-engine.com@g;print"   ${RCNAME}/${name}/img.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' > ${RCNAME}/${name}/env.txt
-    egrep ${RCNAME}/${name}/env.txt
+    egrep JAVA_TOOL_OPTIONS ${RCNAME}/${name}/env.txt
     if [[ $? -ne 0 ]];then
     echo -e '\nJAVA_TOOL_OPTIONS="-Xms384m -Xmx512m"' >> ${RCNAME}/${name}/env.txt
     fi
