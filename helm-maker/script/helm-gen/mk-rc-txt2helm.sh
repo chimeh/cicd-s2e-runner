@@ -3,8 +3,8 @@
 #jimin.huang@nx-engine.com
 #convert txtdir to helm 
 USAGE="
-  export DOMAIN_INTERNAL=
-  export DOMAIN_PUBLIC=
+  export DOMAIN_INTERNAL=xxx.in
+  export DOMAIN_PUBLIC=xxx.com
   usage: $0  txtdir [NEWNAME] [VERSION]"
 
 ###################################################################
@@ -175,10 +175,10 @@ global:
   ingress:
     internal:
       annotations-ingress-class: kong-ingress-internal
-      domain: okd.cd
+      domain: ${DOMAIN_INTERNAL}
     public:
       annotations-ingress-class: kong-ingress-public
-      domain: nxengine.cn
+      domain: ${DOMAIN_PUBLIC}
   containers:
     securityContext:
       privileged: true
