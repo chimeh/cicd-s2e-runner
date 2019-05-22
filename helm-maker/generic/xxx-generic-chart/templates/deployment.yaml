@@ -57,6 +57,28 @@ spec:
         {{- end}}
         {{- end}}
         {{- end}}
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - if [ -f /docker/healthy.sh ] ; then exec /docker/healthy.sh ; fi
+          failureThreshold: 3
+          initialDelaySeconds: 45
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 3
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - if [ -f /docker/ready.sh ] ; then exec /docker/healthy.sh ; fi
+          failureThreshold: 3
+          initialDelaySeconds: 45
+          periodSeconds: 3
+          successThreshold: 2
+          timeoutSeconds: 3
         resources:
           limits:
             memory: 768Mi
