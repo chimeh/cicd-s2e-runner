@@ -87,10 +87,6 @@ while read i; do
     fi  
     perl -ni -e "s@harbor.nxe.local@harbor-chengdu.nx-engine.com@g;print"   ${RCNAME}/${name}/img.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' > ${RCNAME}/${name}/env.txt
-    egrep JAVA_TOOL_OPTIONS ${RCNAME}/${name}/env.txt
-    if [[ $? -ne 0 ]];then
-    echo -e '\nJAVA_TOOL_OPTIONS="-Xms384m -Xmx512m"' >> ${RCNAME}/${name}/env.txt
-    fi
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.default-entrypoint\.sh}' 2>/dev/null > ${RCNAME}/${name}/default-entrypoint.sh
     if [[ $(wc -l ${RCNAME}/${name}/default-entrypoint.sh  | awk '{print $1}') -lt 1 ]];then
       rm -f  ${RCNAME}/${name}/default-entrypoint.sh

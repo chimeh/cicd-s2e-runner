@@ -91,37 +91,74 @@ for i in `/bin/ls ${TXTDIR}`;do \
     name=$i
     echo "gen charts for /${name}"
     img=`head -n 1 ${TXTDIR}/${name}/img.txt`
-    /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${RCNAME}/charts/$name
+    /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${RCNAME}/charts/${name}
+    echo -n '' > ${RCNAME}/charts/${name}/files/env.txt
     if [[ -f ${TXTDIR}/${name}/env.txt ]];then
-       echo ${TXTDIR}/${name}/env.txt
-        perl -ne "print ' ' x 0;print '';print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/$name/files/env.txt
+        echo ${TXTDIR}/${name}/env.txt
+        perl -ne "print ' ' x 0;print '';print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/${name}/files/env.txt
     fi
     if [[ -f ${TXTDIR}/${name}/override-entrypoint.sh ]];then
        echo ${TXTDIR}/${name}/override-entrypoint.sh
-        perl -ne "print ' ' x 0;print '';print \$_" ${TXTDIR}/${name}/override-entrypoint.sh >> ${RCNAME}/charts/$name/files/override-entrypoint.sh
+        perl -ne "print ' ' x 0;print '';print \$_" ${TXTDIR}/${name}/override-entrypoint.sh >> ${RCNAME}/charts/${name}/files/override-entrypoint.sh
     fi
     if [[ -d ${TXTDIR}/${name}/initdata ]];then
-       /bin/cp -rf  ${TXTDIR}/${name}/initdata ${RCNAME}/charts/$name/files/
+       /bin/cp -rf  ${TXTDIR}/${name}/initdata ${RCNAME}/charts/${name}/files/
     fi
-    if [[ ${name} == "ne-config-server" ]];then
-       echo ${TXTDIR}/${name}/env.txt
-       echo "" >> ${RCNAME}/charts/$name/files/initdata/xxx-service1.yaml
-       echo "" >> ${RCNAME}/charts/$name/files/initdata/xxx-service2.yaml
-    fi
-    perl -ni -e "s/^name:.+/name: ${name}/g;print" ${RCNAME}/charts/$name/Chart.yaml
-    perl -ni -e "s/^version:.+/version: ${commonchartversion}/g;print" ${RCNAME}/charts/$name/Chart.yaml
-    perl -ni -e "s/^icev3-xxx-generic/$name/g;print" ${RCNAME}/charts/$name/values-single.yaml
-    perl -ni -e "s@image:.+@image: $img@g;print"  ${RCNAME}/charts/$name/values-single.yaml
+    perl -ni -e "s/^name:.+/name: ${name}/g;print" ${RCNAME}/charts/${name}/Chart.yaml
+    perl -ni -e "s/^version:.+/version: ${commonchartversion}/g;print" ${RCNAME}/charts/${name}/Chart.yaml
     echo "dependcies"
 cat >> ${RCNAME}/requirements.yaml <<EOF
 - name: ${name}
   version: ~${commonchartversion}
   repository: "file://charts/${name}"
 EOF
+echo "gen ${name} value file"
+cat > ${RCNAME}/charts/${name}/values-single.yaml <<EOF
+global:
+  rc-fullname: false
+  ingress:
+    internal:
+      annotations-ingress-class: kong-ingress-internal
+      domain: prd-k8s.tx
+    public:
+      annotations-ingress-class: kong-ingress-public
+      domain: nx-engine.com
+EOF
+cat >> ${RCNAME}/charts/${name}/values-single.yaml <<EOF
+${name}:
+  replicaCount: 1
+  ingress:
+    internal: 
+      host: {}
+    public: 
+      enabled: true
+      host: {}
+  image: $img
+  service:
+    type: ClusterIP
+EOF
+if [[ -f ${TXTDIR}/${name}/ports.txt ]];then
+cat >> ${RCNAME}/charts/${name}/values-single.yaml  <<EOF
+    ports:
+EOF
+perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 6;print  " - $_\n"}' ${TXTDIR}/${name}/ports.txt  >> ${RCNAME}/charts/${name}/values-single.yaml  
+else
+cat >> ${RCNAME}/charts/${name}/values-single.yaml  <<EOF
+    ports:
+      - 8080
+EOF
+fi
+cat >> ${RCNAME}/charts/${name}/values-single.yaml  <<EOF
+  env.txt: |
+EOF
+if [[ -f ${TXTDIR}/${name}/env.txt ]];then
+   #echo ${TXTDIR}/${name}/env.txt
+   perl -ne "chomp(\$_);print ' ' x 4;print \$_;print qq(\n);" ${TXTDIR}/${name}/env.txt  >> ${RCNAME}/charts/${name}/values-single.yaml 
+fi
 done
 
 echo "##########################gen value file"
-cat >> ${RCNAME}/${vaule_filename} <<EOF
+cat >> ${RCNAME}/${vaule_filename}  <<EOF
 global:
   rc-fullname: false
   ingress:
@@ -139,58 +176,18 @@ EOF
 
 for i in `/bin/ls ${TXTDIR}`;do \
     name=$i
-    echo "gen charts for /${name}"
+    echo "gen charts for ${name}"
     img=`head -n 1 ${TXTDIR}/${name}/img.txt`
-cat >> ${RCNAME}/${vaule_filename} <<EOF
+cat >> ${RCNAME}/${vaule_filename}  <<EOF
 ${name}:
-  ${name}:
-    replicaCount: 1
-    ingress:
-      internal: 
-        host: {}
-      public: 
-        enabled: true
-        host: {}
-    image: $img
-    service:
-      type: ClusterIP
 EOF
-if [[ ${name} == "ev-gb-gateway" ]];then
-cat >> ${RCNAME}/${vaule_filename} <<EOF
-      ports:
-        - 8111
-        - 8080
-EOF
-elif [[ ${name} == "simu-ve" ]];then
-cat >> ${RCNAME}/${vaule_filename} <<EOF
-      ports:
-        - 8080
-        - 5000
-EOF
-elif [[ -f ${TXTDIR}/${name}/ports.txt ]];then
-cat >> ${RCNAME}/${vaule_filename} <<EOF
-      ports:
-EOF
-perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}' ${TXTDIR}/${name}/ports.txt  >> ${RCNAME}/${vaule_filename} 
-else
-cat >> ${RCNAME}/${vaule_filename} <<EOF
-      ports:
-        - 8080
-EOF
-fi
-cat >> ${RCNAME}/${vaule_filename} <<EOF
-    env.txt: |
-EOF
-if [[ -f ${TXTDIR}/${name}/env.txt ]];then
-   echo ${TXTDIR}/${name}/env.txt
-    perl -ne "chomp(\$_);print ' ' x 6;print \$_;print qq(\n);" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/${vaule_filename}
-fi
+perl -ne "chomp(\$_);print ' ' x 6;print \$_;print qq(\n);" ${RCNAME}/charts/${name}/values-single.yaml >> ${RCNAME}/${vaule_filename}
 done
 
 echo "##############################################################"
 
 
-cat ${RCNAME}/${vaule_filename} > ${RCNAME}/values.yaml
+/bin/cp  ${RCNAME}/${vaule_filename}  ${RCNAME}/values.yaml
 
 ################# post to repo
 #http://charts.ops/api/charts
@@ -203,5 +200,4 @@ if [ $# -gt 3 ];then
   rm -rf ${RCNAME}/../${CATALOG_NAME}
   curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" https://helm-charts.nx-engine.com/api/charts
   curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" $3
-
 fi
