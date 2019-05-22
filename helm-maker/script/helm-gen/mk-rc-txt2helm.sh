@@ -2,7 +2,10 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 #convert txtdir to helm 
-USAGE="usage: $0  txtdir [NEWNAME] [VERSION]"
+USAGE="
+  export DOMAIN_INTERNAL=
+  export DOMAIN_PUBLIC=
+  usage: $0  txtdir [NEWNAME] [VERSION]"
 
 ###################################################################
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
@@ -54,6 +57,12 @@ else
   CATALOG_NAME=$(echo $(basename $1) | tr '[A-Z]' '[a-z]' )-${VERSION}
 fi
 
+if [[ -z ${DOMAIN_INTERNAL} ]];then
+    DOMAIN_INTERNAL=dev-k8s.tx
+fi
+if [[ -z ${DOMAIN_PUBLIC} ]];then
+    DOMAIN_PUBLIC=e-engine.cn
+fi
 
 
 
@@ -65,6 +74,8 @@ commonchartversion=1.0
 echo "CATALOG_NAME=${CATALOG_NAME}"
 echo "VERSION=${VERSION}"
 echo "RCNAME=${RCNAME}"
+echo "DOMAIN_INTERNAL=${DOMAIN_INTERNAL}"
+echo "DOMAIN_PUBLIC=${DOMAIN_PUBLIC}"
 
 
 mkdir -p ${RCNAME}/charts
@@ -119,10 +130,10 @@ global:
   ingress:
     internal:
       annotations-ingress-class: kong-ingress-internal
-      domain: prd-k8s.tx
+      domain: ${DOMAIN_INTERNAL}
     public:
       annotations-ingress-class: kong-ingress-public
-      domain: nx-engine.com
+      domain: ${DOMAIN_PUBLIC}
 EOF
 cat >> ${RCNAME}/charts/${name}/values-single.yaml <<EOF
 ${name}:
