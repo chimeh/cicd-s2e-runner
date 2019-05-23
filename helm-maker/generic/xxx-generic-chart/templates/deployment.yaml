@@ -62,7 +62,7 @@ spec:
             command:
             - sh
             - -c
-            - if [ -f /docker/healthy.sh ] ; then chmod +x /docker/healthy.sh; exec /docker/healthy.sh ; fi
+            - if [ -f /docker/liveness.sh ] ; then chmod +x /docker/liveness.sh; exec /docker/liveness.sh ; fi
           failureThreshold: 3
           initialDelaySeconds: 45
           periodSeconds: 3
