@@ -103,7 +103,6 @@ description: gen helm for ${APPNAME}
 keywords:
 - ${SVCNAME}
 home: https://www.nx-engine.com/
-icon: https://www.nx-engine.com/img/36577051900299436.png
 sources:
 - https://www.nx-engine.com/
 maintainers:
