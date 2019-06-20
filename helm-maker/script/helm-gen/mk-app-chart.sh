@@ -204,6 +204,10 @@ set -e
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
    echo "###########################################auto deploy"
    helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+   if [[ $? -ne 0 ]];then
+     helm delete --purge ${K8S_NS}-${SVCNAME}   
+     helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+   fi 
 fi
 set +xv
 
