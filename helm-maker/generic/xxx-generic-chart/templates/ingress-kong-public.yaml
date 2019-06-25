@@ -1,6 +1,7 @@
 {{- if (index .Values (include "xxxxxx.name" .)) }}
 {{- if (index .Values (include "xxxxxx.name" .) "ingress") }}
 {{- if (index .Values (include "xxxxxx.name" .) "ingress" "public") }}
+{{- if (index .Values (include "xxxxxx.name" .) "ingress" "public" "enabled") }}
 {{- if (index .Values (include "xxxxxx.name" .) "service") }}
 {{- if (index .Values (include "xxxxxx.name" .) "service" "ports") -}}
 apiVersion: extensions/v1beta1
@@ -41,6 +42,7 @@ spec:
   {{- end }}
   {{- end }}
   {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

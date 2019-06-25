@@ -99,13 +99,25 @@ echo "##########################gen charts, and depencies"
 echo  'dependencies:' > ${RCNAME}/requirements.yaml
 for i in `/bin/ls ${TXTDIR}`;do \
     name=$i
-    echo "gen charts for /${name}"
+    echo "gen charts for ${name}"
+    
+    if [[ -f ${TXTDIR}/${name}/ingress-public.txt ]];then
+        INGRESS_PUBLIC_ENABLED=true
+    else
+        INGRESS_PUBLIC_ENABLED=false
+    fi
+    if [[ -f ${TXTDIR}/${name}/ingress-internal.txt ]];then
+        INGRESS_INTERNAL_ENABLED=true
+    else
+        INGRESS_INTERNAL_ENABLED=false
+    fi
     img=`head -n 1 ${TXTDIR}/${name}/img.txt`
     /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${RCNAME}/charts/${name}
     echo -n '' > ${RCNAME}/charts/${name}/files/env.txt
     if [[ -f ${TXTDIR}/${name}/env.txt ]];then
-        echo ${TXTDIR}/${name}/env.txt
-        perl -ne "print ' ' x 0;print '';print \$_" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/${name}/files/env.txt
+       true
+      #echo ${TXTDIR}/${name}/env.txt
+      #perl -ne "chomp(\$_);print ' ' x 0;print \$_;print qq(\n);" ${TXTDIR}/${name}/env.txt >> ${RCNAME}/charts/${name}/files/env.txt
     fi
     if [[ -f ${TXTDIR}/${name}/override-entrypoint.sh ]];then
        echo ${TXTDIR}/${name}/override-entrypoint.sh
@@ -139,9 +151,10 @@ ${name}:
   replicaCount: 1
   ingress:
     internal: 
+      enabled: ${INGRESS_INTERNAL_ENABLED}
       host: {}
     public: 
-      enabled: true
+      enabled: ${INGRESS_PUBLIC_ENABLED}
       host: {}
   image: $img
   service:
