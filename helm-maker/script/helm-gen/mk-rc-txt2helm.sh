@@ -69,7 +69,11 @@ fi
 if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
     INGRESS_CLASS_PUBLIC=nginx
 fi
-
+if [[ -z ${INGRESS_INTERNAL_ENABLED} ]];then
+    INGRESS_INTERNAL_ENABLED=true
+if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
+    INGRESS_PUBLIC_ENABLED=true
+fi
 
 TXTDIR=$(realpath ${1})
 RCNAME=${PWD}/${CATALOG_NAME}
