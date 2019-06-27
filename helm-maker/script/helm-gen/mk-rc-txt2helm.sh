@@ -63,7 +63,12 @@ fi
 if [[ -z ${DOMAIN_PUBLIC} ]];then
     DOMAIN_PUBLIC=e-engine.cn
 fi
-
+if [[ -z ${INGRESS_CLASS_INTERNAL} ]];then
+    INGRESS_CLASS_INTERNAL=nginx
+fi
+if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
+    INGRESS_CLASS_PUBLIC=nginx
+fi
 
 
 TXTDIR=$(realpath ${1})
@@ -140,10 +145,10 @@ global:
   rc-fullname: false
   ingress:
     internal:
-      annotations-ingress-class: kong-ingress-internal
+      annotations-ingress-class: ${INGRESS_CLASS_INTERNAL}
       domain: ${DOMAIN_INTERNAL}
     public:
-      annotations-ingress-class: kong-ingress-public
+      annotations-ingress-class: ${INGRESS_CLASS_PUBLIC}
       domain: ${DOMAIN_PUBLIC}
 EOF
 cat >> ${RCNAME}/charts/${name}/values-single.yaml <<EOF
