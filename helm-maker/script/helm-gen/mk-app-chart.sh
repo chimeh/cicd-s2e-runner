@@ -37,6 +37,7 @@ if [[ -z ${DOMAIN_PUBLIC} ]];then
 fi
 if [[ -z ${INGRESS_CLASS_INTERNAL} ]];then
     INGRESS_CLASS_INTERNAL=nginx
+fi
 if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
     INGRESS_CLASS_PUBLIC=nginx
 fi

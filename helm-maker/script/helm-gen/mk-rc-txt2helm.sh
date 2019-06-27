@@ -71,6 +71,7 @@ if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
 fi
 if [[ -z ${INGRESS_INTERNAL_ENABLED} ]];then
     INGRESS_INTERNAL_ENABLED=true
+fi
 if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
     INGRESS_PUBLIC_ENABLED=true
 fi
@@ -195,10 +196,10 @@ global:
   rc-fullname: false
   ingress:
     internal:
-      annotations-ingress-class: kong-ingress-internal
+      annotations-ingress-class: ${INGRESS_CLASS_INTERNAL}
       domain: ${DOMAIN_INTERNAL}
     public:
-      annotations-ingress-class: kong-ingress-public
+      annotations-ingress-class: ${INGRESS_CLASS_PUBLIC}
       domain: ${DOMAIN_PUBLIC}
   containers:
     securityContext:
