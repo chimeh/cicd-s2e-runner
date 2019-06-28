@@ -15,7 +15,7 @@ metadata:
     {{- if (index .Values "global" "ingress" "public" "annotations-ingress-class") }}
     kubernetes.io/ingress.class: {{ (index .Values "global" "ingress" "public" "annotations-ingress-class") }}
     {{- else }}
-    kubernetes.io/ingress.class: kong-ingress-public
+    kubernetes.io/ingress.class: nginx
     {{- end }}
     {{- end }}
     {{- end }}

@@ -106,10 +106,10 @@ global:
   rc-fullname: false
   ingress:
     internal:
-      annotations-ingress-class: kong-ingress-internal
+      annotations-ingress-class: nginx
       domain: okd.cd
     public:
-      annotations-ingress-class: kong-ingress-public
+      annotations-ingress-class: nginx
       domain: nxengine.cn
   containers:
     securityContext:
