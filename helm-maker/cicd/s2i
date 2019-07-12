@@ -259,7 +259,7 @@ echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER}"
 echo "DOCKER_URL=${DOCKER_URL}"
 echo "##########################################"
 docker build \
-	--label "nx-engine.com/git-url=${CI_REPOSITORY_URL}" \
+	--label "nx-engine.com/project-url=${CI_PROJECT_URL}" \
 	--label "nx-engine.com/git-commit=${CI_COMMIT_SHA}" \
 	--pull -f ${DOCKFILE} -t ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${SRC_TOP}
 docker tag ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
