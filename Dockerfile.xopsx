@@ -1,0 +1,8 @@
+FROM python:3
+COPY requirements.txt /tmp
+RUN pip install -r /tmp/requirements.txt
+
+COPY . /workspace
+WORKDIR /workspace
+RUN echo "cd /workspace; python -m xopsx; exit 0" >> /root/.bashrc
+ENTRYPOINT ["/workspace/docker-entrypoint.sh"]
