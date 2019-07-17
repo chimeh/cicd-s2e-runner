@@ -1,4 +1,10 @@
+FROM alpine AS binaries
+ARG KUBECTL_VERSION=v1.15.0
+RUN wget -q -O /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+RUN chmod +x /usr/local/bin/kubectl
+
 FROM python:3
+COPY --from=binaries /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY requirements.txt /tmp
 RUN pip install -r /tmp/requirements.txt
 
