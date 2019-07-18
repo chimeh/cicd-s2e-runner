@@ -95,7 +95,12 @@ async def select_namespace(widget_cb):
     return await selected
 
 
+async def export_helm_tarball(widget_cb, namespace):
+    await info(widget_cb, "......")
+
+
 async def new_test_release(widget_cb):
+
     while True:
         pressed = await info(
             widget_cb,
@@ -114,11 +119,21 @@ async def new_test_release(widget_cb):
             break
 
         if pressed == " ":
-            namespace = await select_namespace(widget_cb)
+            header = urwid.Text("")
+            body = urwid.WidgetPlaceholder(urwid.Filler(urwid.Text("")))
+            frame = urwid.Frame(body, header=header)
+            widget_cb(frame)
+
+            def body_widget_cb(widget):
+                body.original_widget = widget
+
+            header.set_text("版本转测：选择 namespace")
+            namespace = await select_namespace(body_widget_cb)
             if not namespace:
                 break
 
-            # await export_helm_tarball(widget_cb, namespace)
+            header.set_text(f"版本转测：导出 helm 包 [namespace: {namespace}]")
+            await export_helm_tarball(body_widget_cb, namespace)
             # await create_release_branches(widget_cb)
             # await export_source_codes(widget_cb)
             break
