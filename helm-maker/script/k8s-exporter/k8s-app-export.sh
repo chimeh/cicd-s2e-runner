@@ -85,8 +85,8 @@ while read i; do
     echo -n ',' >> ${RCNAME}/${name}/ports.txt
     kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  >> ${RCNAME}/${name}/ports.txt               
     fi  
-    perl -ni -e "s@harbor.nxe.local@harbor-chengdu.nx-engine.com@g;print"   ${RCNAME}/${name}/img.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' > ${RCNAME}/${name}/env.txt
+    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.srcmeta\.txt}' > ${RCNAME}/${name}/srcmeta.txt
     kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.default-entrypoint\.sh}' 2>/dev/null > ${RCNAME}/${name}/default-entrypoint.sh
     if [[ $(wc -l ${RCNAME}/${name}/default-entrypoint.sh  | awk '{print $1}') -lt 1 ]];then
       rm -f  ${RCNAME}/${name}/default-entrypoint.sh

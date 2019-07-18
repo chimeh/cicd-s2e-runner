@@ -20,5 +20,8 @@ data:
 {{ if (.Files.Glob "files/override-entrypoint.sh") }}
 {{ (.Files.Glob "files/override-entrypoint.sh").AsConfig | indent 2 }}
 {{ end }}
+{{ if (.Files.Glob "files/srcmeta.txt") }}
+{{ (.Files.Glob "files/srcmeta.txt").AsConfig | indent 2 }}
+{{ end }}
 {{- end -}}
 {{- end -}}

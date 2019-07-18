@@ -146,6 +146,16 @@ cat >> ${APPNAME}/requirements.yaml <<EOF
   version: ~${COMMONCHARTVERSION}
   repository: "file://charts/${name}"
 EOF
+cat > ${APPNAME}/charts/$name/files/srcmeta.txt <<EOF
+CI_PROJECT_URL=${CI_PROJECT_URL}
+CI_PROJECT_PATH=${CI_PROJECT_PATH}
+CI_PROJECT_NAMESPACE=${CI_PROJECT_NAMESPACE}
+CI_PROJECT_NAME=${CI_PROJECT_NAME}
+CI_BUILD_REF_SLUG=${CI_BUILD_REF_SLUG}
+CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA}
+CI_PROJECT_ID=${CI_PROJECT_ID}
+CI_COMMIT_SHA=${CI_COMMIT_SHA}
+EOF
 done
 
 echo "##########################gen value file"
