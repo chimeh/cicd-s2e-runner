@@ -226,7 +226,9 @@ async def main_menu(widget_cb):
 async def run():
     placeholder = urwid.WidgetPlaceholder(urwid.Filler(urwid.Text("Initialize...")))
     with urwid.MainLoop(
-        urwid.LineBox(placeholder), event_loop=urwid.AsyncioEventLoop()
+        urwid.LineBox(placeholder),
+        event_loop=urwid.AsyncioEventLoop(),
+        handle_mouse=False,
     ).start():
 
         def widget_cb(widget):
