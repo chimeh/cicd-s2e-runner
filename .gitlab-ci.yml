@@ -1,5 +1,6 @@
 s2i:
     script:
+     - export CICD_NS_RABC_ENABLED=1
      - env
      - s2i .
     only:
