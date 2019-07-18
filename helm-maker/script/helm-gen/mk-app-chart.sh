@@ -136,6 +136,9 @@ for i in ${SVCNAME};do \
        perl -ne "chomp(\$_);print ' ' x 0;print \$_;print qq(\n);" ${APPNAME}/charts/${name}/env.txt.old >> ${APPNAME}/charts/$name/files/env.txt
        rm -f ${APPNAME}/${name}/env.txt.old
     fi
+    if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
+      /bin/cp -rf  ${APPNAME}/charts/$name/cicd-ns-rabc-templates/* ${APPNAME}/charts/$name/templates/
+    fi
     perl -ni -e "s/^name:.+/name: ${name}/g;print" ${APPNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^version:.+/version: ${COMMONCHARTVERSION}/g;print" ${APPNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^icev3-xxx-generic/$name/g;print" ${APPNAME}/charts/$name/values-single.yaml
