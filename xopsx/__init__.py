@@ -1,5 +1,9 @@
+from tempfile import TemporaryDirectory
 import asyncio
+import contextlib
+import collections
 import itertools
+import os
 
 import urwid
 
@@ -95,8 +99,77 @@ async def select_namespace(widget_cb):
     return await selected
 
 
-async def export_helm_tarball(widget_cb, namespace):
-    await info(widget_cb, "......")
+async def export_helm_tarball(widget_cb, namespace, version):
+    K8S_NS_EXPORT = os.path.realpath(
+        "./helm-maker/script/k8s-exporter/k8s-ns-export.sh"
+    )
+    MK_RC_TXT2HELM = os.path.realpath("./helm-maker/script/helm-gen/mk-rc-txt2helm.sh")
+    tarball = create_future()
+
+    header = urwid.Text("")
+    body = urwid.Text("...")
+    frame = urwid.Frame(urwid.Filler(body), header=header)
+    widget_cb(frame)
+
+    def header_widget_cb(widget):
+        header.original_widget = widget
+
+    @contextlib.contextmanager
+    def progress(desc):
+        loop = asyncio.get_event_loop()
+        finished = False
+
+        def text_gen():
+            for i in itertools.chain.from_iterable(
+                itertools.repeat([".  ", ".. ", "..."])
+            ):
+                yield f"{desc} [{i}]"
+
+        text_iter = text_gen()
+
+        async def task():
+            while not finished:
+                header.set_text(next(text_iter))
+                await asyncio.sleep(0.1)
+
+        try:
+            loop.create_task(task())
+            yield
+        finally:
+            finished = True
+
+    async def show_output(reader):
+        lines = collections.deque(maxlen=7)
+        while not reader.at_eof():
+            line = await reader.readline()
+            lines.append("> " + line.decode("utf-8"))
+            body.set_text("".join(lines))
+
+    with TemporaryDirectory() as outdir:
+        txtdir = os.path.join(outdir, "txt")
+        chartdir = os.path.join(outdir, "chart")
+
+        with progress("[k8s-ns-export.sh] 正在导出 txt 中间格式"):
+            proc = await asyncio.create_subprocess_shell(
+                f"{K8S_NS_EXPORT} {namespace} {txtdir}",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            await show_output(proc.stdout)
+            await proc.wait()
+
+        # with progress("[mk-rc-txt2helm.sh] 正在转化为 helm 包"):
+        #     proc = await asyncio.create_subprocess_shell(
+        #         f"cd {chartdir}; {MK_RC_TXT2HELM} {txtdir} {namespace} {version}",
+        #         stdout=asyncio.subprocess.PIPE,
+        #         stderr=asyncio.subprocess.STDOUT,
+        #     )
+        #     await show_output(proc.stdout)
+        #     await proc.wait()
+
+        tarball.set_result(None)
+
+    return await tarball
 
 
 async def new_test_release(widget_cb):
@@ -133,7 +206,8 @@ async def new_test_release(widget_cb):
                 break
 
             header.set_text(f"版本转测：导出 helm 包 [namespace: {namespace}]")
-            await export_helm_tarball(body_widget_cb, namespace)
+
+            await export_helm_tarball(body_widget_cb, namespace, "test")
             # await create_release_branches(widget_cb)
             # await export_source_codes(widget_cb)
             break
