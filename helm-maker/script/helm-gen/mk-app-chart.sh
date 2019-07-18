@@ -235,6 +235,9 @@ if [[ ${K8S_AUTOCD} -gt 0 ]];then
      helm delete --purge ${K8S_NS}-${SVCNAME}   
      helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
    fi 
+   if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
+     kubectl set serviceaccount deployment ${SVCNAME}  ${SVCNAME}
+   fi
 fi
 set +xv
 
