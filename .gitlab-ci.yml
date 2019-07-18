@@ -1,0 +1,7 @@
+s2i:
+    script:
+     - env
+     - s2i .
+    only:
+     - master
+
