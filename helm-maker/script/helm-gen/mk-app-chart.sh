@@ -146,6 +146,7 @@ cat >> ${APPNAME}/requirements.yaml <<EOF
   version: ~${COMMONCHARTVERSION}
   repository: "file://charts/${name}"
 EOF
+if [[ -n ${GITLAB_CI} ]];then
 cat > ${APPNAME}/charts/$name/files/srcmeta.txt <<EOF
 CI_PROJECT_URL=${CI_PROJECT_URL}
 CI_PROJECT_PATH=${CI_PROJECT_PATH}
@@ -156,6 +157,7 @@ CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA}
 CI_PROJECT_ID=${CI_PROJECT_ID}
 CI_COMMIT_SHA=${CI_COMMIT_SHA}
 EOF
+fi
 done
 
 echo "##########################gen value file"
