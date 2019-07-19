@@ -48,6 +48,12 @@ spec:
         env:
         - name: NGINX_URL
           value: http://xopsx.k8s-dev.cd
+        volumesMounts:
+        - name: xopsx
+          mountPath: /tmp/xopsx
+      volumes:
+      - name: xopsx
+        emptyDir: {}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

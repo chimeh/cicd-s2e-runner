@@ -57,7 +57,7 @@ async def select_namespace(widget_cb):
     async def progress():
         def text_gen():
             for i in itertools.chain.from_iterable(
-                itertools.repeat([".  ", ".. ", "..."])
+                itertools.repeat(["   ", ".  ", ".. ", "..."])
             ):
                 yield f"正在获取 namespace 列表 [{i}]"
 
@@ -101,11 +101,12 @@ async def select_namespace(widget_cb):
     return await selected
 
 
-async def export_helm_tarball(widget_cb, outdir, namespace, name, version):
+async def export_helm_tarball(widget_cb, outdir, namespace):
     K8S_NS_EXPORT = os.path.realpath(
         "./helm-maker/script/k8s-exporter/k8s-ns-export.sh"
     )
     MK_RC_TXT2HELM = os.path.realpath("./helm-maker/script/helm-gen/mk-rc-txt2helm.sh")
+    name, version = outdir.split("/")[-2:]
     header = urwid.Text("")
     body = urwid.Text("...")
     frame = urwid.Frame(urwid.Filler(body), header=header)
@@ -121,7 +122,7 @@ async def export_helm_tarball(widget_cb, outdir, namespace, name, version):
 
         def text_gen():
             for i in itertools.chain.from_iterable(
-                itertools.repeat([".  ", ".. ", "..."])
+                itertools.repeat(["   ", ".  ", ".. ", "..."])
             ):
                 yield f"{desc} [{i}]"
 
@@ -130,7 +131,7 @@ async def export_helm_tarball(widget_cb, outdir, namespace, name, version):
         async def task():
             while not finished:
                 header.set_text(next(text_iter))
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.3)
 
         try:
             loop.create_task(task())
@@ -159,7 +160,7 @@ async def export_helm_tarball(widget_cb, outdir, namespace, name, version):
 
     with progress("[mk-rc-txt2helm.sh] 正在转化为 helm 包"):
         proc = await asyncio.create_subprocess_shell(
-            f"{MK_RC_TXT2HELM} {chartdir} {txtdir} {name} {version}",
+            f"{MK_RC_TXT2HELM} {txtdir} {name} {version} {chartdir}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
@@ -179,15 +180,25 @@ async def input_name_version(widget_cb):
     urwid.connect_signal(submit_button, "click", submit)
 
     widget = urwid.Padding(
-        urwid.ListBox(urwid.SimpleFocusListWalker([
-            name_edit, version_edit, submit_button
-        ])),
-        align="center", width=("relative", 50)
+        urwid.ListBox(
+            urwid.SimpleFocusListWalker([name_edit, version_edit, submit_button])
+        ),
+        align="center",
+        width=("relative", 30),
     )
 
     widget_cb(widget)
 
     return await result
+
+
+async def create_release_branches(widget_cb, outdir):
+    name, version = outdir.split("/")[-2:]
+
+    def targets():
+        for dirpath, dirnames, filenames in os.walk(outdir):
+            if "srcmeta.txt" in filenames:
+                pass
 
 
 async def new_test_release(widget_cb):
@@ -237,8 +248,8 @@ async def new_test_release(widget_cb):
 
             header.set_text(f"版本转测：导出 helm 包 [{name}-{version}.tar.gz]")
 
-            await export_helm_tarball(body_widget_cb, outdir, namespace, name, version)
-            # await create_release_branches(widget_cb)
+            await export_helm_tarball(body_widget_cb, outdir, namespace)
+            await create_release_branches(widget_cb, outdir)
             # await export_source_codes(widget_cb)
 
             header.set_text("版本转测：已完成！")
