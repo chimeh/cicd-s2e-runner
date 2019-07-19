@@ -5,7 +5,7 @@
 USAGE="
   export DOMAIN_INTERNAL=xxx.in
   export DOMAIN_PUBLIC=xxx.com
-  usage: $0  txtdir [NEWNAME] [VERSION]"
+  usage: $0  txtdir [NEWNAME] [VERSION] [OUTDIR]"
 
 ###################################################################
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
@@ -76,8 +76,13 @@ if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
     INGRESS_PUBLIC_ENABLED=true
 fi
 
+if [[ $# -gt 2 ]];then
+   OUTDIR=$(realpath ${3}) 
+else
+   OUTDIR=$(realpath ${PWD})
+fi
 TXTDIR=$(realpath ${1})
-RCNAME=${PWD}/${CATALOG_NAME}
+RCNAME=${OUTDIR}/${CATALOG_NAME}
 vaule_filename=values-release-txt2helm.yaml
 commonchartversion=1.0
 
