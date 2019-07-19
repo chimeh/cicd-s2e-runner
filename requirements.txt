@@ -1,2 +1,3 @@
 gitlab
+requests
 urwid
