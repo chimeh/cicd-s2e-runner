@@ -1,3 +1,2 @@
-gitlab
-requests
+python-gitlab
 urwid
