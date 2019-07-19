@@ -76,8 +76,8 @@ if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
     INGRESS_PUBLIC_ENABLED=true
 fi
 
-if [[ $# -gt 2 ]];then
-   OUTDIR=$(realpath ${3}) 
+if [[ $# -gt 3 ]];then
+   OUTDIR=$(realpath ${4}) 
 else
    OUTDIR=$(realpath ${PWD})
 fi
