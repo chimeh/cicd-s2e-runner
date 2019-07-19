@@ -14,6 +14,20 @@ spec:
   - port: 80
     targetPort: 8080
 ---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: xopsx
+spec:
+  rules:
+  - host: xopsx.k8s-dev.cd
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: xopsx
+          servicePort: 80
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,6 +45,9 @@ spec:
       containers:
       - name: app
         image: harbor-chengdu.nx-engine.com/devops/xopsx
+        env:
+        - name: NGINX_URL
+          value: http://xopsx.k8s-dev.cd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
