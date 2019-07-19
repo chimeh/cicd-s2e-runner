@@ -101,13 +101,11 @@ async def select_namespace(widget_cb):
     return await selected
 
 
-async def export_helm_tarball(widget_cb, outdir, namespace, version):
+async def export_helm_tarball(widget_cb, outdir, namespace, name, version):
     K8S_NS_EXPORT = os.path.realpath(
         "./helm-maker/script/k8s-exporter/k8s-ns-export.sh"
     )
     MK_RC_TXT2HELM = os.path.realpath("./helm-maker/script/helm-gen/mk-rc-txt2helm.sh")
-    tarball = create_future()
-
     header = urwid.Text("")
     body = urwid.Text("...")
     frame = urwid.Frame(urwid.Filler(body), header=header)
@@ -159,36 +157,37 @@ async def export_helm_tarball(widget_cb, outdir, namespace, version):
         await show_output(proc.stdout)
         await proc.wait()
 
-    # with progress("[mk-rc-txt2helm.sh] 正在转化为 helm 包"):
-    #     proc = await asyncio.create_subprocess_shell(
-    #         f"cd {chartdir}; {MK_RC_TXT2HELM} {txtdir} {namespace} {version}",
-    #         stdout=asyncio.subprocess.PIPE,
-    #         stderr=asyncio.subprocess.STDOUT,
-    #     )
-    #     await show_output(proc.stdout)
-    #     await proc.wait()
-
-    tarball.set_result(None)
-
-    return await tarball
+    with progress("[mk-rc-txt2helm.sh] 正在转化为 helm 包"):
+        proc = await asyncio.create_subprocess_shell(
+            f"{MK_RC_TXT2HELM} {chartdir} {txtdir} {name} {version}",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        await show_output(proc.stdout)
+        await proc.wait()
 
 
-async def input_version(widget_cb):
-    version = create_future()
+async def input_name_version(widget_cb):
+    result = create_future()
+    name_edit = urwid.Edit("名称： ")
+    version_edit = urwid.Edit("版本： ")
+    submit_button = urwid.Button("确认")
 
-    class MyWidget(urwid.Filler):
-        def __init__(self):
-            return super(MyWidget, self).__init__(urwid.Edit("版本号： "))
+    def submit(_):
+        result.set_result((name_edit.edit_text, version_edit.edit_text))
 
-        def keypress(self, size, key):
-            if key == "enter":
-                version.set_result(self.body.edit_text)
-            else:
-                return super(MyWidget, self).keypress(size, key)
+    urwid.connect_signal(submit_button, "click", submit)
 
-    widget_cb(MyWidget())
+    widget = urwid.Padding(
+        urwid.ListBox(urwid.SimpleFocusListWalker([
+            name_edit, version_edit, submit_button
+        ])),
+        align="center", width=("relative", 50)
+    )
 
-    return await version
+    widget_cb(widget)
+
+    return await result
 
 
 async def new_test_release(widget_cb):
@@ -200,7 +199,7 @@ async def new_test_release(widget_cb):
                 [
                     "版本转测将依次进行以下步骤：",
                     "  1. 选择 namespace",
-                    "  2. 输入版本号",
+                    "  2. 输入名称和版本号",
                     "  3. 导出 helm 包",
                     "  4. 创建 release 分支",
                     "  5. 导出代码包",
@@ -225,10 +224,10 @@ async def new_test_release(widget_cb):
             if not namespace:
                 break
 
-            header.set_text("版本转测: 输入版本号")
-            version = await input_version(body_widget_cb)
+            header.set_text("版本转测: 输入名称和版本号")
+            name, version = await input_name_version(body_widget_cb)
 
-            outdir = os.path.join(settings.OUTPUT_DIR, namespace, version)
+            outdir = os.path.join(settings.OUTPUT_DIR, name, version)
 
             try:
                 os.makedirs(outdir)
@@ -236,9 +235,9 @@ async def new_test_release(widget_cb):
                 await info(body_widget_cb, "版本已存在，无需再次创建！")
                 break
 
-            header.set_text(f"版本转测：导出 helm 包 [{namespace}-{version}.tar.gz]")
+            header.set_text(f"版本转测：导出 helm 包 [{name}-{version}.tar.gz]")
 
-            await export_helm_tarball(body_widget_cb, outdir, namespace, version)
+            await export_helm_tarball(body_widget_cb, outdir, namespace, name, version)
             # await create_release_branches(widget_cb)
             # await export_source_codes(widget_cb)
 
