@@ -229,7 +229,7 @@ echo "##############################################################"
 
 ################# post to repo
 #http://charts.ops/api/charts
-if [ $# -gt 3 ];then
+if [ $# -gt 4 ];then
   echo "post to repo"
   rm -rf ${RCNAME}/../${CATALOG_NAME}
   /bin/cp -rf ${RCNAME} ${RCNAME}/../${CATALOG_NAME}
