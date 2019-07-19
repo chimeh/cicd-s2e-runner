@@ -6,8 +6,9 @@ import itertools
 import os
 
 import urwid
+import gitlab
 
-from . import settings
+from . import settings, utils
 
 
 def create_future():
@@ -167,6 +168,15 @@ async def export_helm_tarball(widget_cb, outdir, namespace):
         await show_output(proc.stdout)
         await proc.wait()
 
+        tarball = os.path.join(outdir, f"{name}-{version}.tar.gz")
+        proc = await asyncio.create_subprocess_shell(
+            f"tar --verbose --directory {chartdir} --create --gzip --file {tarball} {name}",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        await show_output(proc.stdout)
+        await proc.wait()
+
 
 async def input_name_version(widget_cb):
     result = create_future()
@@ -194,11 +204,50 @@ async def input_name_version(widget_cb):
 
 async def create_release_branches(widget_cb, outdir):
     name, version = outdir.split("/")[-2:]
+    body = urwid.Text("")
+    widget_cb(urwid.Filler(body))
 
-    def targets():
-        for dirpath, dirnames, filenames in os.walk(outdir):
-            if "srcmeta.txt" in filenames:
-                pass
+    lines = collections.deque(maxlen=7)
+
+    def log(s):
+        lines.append(s)
+        body.set_text("\n".join(lines))
+
+    try:
+        gl = utils.make_gitlab_client()
+    except gitlab.GitlabError as e:
+        await info(widget_cb, f"访问 GitLab 失败，{e}")
+        return
+
+    log("> 获取项目信息")
+    targets = set()
+    for dirpath, dirnames, filenames in os.walk(outdir):
+        if "srcmeta.txt" in filenames:
+            meta = {}
+            with open(os.path.join(dirpath, "srcmeta.txt")) as f:
+                for line in f:
+                    key, val = line.strip().partition("=")[::2]
+                    meta[key] = val
+
+                with contextlib.suppress(KeyError):
+                    targets.add((meta["CI_PROJECT_ID"], meta["CI_COMMIT_SHA"]))
+
+    branch_name = f"release/{name}-{version}"
+    created = []
+    for project_id, ref in targets:
+        project = gl.projects.get(project_id)
+        log(f"> {project.path_with_namespace}: 从 {ref} 创建分支 {branch_name}")
+        try:
+            project.branches.create({"branch": branch_name, "ref": ref})
+            created.append(project.path_with_namespace)
+        except gitlab.GitlabError as e:
+            log(f"! 创建分支失败，{e}")
+
+    if created:
+        await info(
+            widget_cb,
+            "\n".join([f"已在以下项目创建 {branch_name} 分支：", *["  " + i for i in created]]),
+        )
 
 
 async def new_test_release(widget_cb):
@@ -213,7 +262,7 @@ async def new_test_release(widget_cb):
                     "  2. 输入名称和版本号",
                     "  3. 导出 helm 包",
                     "  4. 创建 release 分支",
-                    "  5. 导出代码包",
+                    # "  5. 导出代码包",
                     "按 ECS 键返回主菜单，SPACE 键继续。",
                 ]
             ),
@@ -247,9 +296,10 @@ async def new_test_release(widget_cb):
                 break
 
             header.set_text(f"版本转测：导出 helm 包 [{name}-{version}.tar.gz]")
-
             await export_helm_tarball(body_widget_cb, outdir, namespace)
-            await create_release_branches(widget_cb, outdir)
+
+            header.set_text(f"版本转测：创建 release 分支")
+            await create_release_branches(body_widget_cb, outdir)
             # await export_source_codes(widget_cb)
 
             header.set_text("版本转测：已完成！")
