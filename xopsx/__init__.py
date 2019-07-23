@@ -262,7 +262,6 @@ async def new_test_release(widget_cb):
                     "  2. 输入名称和版本号",
                     "  3. 导出 helm 包",
                     "  4. 创建 release 分支",
-                    # "  5. 导出代码包",
                     "按 ECS 键返回主菜单，SPACE 键继续。",
                 ]
             ),
@@ -400,6 +399,13 @@ async def archive_source_codes(widget_cb):
 
             branch_name = f"release/{name}-{version}"
             await fetch_source_codes(widget_cb, outdir, branch_name)
+
+            header.set_text("源代码归档：已完成！")
+            await info(
+                body_widget_cb,
+                f"源代码地址：{settings.NGINX_URL}/{outdir}/"
+            )
+            break
 
 
 async def main_menu(widget_cb):
