@@ -300,7 +300,6 @@ async def new_test_release(widget_cb):
 
             header.set_text(f"版本转测：创建 release 分支")
             await create_release_branches(body_widget_cb, outdir)
-            # await export_source_codes(widget_cb)
 
             header.set_text("版本转测：已完成！")
             await info(
@@ -314,13 +313,105 @@ async def new_test_release(widget_cb):
             break
 
 
+async def fetch_source_codes(widget_cb, outdir, branch_name):
+    body = urwid.Text("")
+    widget_cb(urwid.Filler(body))
+    lines = collections.deque(maxlen=12)
+
+    def log(s):
+        lines.append(s)
+        body.set_text("\n".join(lines))
+
+    try:
+        gl = utils.make_gitlab_client()
+    except gitlab.GitlabError as e:
+        await info(widget_cb, f"访问 GitLab 失败，{e}")
+        return
+
+    fetched = []
+    for project in gl.projects.list(as_list=False):
+        await asyncio.sleep(0.1)
+        log(f"> 检测 {project.path_with_namespace}")
+        try:
+            branch = project.branches.get(branch_name)
+            log(f"! 拉取 {project.path_with_namespace} 的 {branch_name} 分支")
+            os.makedirs(
+                os.path.join(outdir, os.path.dirname(project.path_with_namespace))
+            )
+            with open(
+                os.path.join(outdir, project.path_with_namespace + ".tar.gz"), mode="wb"
+            ) as f:
+                project.repository_archive(
+                    sha=branch_name, streamed=True, target=f.write
+                )
+            fetched.append(project.path_with_namespace)
+
+        except gitlab.GitlabError:
+            with contextlib.suppress(gitlab.GitlabError):
+                tag = project.tags.get(branch_name)
+                log(f"! 拉取 {project.path_with_namespace} 的 {branch_name} 分支")
+                os.makedirs(
+                    os.path.join(outdir, os.path.dirname(project.path_with_namespace))
+                )
+                with open(
+                    os.path.join(outdir, project.path_with_namespace + ".tar.gz"),
+                    mode="wb",
+                ) as f:
+                    project.repository_archive(
+                        sha=branch_name, streamed=True, target=f.write
+                    )
+                fetched.append(project.path_with_namespace)
+
+    if fetched:
+        await info(widget_cb, "\n".join([f"以获取以下项目的源码：", *["  " + i for i in fetched]]))
+
+
+async def archive_source_codes(widget_cb):
+    while True:
+        pressed = await info(
+            widget_cb,
+            "\n".join(
+                [
+                    "源代码归档需要输入名称和版本号。",
+                    "本程序将拉取 GitLab 上所有项目的以 release/[名称]-[版本号] 命名的分支或 TAG 的源代码。",
+                    "按 ECS 键返回主菜单，SPACE 键继续。",
+                ]
+            ),
+        )
+
+        if pressed == "esc":
+            break
+
+        if pressed == " ":
+            header = urwid.Text("源代码归档")
+            body = urwid.WidgetPlaceholder(urwid.Filler(urwid.Text("")))
+            frame = urwid.Frame(body, header=header)
+            widget_cb(frame)
+
+            def body_widget_cb(widget):
+                body.original_widget = widget
+
+            header.set_text("源代码归档：输入版本号")
+            name, version = await input_name_version(body_widget_cb)
+
+            outdir = os.path.join(settings.OUTPUT_DIR, name, version, "codes")
+            with contextlib.suppress(FileExistsError):
+                os.makedirs(outdir)
+
+            branch_name = f"release/{name}-{version}"
+            await fetch_source_codes(widget_cb, outdir, branch_name)
+
+
 async def main_menu(widget_cb):
     while True:
-        chosen = await menu(widget_cb, ("新版本转测", "退出本程序"))
+        chosen = await menu(widget_cb, ("新版本转测", "源代码归档", "退出本程序"))
         if chosen == 0:
             await new_test_release(widget_cb)
 
         if chosen == 1:
+            await archive_source_codes(widget_cb)
+
+        if chosen == 2:
             break
 
 
