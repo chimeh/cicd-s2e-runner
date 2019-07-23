@@ -341,7 +341,7 @@ async def fetch_source_codes(widget_cb, outdir, branch_name):
                 os.path.join(outdir, project.path_with_namespace + ".tar.gz"), mode="wb"
             ) as f:
                 project.repository_archive(
-                    sha=branch_name, streamed=True, target=f.write
+                    sha=branch_name, streamed=True, action=f.write
                 )
             fetched.append(project.path_with_namespace)
 
@@ -357,7 +357,7 @@ async def fetch_source_codes(widget_cb, outdir, branch_name):
                     mode="wb",
                 ) as f:
                     project.repository_archive(
-                        sha=branch_name, streamed=True, target=f.write
+                        sha=branch_name, streamed=True, action=f.write
                     )
                 fetched.append(project.path_with_namespace)
 
