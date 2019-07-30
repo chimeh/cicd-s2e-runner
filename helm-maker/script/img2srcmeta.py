@@ -18,13 +18,13 @@ def run(args):
 
         try:
             # tag: VERSION-BRANCH-REF-X-BUILD
-            _, _, ref, _, _ = tag.split("-")
-        except ValueError:
+            ref = tag.split("-")[-3]
+        except IndexError:
             # tag: COMMIT
             ref = tag
 
     except ValueError:
-        print(f"{args.image} 缺少版本 tag ，无法确认 commit ！", file=sys.stderr)
+        print(f"[ERROR] {args.image} 缺少版本 tag ，无法确认 commit ！", file=sys.stderr)
         sys.exit(1)
 
     # 推断 project id
@@ -36,18 +36,27 @@ def run(args):
     else:
         matched_projects = gl.projects.list(search=project_name, all=True)
 
+
+    matched_projects = [x for x in matched_projects if x.name == project_name]
     if not matched_projects:
-        print(f"项目 {project_name} 未找到！", file=sys.stderr)
+        print(f"[ERROR] 项目 {project_name} 未找到！", file=sys.stderr)
         sys.exit(1)
+
 
     try:
         project, = matched_projects
     except ValueError:
-        print(f"存在多个同名的项目：{matched_projects} ！", file=sys.stderr)
+        print(f"[ERROR] {project_name}: 存在多个同名的项目：{[i.path_with_namespace for i in matched_projects]} ！", file=sys.stderr)
         sys.exit(1)
 
     project = gl.projects.get(project.id)
-    commit = project.commits.get(ref)
+
+    try:
+        commit = project.commits.get(ref)
+    except gitlab.GitlabError:
+        print(f"[ERROR] {project.path_with_namespace} 不存在 commit {ref} ！", file=sys.stderr)
+        sys.exit(1)
+
     print(f"CI_PROJECT_ID={project.id}")
     print(f"CI_COMMIT_SHA={commit.id}")
 
