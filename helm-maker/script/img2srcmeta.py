@@ -24,7 +24,7 @@ def run(args):
             ref = tag
 
     except ValueError:
-        print(f"{image_name} 缺少版本 tag ，无法确认 commit ！", file=sys.stderr)
+        print(f"{args.image} 缺少版本 tag ，无法确认 commit ！", file=sys.stderr)
         sys.exit(1)
 
     # 推断 project id
