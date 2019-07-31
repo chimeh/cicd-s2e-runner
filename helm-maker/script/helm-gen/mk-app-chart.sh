@@ -19,7 +19,7 @@ TRYTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do
         done ;                                  \
         pwd;)
 
-WORKDIR=$(pwd)
+WORKDIR=$(realpath $(pwd))
 if [[ -z ${TRYTOP} ]];then
 TRYTOP=${WORKDIR}
 fi
@@ -69,7 +69,7 @@ fi
 
 CATALOG_NAME=$(echo ${SVCNAME} | tr '[A-Z]' '[a-z]')
 VERSION=${CURDATE}${BUILD_COUNTER}
-APPNAME=$(realpath ${WORKDIR}/${K8S_NS}-${SVCNAME})
+APPNAME=${WORKDIR}/${K8S_NS}-${SVCNAME}
 VAULE_FILENAME=values-${SVCNAME}.yaml
 COMMONCHARTVERSION=1.0
 echo "IMG=${IMG}"
