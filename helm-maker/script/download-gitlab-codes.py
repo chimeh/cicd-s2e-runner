@@ -15,7 +15,7 @@ def run(args):
     print("正在获取项目列表。。。")
 
     targets = []
-    for project in (gl.projects.list())[:3]:
+    for project in gl.projects.list(as_list=False):
         with contextlib.suppress(gitlab.GitlabError):
             project.branches.get(args.ref)
             targets.append(project)
