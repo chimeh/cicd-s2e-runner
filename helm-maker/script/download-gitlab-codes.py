@@ -33,9 +33,10 @@ def run(args):
             print(f"开始下载项目源代码，总计：{len(targets)}")
             for i, project in enumerate(targets):
                 print(f"[{i+1}/{len(targets)}] 下载 {project.path_with_namespace}")
-                os.makedirs(
-                    os.path.join(t, os.path.dirname(project.path_with_namespace))
-                )
+                with contextlib.suppress(FileExistsError):
+                    os.makedirs(
+                        os.path.join(t, os.path.dirname(project.path_with_namespace))
+                    )
                 with open(
                     os.path.join(t, project.path_with_namespace + ".tar.gz"), mode="wb"
                 ) as f:
