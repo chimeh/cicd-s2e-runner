@@ -56,6 +56,7 @@ if [[ -n $(eval ${DETECT_JAVA}) ]];then
     echo "detect SRC_TOP from file ${pom}"
     SRC_TOP=`echo $(realpath $(dirname ${pom})) | sort | head -n 1`
     SRC_TYPE=java
+    mvn --file ${SRC_TOP} -N  -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec 
     SRC_VERSION=`mvn --file ${SRC_TOP} -q -N -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec | tail -n 1`
 elif [[ -n $(eval ${DETECT_NODEJS}) ]];then
     echo "detect SRC_TOP from file ${package}"
@@ -111,6 +112,13 @@ else
     ARTIFACT_DEPLOY=0
 fi
 
+if [[ -z ${K8S_AUTOCD} ]];then                                                                                                    
+  if [[ ${CI_COMMIT_REF_SLUG} =~ master ]];then                                                                                   
+    K8S_AUTOCD=1                                                                                                                  
+  else                                                                                                                            
+    K8S_AUTOCD=0                                                                                                                  
+  fi                                                                                                                              
+fi 
 echo "##########################################"
 echo "SRC_TOP=${SRC_TOP}"
 echo "SRC_TYPE=${SRC_TYPE}"
