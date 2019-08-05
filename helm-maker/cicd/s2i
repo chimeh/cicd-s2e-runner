@@ -64,9 +64,6 @@ elif [[ -n $(eval ${DETECT_NODEJS}) ]];then
     SRC_TOP=$(realpath $(dirname ${package}))
     SRC_TYPE=nodejs
     SRC_VERSION=$(cd ${SRC_TOP};npm run packageVersion |tail -n 1)
-    if [[ -z ${SRC_VERSION} ]];then
-    SRC_VERSION=1.0.0
-    fi
 elif [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
     echo "detect SRC_TOP from file .TOP"
     topfile=`echo $(eval ${DETECT_DEFAULT_GIT}) | head -n 1 | awk '{print $1}'`
@@ -84,6 +81,9 @@ else
     SRC_VERSION="cant-detect-version"
     echo "Error can't detect SRC_TOP !!!!"
     exit 1
+fi
+if [[ -z ${SRC_VERSION} ]];then
+    SRC_VERSION=1.0.0
 fi
 SRC_GIT_COMMIT_ID="-$(cd ${SRC_TOP};git rev-parse --short HEAD )"
 if [[ -n ${TEAMCITY_GIT_PATH} ]];then
@@ -122,7 +122,6 @@ fi
 echo "##########################################"
 echo "SRC_TOP=${SRC_TOP}"
 echo "SRC_TYPE=${SRC_TYPE}"
-echo "SRC_VERSION=${SRC_VERSION}"
 echo "SRC_VERSION=${SRC_VERSION}"
 echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}"
 echo "BUILD_COUNTER=${BUILD_COUNTER}"
@@ -182,10 +181,6 @@ function do_nodejs_s2i()
 {
         echo "soure2image begin, nodejs source, webpack, to docker image"
         pushd ${SRC_TOP}
-        npm install
-        npm run build
-	rm -rf node_modules
-	npm install --production
         popd
 }
 function do_java_s2i()
@@ -266,10 +261,7 @@ echo "DOCKER_URL=${DOCKER_URL}"
 echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER}"
 echo "DOCKER_URL=${DOCKER_URL}"
 echo "##########################################"
-docker build \
-	--label "nx-engine.com/project-url=${CI_PROJECT_URL}" \
-	--label "nx-engine.com/git-commit=${CI_COMMIT_SHA}" \
-	--pull -f ${DOCKFILE} -t ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${SRC_TOP}
+docker build --pull -f ${DOCKFILE} -t ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${SRC_TOP}
 docker tag ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
 
 
