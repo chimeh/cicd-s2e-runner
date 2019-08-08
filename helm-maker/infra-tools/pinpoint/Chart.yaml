@@ -1,4 +1,0 @@
-apiVersion: v1
-description: pinpoint(hbase+mysql+pinpoint-web+pinpoint-collector)
-name: pinpoint
-version: 0.1.0

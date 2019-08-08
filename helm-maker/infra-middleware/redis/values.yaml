@@ -1,5 +1,0 @@
-persistence:
-  enabled: false
-  size: 1Gi
-service:
-  type: LoadBalancer
