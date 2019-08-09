@@ -45,6 +45,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sonarqube-url", required=True, help="SonarQube URL")
     parser.add_argument("--ce-task-id", required=True, help="report-task.txt: ceTaskId")
-    parser.add_argument("--check-")
     args = parser.parse_args()
     run(args.sonarqube_url, args.ce_task_id)
