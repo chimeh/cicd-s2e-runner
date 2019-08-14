@@ -19,7 +19,6 @@ TRYTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do
         done ;                                  \
         pwd;)
 
-bash ${SCRIPT_DIR}/s2i-depend
 WORKDIR=$(pwd)
 if [[ -z ${TRYTOP} ]];then
 TRYTOP=${WORKDIR}
@@ -112,13 +111,6 @@ else
     ARTIFACT_DEPLOY=0
 fi
 
-if [[ -z ${K8S_AUTOCD} ]];then                                                                                                    
-  if [[ ${CI_COMMIT_REF_SLUG} =~ master ]];then                                                                                   
-    K8S_AUTOCD=1                                                                                                                  
-  else                                                                                                                            
-    K8S_AUTOCD=0                                                                                                                  
-  fi                                                                                                                              
-fi 
 echo "##########################################"
 echo "SRC_TOP=${SRC_TOP}"
 echo "SRC_TYPE=${SRC_TYPE}"
@@ -138,6 +130,9 @@ if [[ -z ${NEXUS_SNAPSHOT} ]];then
     export NEXUS_SNAPSHOT=${DOCKER_REPO:-'http://nexus.nx-code.com/content/repositories/ne-server-maven-snapshot'}
 fi
     export NEXUS_SNAPSHOT
+if [[ -z ${DOCKER_BUILD} ]];then
+    DOCKER_BUILD=1
+fi
 if [[ -z ${DOCKER_REPO} ]];then
     DOCKER_REPO=${DOCKER_REPO:-harbor-chengdu.nx-engine.com}
 fi
@@ -159,11 +154,38 @@ fi
 if [[ -z ${K8S_DOMAIN_PUBLIC} ]];then
     K8S_DOMAIN_PUBLIC=nxengine.cn
 fi
+
+case $num in
+    master)
+      echo 'branch name ${CI_COMMIT_REF_SLUG}, do CI, then CD'
+    ;;
+    bugfix*)
+      echo 'branch name ${CI_COMMIT_REF_SLUG}, only do CI'
+      K8S_AUTOCD=0
+    ;;
+    hotfix*)
+      echo 'branch name ${CI_COMMIT_REF_SLUG}, only do CI'
+      K8S_AUTOCD=0
+    ;;
+    feature*)
+      echo 'branch name ${CI_COMMIT_REF_SLUG}, only do CI'
+      K8S_AUTOCD=0
+    ;;
+    *)echo
+      K8S_AUTOCD=0
+    ;;
+esac
+if [[ ${DOCKER_BUILD} -eq 0 ]];then
+  echo 'No CD when disable docker build'
+  K8S_AUTOCD=0
+fi
+
 echo "##########################################"
 echo "NEXUS_REPO=${NEXUS_REPO}"
 echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
 echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
 echo "ENABLE_SONAR=${ENABLE_SONAR}"
+echo "DOCKER_BUILD=${DOCKER_BUILD}"
 echo "DOCKER_REPO=${DOCKER_REPO}"
 echo "DOCKER_NS=${DOCKER_NS}"
 echo "K8S_AUTOCD=${K8S_AUTOCD}"
@@ -172,6 +194,10 @@ echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
 echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
 echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
 
+if [[ ${DOCKER_BUILD} -eq 0 ]];then
+  echo 'No CD when disable docker build'
+  K8S_AUTOCD=0
+fi
 
 echo "##########################################"
 #ls -lh ${SRC_TOP}/*
@@ -235,44 +261,48 @@ if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
     DOCKFILE_DIR=$(dirname ${DOCKFILE})
 else
     echo "can't detect Dockerfile"
-    exit -1
 fi
 echo "DOCKFILE=${DOCKFILE}"
 echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
-
-SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
-
-if [[ -z ${SVC_PORTS} ]];then
-    echo "warn, no EXPOSE in ${DOCKFILE}"
-    SVC_PORTS=80
+  
+if [[ ${DOCKER_BUILD} -gt 0 ]];then
+  SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
+  
+  if [[ -z ${SVC_PORTS} ]];then
+      echo "warn, no EXPOSE in ${DOCKFILE}"
+      SVC_PORTS=80
+  fi
+  echo "##########################################"
+  DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMAGE_NAME}:${SRC_VERSION}${BUILD_COUNTER}
+  echo "DOCKFILE=${DOCKFILE}"
+  echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
+  echo "DOCKER_URL=${DOCKER_URL}"
+  echo "SVC_PORTS=${SVC_PORTS}"
+  
+  
+  echo "##########################################"
+  echo "build docker image"
+  echo "DOCKFILE=${DOCKFILE}"
+  echo "DOCKER_URL=${DOCKER_URL}"
+  echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER}"
+  echo "DOCKER_URL=${DOCKER_URL}"
+  echo "##########################################"
+  docker build --pull -f ${DOCKFILE} -t ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${SRC_TOP}
+  docker tag ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
+  
+  
+  
+  docker push ${DOCKER_URL}
+  docker rmi ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER}
+  docker rmi ${DOCKER_URL}
 fi
-echo "##########################################"
-DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMAGE_NAME}:${SRC_VERSION}${BUILD_COUNTER}
-echo "DOCKFILE=${DOCKFILE}"
-echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
-echo "DOCKER_URL=${DOCKER_URL}"
-echo "SVC_PORTS=${SVC_PORTS}"
 
-
-echo "##########################################"
-echo "build docker image"
-echo "DOCKFILE=${DOCKFILE}"
-echo "DOCKER_URL=${DOCKER_URL}"
-echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER}"
-echo "DOCKER_URL=${DOCKER_URL}"
-echo "##########################################"
-docker build --pull -f ${DOCKFILE} -t ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${SRC_TOP}
-docker tag ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
-
-
-
-docker push ${DOCKER_URL}
-docker rmi ${DOCKER_IMAGE_NAME}:x${BUILD_COUNTER}
-docker rmi ${DOCKER_URL}
 set +e
 set -xv
+
 if [ ${K8S_AUTOCD} -gt 0 ];then
     for SVCNAME in ${K8S_SVCNAMES};do
         bash ${TRYTOP}/script/helm-gen/mk-app-chart.sh ${DOCKER_URL} ${SVCNAME} ${K8S_NS} ${SVC_PORTS} ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
     done
 fi
+echo ${DOCKER_URL}
