@@ -219,10 +219,10 @@ function do_java_s2i()
         fi
         if [[ ${ENABLE_SONAR} -gt 0 ]];then
             if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-                  mvn clean deploy sonar:sonar
+                  mvn clean deploy sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .)
                   exit 0
             else
-                mvn clean package sonar:sonar
+                mvn clean package sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .)
             fi
         else
             if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
