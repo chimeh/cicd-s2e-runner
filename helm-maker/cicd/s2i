@@ -155,23 +155,24 @@ if [[ -z ${K8S_DOMAIN_PUBLIC} ]];then
     K8S_DOMAIN_PUBLIC=nxengine.cn
 fi
 
-case $num in
+case ${CI_COMMIT_REF_SLUG} in
     master)
-      echo 'branch name ${CI_COMMIT_REF_SLUG}, do CI, then CD'
+      echo "branch name ${CI_COMMIT_REF_SLUG}, do CI, then CD"
     ;;
     bugfix*)
-      echo 'branch name ${CI_COMMIT_REF_SLUG}, only do CI'
+      echo "branch name ${CI_COMMIT_REF_SLUG}, only do CI"
       K8S_AUTOCD=0
     ;;
     hotfix*)
-      echo 'branch name ${CI_COMMIT_REF_SLUG}, only do CI'
+      echo "branch name ${CI_COMMIT_REF_SLUG}, only do CI"
       K8S_AUTOCD=0
     ;;
     feature*)
-      echo 'branch name ${CI_COMMIT_REF_SLUG}, only do CI'
+      echo "branch name ${CI_COMMIT_REF_SLUG}, only do CI"
       K8S_AUTOCD=0
     ;;
-    *)echo
+    *)
+      echo " branch name ${CI_COMMIT_REF_SLUG}, only do CI"
       K8S_AUTOCD=0
     ;;
 esac
