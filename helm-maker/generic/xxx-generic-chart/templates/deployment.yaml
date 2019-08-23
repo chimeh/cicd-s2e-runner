@@ -64,7 +64,7 @@ spec:
             - -c
             - if [ -f /docker/liveness.sh ] ; then chmod +x /docker/liveness.sh; exec /docker/liveness.sh ; fi
           failureThreshold: 3
-          initialDelaySeconds: 45
+          initialDelaySeconds: 6
           periodSeconds: 3
           successThreshold: 1
           timeoutSeconds: 3
@@ -75,7 +75,7 @@ spec:
             - -c
             - if [ -f /docker/ready.sh ] ; then chmod +x /docker/ready.sh; exec /docker/ready.sh ; fi
           failureThreshold: 3
-          initialDelaySeconds: 45
+          initialDelaySeconds: 6
           periodSeconds: 3
           successThreshold: 2
           timeoutSeconds: 3
