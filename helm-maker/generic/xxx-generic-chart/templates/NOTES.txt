@@ -1,1 +1,1 @@
-hello!!!
+autogen chart for {{ template "xxxxxx.name" . }}
