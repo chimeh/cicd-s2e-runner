@@ -230,10 +230,10 @@ set -xv
 set -e
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
    echo "###########################################auto deploy"
-   helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+   helm upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
    if [[ $? -ne 0 ]];then
      helm delete --purge ${K8S_NS}-${SVCNAME}   
-     helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+     helm upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
    fi 
    if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
      kubectl set -n  ${K8S_NS}  serviceaccount deployment ${SVCNAME}  ${SVCNAME}
