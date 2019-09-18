@@ -1,7 +1,7 @@
 stages:
-  - deploy
+  - deploy-env
 deploy-to-dev:
-  stage: deploy-to-dev
+  stage: deploy-env
   script:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_DEV}
      - s2i . deploy 
@@ -14,7 +14,7 @@ deploy-to-dev:
   except:
     - /^dev.*$/
 deploy-to-test:
-  stage: deploy-to-test
+  stage: deploy-env
   when: manual
   script:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_TEST}
@@ -28,7 +28,7 @@ deploy-to-test:
   except:
     - /^dev.*$/
 deploy-to-prod:
-  stage: deploy-to-prod
+  stage: deploy-env
   when: manual
   script:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_PROD}
