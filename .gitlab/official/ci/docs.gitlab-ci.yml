@@ -1,0 +1,86 @@
+.review-docs:
+  extends:
+    - .default-tags
+    - .default-retry
+  image: ruby:2.6-alpine
+  stage: review
+  dependencies: []
+  variables:
+    GIT_STRATEGY: none
+  environment:
+    name: review-docs/$CI_COMMIT_REF_SLUG
+    # DOCS_REVIEW_APPS_DOMAIN and DOCS_GITLAB_REPO_SUFFIX are CI variables
+    # Discussion: https://gitlab.com/gitlab-org/gitlab-foss/merge_requests/14236/diffs#note_40140693
+    url: http://$CI_ENVIRONMENT_SLUG.$DOCS_REVIEW_APPS_DOMAIN/$DOCS_GITLAB_REPO_SUFFIX
+    on_stop: review-docs-cleanup
+  before_script:
+    # We don't clone the repo by using GIT_STRATEGY: none and only download the
+    # single script we need here so it's much faster than cloning.
+    - apk add --update openssl
+    - wget $CI_PROJECT_URL/raw/$CI_COMMIT_SHA/scripts/trigger-build-docs
+    - chmod 755 trigger-build-docs
+
+# Trigger a manual docs build in gitlab-docs only on non docs-only branches.
+# Useful to preview the docs changes live.
+review-docs-deploy-manual:
+  extends:
+    - .review-docs
+    - .except-docs-qa
+  script:
+    - gem install gitlab --no-document
+    - ./trigger-build-docs deploy
+  when: manual
+  only:
+    - branches@gitlab-org/gitlab-foss
+    - branches@gitlab-org/gitlab
+
+# Always trigger a docs build in gitlab-docs only on docs-only branches.
+# Useful to preview the docs changes live.
+review-docs-deploy:
+  extends:
+    - .review-docs
+    - .except-qa
+  script:
+    - gem install gitlab --no-document
+    - ./trigger-build-docs deploy
+  only:
+    - /(^docs[\/-].+|.+-docs$)/@gitlab-org/gitlab-foss
+    - /(^docs[\/-].+|.+-docs$)/@gitlab-org/gitlab
+
+# Cleanup remote environment of gitlab-docs
+review-docs-cleanup:
+  extends:
+    - .review-docs
+    - .except-qa
+  environment:
+    name: review-docs/$CI_COMMIT_REF_SLUG
+    action: stop
+  script:
+    - gem install gitlab --no-document
+    - ./trigger-build-docs cleanup
+  when: manual
+  only:
+    - branches@gitlab-org/gitlab-foss
+    - branches@gitlab-org/gitlab
+
+docs lint:
+  extends:
+    - .default-tags
+    - .default-retry
+    - .except-qa
+  image: "registry.gitlab.com/gitlab-org/gitlab-build-images:gitlab-docs-lint"
+  stage: test
+  dependencies: []
+  script:
+    - scripts/lint-doc.sh
+    # Lint Markdown
+    - markdownlint --config .markdownlint.json 'doc/**/*.md'
+    # Prepare docs for build
+    - mv doc/ /tmp/gitlab-docs/content/$DOCS_GITLAB_REPO_SUFFIX
+    - cd /tmp/gitlab-docs
+    # Build HTML from Markdown
+    - bundle exec nanoc
+    # Check the internal links
+    - bundle exec nanoc check internal_links
+    # Check the internal anchor links
+    - bundle exec nanoc check internal_anchors

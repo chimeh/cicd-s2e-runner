@@ -1,0 +1,30 @@
+global:
+  rc-fullname: false
+  ingress:
+    internal:
+      annotations-ingress-class: nginx
+      domain: okd.cd
+    public:
+      annotations-ingress-class: nginx
+      domain: nxengine.cn
+icev3-xxx-generic:
+  replicaCount: 1
+  ingress:
+    internal: 
+      enabled: true
+      host: {}
+    public: 
+      enabled: true
+      host: {}
+  service:
+    type: LoadBalancer
+    ports:
+      - 80
+      - 8080
+  image: nginx:latest
+  env.txt: |
+    CCC=DDD
+    CCC=DDD
+    CCC=DDD
+  
+

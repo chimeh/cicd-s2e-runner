@@ -1,0 +1,15 @@
+stages:
+  - s4
+s4:
+  stage: s4
+  when: manual
+  script:
+     - echo s4
+  only:
+    - master
+    - /^rc.*$/
+    - /^bugfix.*$/
+    - /^hotfix.*$/
+    - /^feature.*$/ 
+  except:
+    - /^dev.*$/

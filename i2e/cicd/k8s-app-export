@@ -1,0 +1,105 @@
+#!/bin/bash
+#author: huangjimin
+#email : jimin.huang@nx-engine.com
+
+set -e
+USAGE="usage: $0 K8S_NS DEPLOYMENT_NAME1[,NAME2,...] [OUT_DIR]
+       $0 default nginx,tomcat,... xxx-rc1 "
+echo "${USAGE}"
+
+###################################################################
+THIS_SCRIPT=$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0})
+#automatic detection TOPDIR
+CUR_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+TSTOP=$(xdir=${CUR_DIR};cd ${CUR_DIR}; while /usr/bin/test ! -e .TOP ; do \
+        xdir=`cd ../;pwd`;                       \
+        if [ "$xdir" = "/" ] ; then             \
+           echo  1>&2; \
+           break;                              \
+        fi ;                                    \
+        cd $xdir;                               \
+        done ;                                  \
+        pwd;)
+
+if [[ -z ${TSTOP} ]];then
+TSTOP=${CUR_DIR}
+fi
+echo THIS_SCRIPT=$THIS_SCRIPT
+echo CUR_DIR=$CUR_DIR
+echo TSTOP=$TSTOP
+
+if [[ -n ${TEAMCITY_GIT_PATH} ]];then
+    echo "Teamcity CI"
+elif [[ -n ${JENKINS_URL} ]];then
+    echo "Jenkins CI"
+elif [[ -n ${GITLAB_CI} ]];then
+    echo "GITLAB CI"
+else
+    echo "can't detect name"
+fi
+
+
+####################################################################
+
+if [ $# -lt 2 ];then
+  echo "${USAGE}"
+  exit 1;
+fi
+K8S_NS=$1
+SVC=$2
+if [ $# -ge 3 ];then
+  OUT_DIR=$(realpath -m ${3})
+else
+  OUT_DIR=$(PWD)
+fi
+CURDATE=$(date +%Y%m%d%H%M%S)
+VERSION=${CURDATE}
+
+
+if [ -z ${OUT_DIR} ];then
+  OUT_DIR=$(pwd)/${K8S_NS}-${VERSION}-txt
+fi
+echo "${K8S_NS}"
+echo "${SVC}"
+echo "${OUT_DIR}"
+
+kubectl cluster-info
+kubectl get ns ${K8S_NS}
+if [ $? -ne 0 ];then
+  echo "NS ${K8S_NS} no exist"
+  exit 2;
+fi
+mkdir -p ${OUT_DIR}
+
+echo "##########################gen img/env/port"
+    name=$i
+    echo "export app for ${K8S_NS}/${name}"
+    mkdir -p ${OUT_DIR}/${name}
+    img=`kubectl get -n ${K8S_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
+    echo ${img} > ${OUT_DIR}/${name}/img.txt
+    kubectl get -n  ${K8S_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  &> /dev/null
+    if [[ $? -eq 0 ]];then
+    kubectl get -n  ${K8S_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  > ${OUT_DIR}/${name}/ports.txt
+    fi
+    kubectl get -n  ${K8S_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  &> /dev/null
+    if [[ $? -eq 0 ]];then                                                                                             
+    echo -n ',' >> ${OUT_DIR}/${name}/ports.txt
+    kubectl get -n  ${K8S_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  >> ${OUT_DIR}/${name}/ports.txt               
+    fi  
+    
+    kubectl get -n ${K8S_NS} cm $name -o=jsonpath='{.data.env\.txt}' > ${OUT_DIR}/${name}/env.txt
+    kubectl get -n ${K8S_NS} cm $name -o=jsonpath='{.data.default-entrypoint\.sh}' 2>/dev/null > ${OUT_DIR}/${name}/default-entrypoint.sh
+    if [[ $(wc -l ${OUT_DIR}/${name}/default-entrypoint.sh  | awk '{print $1}') -lt 1 ]];then
+      rm -f  ${OUT_DIR}/${name}/default-entrypoint.sh
+    fi
+    kubectl get -n ${K8S_NS} cm $name -o=jsonpath='{.data.override-entrypoint\.sh}' 2>/dev/null > ${OUT_DIR}/${name}/override-entrypoint.sh
+    if [[ $(wc -l ${OUT_DIR}/${name}/override-entrypoint.sh  | awk '{print $1}') -lt 1 ]];then
+      rm -f  ${OUT_DIR}/${name}/override-entrypoint.sh
+    fi
+    kubectl get -n ${K8S_NS} --export cm ${name}-initdata -o=yaml >${OUT_DIR}/${name}/${name}-initdata.yaml 2>/dev/null
+    if [[ $(wc -l ${OUT_DIR}/${name}/${name}-initdata.yaml  | awk '{print $1}') -lt 1 ]];then
+      rm -f  ${OUT_DIR}/${name}/${name}-initdata.yaml
+    fi
+done
+
+

@@ -1,0 +1,15 @@
+stages:
+  - s2i
+s2i:
+  stage: s2i
+  script:
+     - env
+     - s2i .
+  only:
+    - master
+    - /^rc.*$/
+    - /^bugfix.*$/
+    - /^hotfix.*$/
+    - /^feature.*$/ 
+  except:
+    - /^dev.*$/

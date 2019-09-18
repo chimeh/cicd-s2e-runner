@@ -1,0 +1,15 @@
+{{- if  (.Files.Glob "files/initdata/*") }}
+{{- if (index .Values (include "xxxxxx.name" .)) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "xxxxxx.fullname" . }}-initdata
+  labels:
+    qcloud-app: {{ template "xxxxxx.name" . }}
+    chart: {{ template "xxxxxx.chart" . }}
+    release: {{ .Release.Name | quote }}
+    heritage: {{ .Release.Service | quote }}
+data:
+{{ (.Files.Glob "files/initdata/*").AsConfig | indent 2 }}
+{{- end -}}
+{{- end -}}

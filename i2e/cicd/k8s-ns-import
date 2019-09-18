@@ -1,0 +1,73 @@
+#!/bin/bash
+#author: jimin.huang
+#email: jimin.huang@nx-engine.com
+set -e
+USAGE="usage: $0 K8S_NS /path/to/ns_txt_dir [DOMAIN_INTERNAL] [DOMAIN_PUBLIC]
+       "
+echo "${USAGE}"
+###################################################################
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+TRYTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do \
+        xdir=`cd ../;pwd`;                       \
+        if [ "$xdir" = "/" ] ; then             \
+           echo  1>&2; \
+           break;                              \
+        fi ;                                    \
+        cd $xdir;                               \
+        done ;                                  \
+        pwd;)
+
+
+WORKDIR=$(pwd)
+if [[ -z ${TRYTOP} ]];then
+TRYTOP=${WORKDIR}
+fi
+
+if [[ $# -lt 2 ]];then
+    echo "${USAGE}"
+    exit 1
+fi
+K8S_NS=$1
+K8S_NS_TXT_DIR=$(realpath $2)
+if [[ $# -ge 3 ]];then
+  DOMAIN_INTERNAL=$3
+fi 
+if [[ $# -ge 4 ]];then
+  DOMAIN_PUBLIC=$4
+fi 
+echo "##########################################"
+echo "SCRIPT_DIR=${SCRIPT_DIR}"
+echo "TRYTOP=${TRYTOP}"
+echo "K8S_NS=${K8S_NS}"
+echo "K8S_NS_TXT_DIR=${K8S_NS_TXT_DIR}"
+echo "DOMAIN_PUBLIC=${DOMAIN_PUBLIC}"
+echo "DOMAIN_INTERNAL=${DOMAIN_INTERNAL}"
+#env |egrep -v LS_COLORS
+echo "##########################################"
+echo "start deploy"
+export DOMAIN_PUBLIC
+export DOMAIN_INTERNAL
+
+bash ${SCRIPT_DIR}/helm-maker/script/helm-gen/mk-rc-txt2helm.sh ${K8S_NS_TXT_DIR} ${K8S_NS}-helm
+
+
+for i in $(dir  ${WORKDIR}/${K8S_NS}-helm/charts);
+do
+  set +e
+  kubectl get -n ${K8S_NS} deployment $i
+  rv=$?
+  set -e
+  if [[ ${rv} -ne 0 ]];then
+      echo "new deploy $i"
+      helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${i} ${WORKDIR}/${K8S_NS}-helm/charts/$i -f ${WORKDIR}/${K8S_NS}-helm/charts/$i/values-single.yaml
+  else
+      echo "upgrade img on $i"
+     img=$(head -n 1 ${K8S_NS_TXT_DIR}/${i}/img.txt)
+     kubectl set image -n ${K8S_NS} deployment ${i}  ${i}=${img}
+#  kubectl set resources deployment -n ${K8S_NS} deployment ${i} --limits=cpu=200m,memory=1024Mi 
+  fi
+done
+#/bin/rm -rf ${WORKDIR}/${K8S_NS}-helm
+

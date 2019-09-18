@@ -1,0 +1,14 @@
+stages:
+  - s2
+s2:
+  stage: s2
+  script:
+     - echo s2
+  only:
+    - master
+    - /^rc.*$/
+    - /^bugfix.*$/
+    - /^hotfix.*$/
+    - /^feature.*$/ 
+  except:
+    - /^dev.*$/
