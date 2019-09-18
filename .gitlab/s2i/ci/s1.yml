@@ -4,6 +4,7 @@ s1:
   stage: s1
   script:
      - echo s1
+     - ./s2e/s2i .
   only:
     - master
     - /^rc.*$/
