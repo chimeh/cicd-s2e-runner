@@ -4,6 +4,7 @@ deploy-to-dev:
   stage: deploy-env
   script:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_DEV}
+     - export K8S_NS=${K8S_NS_DEV:${K8S_NS}}
      - s2i . deploy 
   only:
     - master
@@ -18,6 +19,7 @@ deploy-to-test:
   when: manual
   script:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_TEST}
+     - export K8S_NS=${K8S_NS_TEST:${K8S_NS}}
      - s2i . deploy 
   only:
     - master
@@ -32,6 +34,7 @@ deploy-to-prod:
   when: manual
   script:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_PROD}
+     - export K8S_NS=${K8S_NS_PROD:${K8S_NS}}
      - s2i . deploy 
   only:
     - master
