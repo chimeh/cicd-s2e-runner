@@ -142,7 +142,7 @@ function do_src_get_reponame()
         echo "GITLAB CICD"
         SRC_BRANCHER_NAME=${CI_COMMIT_REF_SLUG}
         SRC_REPO_NAME="${CI_PROJECT_NAME}"
-        BUILD_COUNTER="g${CI_BUILD_ID}"
+        BUILD_COUNTER="g${CI_PIPELINE_ID}"
     else
         echo "manual CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)   
