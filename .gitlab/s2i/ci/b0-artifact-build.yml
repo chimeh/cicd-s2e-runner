@@ -3,7 +3,7 @@ stages:
 code-analysis:
   stage: artifact-build
   script:
-     - ./s2e/s2i . artifact-build
+     - s2i . artifact-build
   only:
     - master
     - /^rc.*$/

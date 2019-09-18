@@ -3,7 +3,7 @@ stages:
 code-analysis:
   stage: analysis-code
   script:
-     - ./s2e/s2i . analysis-code
+     - s2i . analysis-code
   only:
     - master
     - /^rc.*$/

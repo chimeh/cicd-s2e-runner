@@ -3,7 +3,7 @@ stages:
 code-analysis:
   stage: docker-build
   script:
-     - ./s2e/s2i . docker-build
+     - s2i . docker-build
   only:
     - master
     - /^rc.*$/
