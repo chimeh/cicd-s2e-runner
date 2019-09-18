@@ -9,20 +9,18 @@ RUN  cat /etc/apk/repositories \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && rm -rf /var/cache/apk/*
 
-RUN pip3 install kubernetes python-gitlab
+RUN pip3 install --index-url='https://mirrors.aliyun.com/pypi/simple' kubernetes python-gitlab
 
 
+COPY s2e /s2e
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY helm-maker /helm-maker
 
-#https://hub.docker.com/r/dtzar/helm-kubectl/tags
-#COPY --from=kubectl /usr/local/bin/kubectl /helm-maker/cicd
-#COPY --from=kubectl /usr/local/bin/helm /helm-maker/cicd
 
-ENV PATH=/helm-maker/cicd:/helm-maker/script/helm-gen:/helm-maker/script/k8s-exporter:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/s2e/cicd:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+WORKDIR /
 
-RUN chmod -R +x /helm-maker/cicd/ /helm-maker/script/helm-gen /helm-maker/script/k8s-exporter\
+RUN chmod -R +x /s2e/cicd \
     && echo "${SHELL_IMG_BASE} "
 
 EXPOSE 80
