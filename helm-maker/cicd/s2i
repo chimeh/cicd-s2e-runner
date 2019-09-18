@@ -12,17 +12,26 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 if [[ $# -lt 1 ]];then
     cat <<EOF
-    usage:
-    a build runner for java|nodejs|... source
+  usage:
+  s2i, a cicd tool, from src to artifact, to docker img, deploy to environment
 
-    $(realpath $0)   /path/to/srctop
+  $(basename $(realpath $0)) /path/to/srctop [ACTION_STAGE:{analysis|artifact|docker|deploy} ]
+  $(basename $(realpath $0)) /path/to/srctop analysis
+  $(basename $(realpath $0)) /path/to/srctop artifact
+  $(basename $(realpath $0)) /path/to/srctop docker
+  $(basename $(realpath $0)) /path/to/srctop deploy
 
 EOF
     exit 1
+else
+    GAVE_SRC_TOP=$(realpath $1)
+    SRC_TOP=$(realpath ${GAVE_SRC_TOP})
 fi
 
 if [[ $# -gt 1 ]];then
     ACTION_STAGE=$2
+else
+    ACTION_STAGE="ACTION_ALL"
 fi
 
 echo "##########################################"
@@ -30,74 +39,247 @@ echo "TRYTOP=${TRYTOP}"
 env |egrep -v LS_COLORS
 echo "##########################################"
 
-function src_metadata()
+function do_src_getype()
 {
-    echo "start build"
-    GAVE_SRC_TOP=$(realpath $1)
-    
-    # try to guest java or nodejs
-    echo "auto try to detect java or nodejs source and its topdir"
-    DETECT_JAVA="find ${GAVE_SRC_TOP}   -maxdepth 1 -iname pom.xml"
-    DETECT_NODEJS="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname package.json"
+    # try to guest java or nodejs, ...
+    echo "try to detect java or nodejs source"
+    DETECT_JAVA="find ${GAVE_SRC_TOP} -maxdepth 1 -iname pom.xml"
+    DETECT_NODEJS="find ${GAVE_SRC_TOP} -maxdepth 2 -iname package.json"
     DETECT_DEFAULT_TOP="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .TOP"
     DETECT_DEFAULT_GIT="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .git"
     eval ${DETECT_JAVA}
     eval ${DETECT_NODEJS}
     if [[ -n $(eval ${DETECT_JAVA}) ]];then
         pom=`echo $(eval ${DETECT_JAVA}) | head -n 1`
-        echo "detect SRC_TOP from file ${pom}"
-        SRC_TOP=`echo $(realpath $(dirname ${pom})) | sort | head -n 1`
+#        SRC_TOP=`echo $(realpath $(dirname ${pom})) | sort | head -n 1`
         SRC_TYPE=java
-        mvn --file ${SRC_TOP} -N  -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec 
-        SRC_VERSION=`mvn --file ${SRC_TOP} -q -N -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec | tail -n 1`
+        echo "SRC_TYPE=${SRC_TYPE}"
+        #mvn --file ${SRC_TOP} -N  -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec 
+        #SRC_VERSION=`mvn --file ${SRC_TOP} -q -N -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec | tail -n 1`
     elif [[ -n $(eval ${DETECT_NODEJS}) ]];then
-        echo "detect SRC_TOP from file ${package}"
-        package=`echo $(eval ${DETECT_NODEJS}) | head -n 1`
-        SRC_TOP=$(realpath $(dirname ${package}))
+#        package=`echo $(eval ${DETECT_NODEJS}) | head -n 1`
+#        SRC_TOP=$(realpath $(dirname ${package}))
         SRC_TYPE=nodejs
-        SRC_VERSION=$(cd ${SRC_TOP};npm run packageVersion |tail -n 1)
+        echo "SRC_TYPE=${SRC_TYPE}"
+        #SRC_VERSION=$(cd ${SRC_TOP};npm run packageVersion |tail -n 1)
     elif [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
-        echo "detect SRC_TOP from file .TOP"
-        topfile=`echo $(eval ${DETECT_DEFAULT_GIT}) | head -n 1 | awk '{print $1}'`
-        SRC_TOP=`echo $(realpath $(dirname ${topfile})) | head -n 1`
+#        topfile=`echo $(eval ${DETECT_DEFAULT_GIT}) | head -n 1 | awk '{print $1}'`
+#        SRC_TOP=`echo $(realpath $(dirname ${topfile})) | head -n 1`
         SRC_TYPE=none
-        SRC_VERSION="$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
-    elif [[ -n $(eval ${DETECT_DEFAULT_TOP}) ]];then
-        echo "detect SRC_TOP from file .TOP"
-        topfile=`echo $(eval ${DETECT_DEFAULT_TOP}) | head -n 1 | awk '{print $1}'`
-        SRC_TOP=`echo $(realpath $(dirname ${topfile})) | head -n 1`
-        SRC_TYPE=none
-        SRC_VERSION="v"
+        echo "SRC_TYPE=${SRC_TYPE}"
+        #SRC_VERSION="$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
     else
         SRC_TYPE=none
-        SRC_VERSION="cant-detect-version"
-        echo "Warn can't detect SRC_TOP !!!!"
+        echo "SRC_TYPE=${SRC_TYPE}"
+        SRC_VERSION="v1"
+        echo "Warn can't detect SRC_VERSION !!!!"
     fi
     if [[ -z ${SRC_VERSION} ]];then
-        SRC_VERSION=1.0.0
+        SRC_VERSION=v1
     fi
-    SRC_GIT_COMMIT_ID="-$(cd ${SRC_TOP};git rev-parse --short HEAD )"
-    
+    if [[ -f ${SRC_TOP}/src_version.txt ]];then
+        SRC_VERSION=`echo ${SRC_TOP}/src_version.txt | head -n 1 | awk '{print $1}'`
+    fi
+    ###################################################################  
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
         ARTIFACT_DEPLOY=1
     else
         ARTIFACT_DEPLOY=0
     fi
-    echo "##########################################"
+    ###################################################################  
+    if [[ -n ${TEAMCITY_GIT_PATH} ]];then
+        echo "Teamcity CI"
+        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
+        SRC_REPO_NAME=${TEAMCITY_BUILDCONF_NAME}
+        BUILD_COUNTER="-t-${BUILD_NUMBER}"
+    elif [[ -n ${JENKINS_URL} ]];then
+        echo "Jenkins CI"
+        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
+        SRC_REPO_NAME="${JOB_NAME}"
+        BUILD_COUNTER="-j-${BUILD_NUMBER}"
+    elif [[ -n ${GITLAB_CI} ]];then
+        echo "GITLAB CI"
+        SRC_BRANCHER_NAME=${CI_COMMIT_REF_SLUG}
+        SRC_REPO_NAME="${CI_PROJECT_NAME}"
+        BUILD_COUNTER="-${CI_COMMIT_REF_SLUG}${SRC_GIT_COMMIT_ID}-g-${CI_BUILD_ID}"
+    else
+        echo "manual CI"
+        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)   
+        SRC_REPO_NAME=$(basename $(realpath ${SRC_TOP}))
+        BUILD_COUNTER="-custom-1"
+    fi
+    SRC_GIT_COMMIT_ID="-$(cd ${SRC_TOP};git rev-parse --short HEAD )"
+    echo "##########################################${ACTION_STAGE}"
     echo "SRC_TOP=${SRC_TOP}"
     echo "SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
     echo "SRC_TYPE=${SRC_TYPE}"
     echo "SRC_VERSION=${SRC_VERSION}"
     echo "SRC_REPO_NAME=${SRC_REPO_NAME}"
     echo "SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
-    echo "##########################################"
+    echo "##########################################${ACTION_STAGE}"
     echo "NEXUS_REPO=${NEXUS_REPO}"
     echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
     echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
     echo "ENABLE_SONAR=${ENABLE_SONAR}"
 }
+function do_src_analysis_nodejs()
+{
+    echo "todo"
+}
 
-function deploy_metadata()
+function do_src_analysis_java()
+{
+   if [[ -z ${CI_PROJECT_PATH} ]];then
+    CI_PROJECT_PATH=${SRC_TOP}
+   fi
+   mvn clean package sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .) -Dsonar.projectName=$(echo ${CI_PROJECT_PATH}| tr / .)
+}
+function do_src_analysis()
+{
+    echo "do_src_analysis begin"
+    do_src_getype
+    case ${SRC_TYPE} in
+        nodejs)
+            do_src_analysis_nodejs
+            ;;
+        java)
+            do_src_analysis_java
+            ;;
+        python)
+            echo "not support yet"
+            ;;
+        go)
+            echo "not support yet"
+            ;;
+        *)
+            echo "not support yet"
+            ;;
+    esac
+}
+
+function do_artifact_build_nodejs()
+{
+        echo "soure2image begin, nodejs source, webpack, to docker image"
+        pushd ${SRC_TOP}
+        popd
+}
+function do_artifact_build_java()
+{
+        echo "soure2image begin, java source, to jar, to docker image"
+        pushd ${SRC_TOP}
+
+        if [[ ${ENABLE_SONAR} -gt 0 ]];then
+            if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
+                  mvn clean deploy sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .) -Dsonar.projectName=$(echo ${CI_PROJECT_PATH}| tr / .)
+                  exit 0
+            else
+                mvn clean package sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .) -Dsonar.projectName=$(echo ${CI_PROJECT_PATH}| tr / .)
+            fi
+        else
+            if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
+                mvn clean deploy
+                exit 0
+            else
+                mvn clean package
+            fi
+        fi
+}
+function do_artifact_build()
+{
+    echo "do_artifact_build begin"
+    do_src_getype
+    case ${SRC_TYPE} in
+        nodejs)
+            do_artifact_build_nodejs
+            ;;
+        java)
+            do_artifact_build_java
+            ;;
+        python)
+            echo "not support yet"
+            ;;
+        go)
+            echo "not support yet"
+            ;;
+        *)
+            echo "not support source, or detect fail"
+            ;;
+    esac
+}
+
+function do_docker_build()
+{
+    if [[ -z ${DOCKER_BUILD} ]];then
+        DOCKER_BUILD=1
+    fi
+    if [[ ${DOCKER_BUILD} -eq 0 ]];then
+        echo "DOCKER_BUILD=${DOCKER_BUILD}, exit 0"
+        exit 0
+    else
+        echo "start docker build"
+    fi
+    
+    do_src_getype
+    
+    echo "detect Dockerfile"
+    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 2 -iname Dockerfile | sort"
+    eval ${DETECT_DOCKERFILE}
+    eval ${DETECT_DOCKERFILE} | while read d;do
+        if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
+            #DOCKFILE=$(realpath `echo $(eval ${DETECT_DOCKERFILE})| head -n 1`)
+            DOCKFILE=$(realpath `echo ${d} | head -n 1`)
+            DOCKFILE_DIR=$(dirname ${DOCKFILE})
+        else
+            echo "can't detect Dockerfile"
+            exit 0
+        fi
+        if [[ -z ${DOCKER_REPO} ]];then
+            DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
+        fi
+        if [[ -z ${DOCKER_NS} ]];then
+            DOCKER_NS=default
+        fi
+        
+        DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
+        
+        if [[ -z ${DOCKER_SVC_PORTS} ]];then
+            echo "warn, no EXPOSE in ${DOCKFILE}"
+            DOCKER_SVC_PORTS=80
+        fi
+        
+        if [[ "${DOCKFILE_DIR}" = ${SRC_DIR} ]];then
+            DOCKER_IMG_TAG=${SRC_VERSION}${BUILD_COUNTER}
+        else
+            DOCKER_SUBDIR_NAME=$(basename $(realpath -m ${DOCKFILE_DIR}))
+            DOCKER_IMG_TAG=${DOCKER_SUBDIR_NAME}-${SRC_VERSION}${BUILD_COUNTER}
+        fi
+        DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
+        
+        echo "########################################## ${ACTION_STAGE}"
+        echo "build docker image"
+        echo "DOCKFILE=${DOCKFILE}"
+        echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
+        echo "DOCKER_BUILD=${DOCKER_BUILD}"
+        echo "DOCKER_REPO=${DOCKER_REPO}"
+        echo "DOCKER_NS=${DOCKER_NS}"
+        echo "DOCKER_SUBDIR_NAME=${DOCKER_SUBDIR_NAME}"
+        echo "DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
+        echo "DOCKER_URL=${DOCKER_URL}"
+        echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
+        echo "##########################################"
+        docker build --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
+        docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
+        
+        
+        
+        docker push ${DOCKER_URL}
+        docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
+        docker rmi ${DOCKER_URL}
+        echo ${DOCKER_URL}
+    done
+}
+
+function do_deploy_k8s()
 {
     TRYTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do \
             xdir=`cd ../;pwd`;                       \
@@ -129,141 +311,19 @@ function deploy_metadata()
     echo "K8S_AUTOCD=${K8S_AUTOCD}"
     echo "K8S_NS=${DOCKER_NS}"
     echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
+    echo "K8S_KUBECONFIG=${K8S_KUBECONFIG}"
     echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
     echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
-}
-
-
-
-
-if [[ ${DOCKER_BUILD} -eq 0 ]];then
-  echo 'No CD when disable docker build'
-  K8S_AUTOCD=0
-fi
-
-echo "##########################################"
-#ls -lh ${SRC_TOP}/*
-echo "##########################################"
-
-function do_artifact_nodejs_build()
-{
-        echo "soure2image begin, nodejs source, webpack, to docker image"
-        pushd ${SRC_TOP}
-        popd
-}
-function do_artifact_java_build()
-{
-        echo "soure2image begin, java source, to jar, to docker image"
-        pushd ${SRC_TOP}
-
-        if [[ "${SRC_REPO_NAME}" =~ ${NE_BOOT_MATCH} ]];then
-           ARTIFACT_DEPLOY=1
-        fi
-        if [[ ${ENABLE_SONAR} -gt 0 ]];then
-            if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-                  mvn clean deploy sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .) -Dsonar.projectName=$(echo ${CI_PROJECT_PATH}| tr / .)
-                  exit 0
-            else
-                mvn clean package sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .) -Dsonar.projectName=$(echo ${CI_PROJECT_PATH}| tr / .)
-            fi
-        else
-            if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-                mvn clean deploy
-                exit 0
-            else
-                mvn clean package
-            fi
-        fi
-}
-
-
-function do_docker_build()
-{
-    if [[ -n ${TEAMCITY_GIT_PATH} ]];then
-        echo "Teamcity CI"
-        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
-        SRC_REPO_NAME=${TEAMCITY_BUILDCONF_NAME}
-        BUILD_COUNTER="-t-${BUILD_NUMBER}"
-    elif [[ -n ${JENKINS_URL} ]];then
-        echo "Jenkins CI"
-        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
-        SRC_REPO_NAME="${JOB_NAME}"
-        BUILD_COUNTER="-j-${BUILD_NUMBER}"
-    elif [[ -n ${GITLAB_CI} ]];then
-        echo "GITLAB CI"
-        SRC_BRANCHER_NAME=${CI_COMMIT_REF_SLUG}
-        SRC_REPO_NAME="${CI_PROJECT_NAME}"
-        BUILD_COUNTER="-${CI_COMMIT_REF_SLUG}${SRC_GIT_COMMIT_ID}-g-${CI_BUILD_ID}"
-    else
-        echo "can't detect name"
-        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)   
-        SRC_REPO_NAME=$(basename $(realpath ${SRC_TOP}))
-        BUILD_COUNTER="-custom-1"
-    fi
     
-    echo "detect Dockerfile"
-    DETECT_DOCKERFILE="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname Dockerfile"
-    eval ${DETECT_DOCKERFILE}
-    if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
-        DOCKFILE=$(realpath `echo $(eval ${DETECT_DOCKERFILE})| head -n 1`)
-        DOCKFILE_DIR=$(dirname ${DOCKFILE})
-    else
-        echo "can't detect Dockerfile"
-        exit 0
-    fi
-    
-    if [[ -z ${DOCKER_BUILD} ]];then
-        DOCKER_BUILD=1
-    fi
-    if [[ -z ${DOCKER_REPO} ]];then
-        DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
-    fi
-    if [[ -z ${DOCKER_NS} ]];then
-        DOCKER_NS=default
-    fi
-      
-    if [[ ${DOCKER_BUILD} -gt 0 ]];then
-      DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
-      
-      if [[ -z ${DOCKER_SVC_PORTS} ]];then
-          echo "warn, no EXPOSE in ${DOCKFILE}"
-          DOCKER_SVC_PORTS=80
-      fi
-
-      DOCKER_IMG_NAME=$(basename $(realpath -m ${DOCKFILE_DIR})) 
-      DOCKER_IMG_TAG=${SRC_VERSION}${BUILD_COUNTER}
-      DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMG_NAME}:${DOCKER_IMG_TAG}
-      
-      echo "##########################################"
-      echo "build docker image"
-      echo "DOCKFILE=${DOCKFILE}"
-      echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
-      echo "DOCKER_BUILD=${DOCKER_BUILD}"
-      echo "DOCKER_REPO=${DOCKER_REPO}"
-      echo "DOCKER_NS=${DOCKER_NS}"
-      echo "DOCKER_IMG_NAME=${DOCKER_IMG_NAME}"
-      echo "DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
-      echo "DOCKER_URL=${DOCKER_URL}"
-      echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
-      echo "##########################################"
-      docker build --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
-      docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
-      
-      
-      
-      docker push ${DOCKER_URL}
-      docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
-      docker rmi ${DOCKER_URL}
-    fi
-    echo ${DOCKER_URL}
-}
-
-function do_deploy_k8s()
-{
     if [[ -z ${K8S_SVCNAMES} ]];then
         K8S_SVCNAMES=${SRC_REPO_NAME}
     fi
-    
+    if [[ -n ${K8S_KUBECONFIG} ]];then
+        echo "custom kubeconfig"
+        export KUBECONFIG=${K8S_KUBECONFIG}
+    else
+        echo "default kubeconfig"
+    fi
     if [ ${K8S_AUTOCD} -gt 0 ];then
         for SVCNAME in ${K8S_SVCNAMES};do
             bash ${TRYTOP}/script/helm-gen/mk-app-chart.sh ${DOCKER_URL} ${SVCNAME} ${K8S_NS} ${DOCKER_SVC_PORTS} ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
@@ -271,45 +331,28 @@ function do_deploy_k8s()
     fi
 }
 
-# artifact build
-case ${SRC_TYPE} in
-    nodejs)
-        do_artifact_nodejs_build
-        ;;
-    java)
-        do_artifact_java_build
-        ;;
-    python)
-        echo "not support yet"
-        ;;
-    go)
-        echo "not support yet"
-        ;;
-    *)
-        echo "node support source, or detect fail"
-        ;;
-esac
 
-# docker img build
-case ${SRC_BRANCHER_NAME} in
-    master)
-      echo "branch name ${SRC_BRANCHER_NAME}, do CI, then CD"
-    ;;
-    bugfix*)
-      echo "branch name ${SRC_BRANCHER_NAME}, only do CI"
-      K8S_AUTOCD=0
-    ;;
-    hotfix*)
-      echo "branch name ${SRC_BRANCHER_NAME}, only do CI"
-      K8S_AUTOCD=0
-    ;;
-    feature*)
-      echo "branch name ${SRC_BRANCHER_NAME}, only do CI"
-      K8S_AUTOCD=0
-    ;;
-    *)
-      echo " branch name ${SRC_BRANCHER_NAME}, only do CI"
-      K8S_AUTOCD=0
-    ;;
+
+# main logic
+
+echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
+case ${ACTION_STAGE} in
+    anal*)
+        do_src_analysis
+        ;;
+    art*)
+        do_artifact_build
+        ;;
+    docker*)
+        do_docker_build
+        ;;
+    deploy*)
+        do_deploy_k8s
+        ;;
+    ACTION_ALL*)
+        do_artifact_build
+        do_docker_build
+        do_deploy_k8s
+        ;;
 esac
 
