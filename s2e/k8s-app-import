@@ -19,7 +19,7 @@ TRYTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do
         done ;                                  \
         pwd;)
 
-WORKDIR=$(pwd)
+WORKDIR=$(realpath $(pwd))
 if [[ -z ${TRYTOP} ]];then
 TRYTOP=${WORKDIR}
 fi
@@ -35,7 +35,18 @@ fi
 if [[ -z ${DOMAIN_PUBLIC} ]];then
     DOMAIN_PUBLIC=e-engine.cn
 fi
-
+if [[ -z ${INGRESS_CLASS_INTERNAL} ]];then
+    INGRESS_CLASS_INTERNAL=nginx
+fi
+if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
+    INGRESS_CLASS_PUBLIC=nginx
+fi
+if [[ -z ${INGRESS_INTERNAL_ENABLED} ]];then
+    INGRESS_INTERNAL_ENABLED=true
+fi
+if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
+    INGRESS_PUBLIC_ENABLED=true
+fi
 ####################################################################
 CURDATE=$(date +%Y%m%d)
 if [ $# -lt 3 ];then
@@ -51,14 +62,14 @@ else
     PORTS=8080
 fi
 if [[ $# -gt 4 ]];then
-    K8S_AUTOCD=$4
+    K8S_AUTOCD=$5
 else
-    K8S_AUTOCD=$4
+    K8S_AUTOCD=$5
 fi
 
 CATALOG_NAME=$(echo ${SVCNAME} | tr '[A-Z]' '[a-z]')
 VERSION=${CURDATE}${BUILD_COUNTER}
-APPNAME=$(realpath ${WORKDIR}/${K8S_NS}-${SVCNAME})
+APPNAME=${WORKDIR}/${K8S_NS}-${SVCNAME}
 VAULE_FILENAME=values-${SVCNAME}.yaml
 COMMONCHARTVERSION=1.0
 echo "IMG=${IMG}"
@@ -125,6 +136,9 @@ for i in ${SVCNAME};do \
        perl -ne "chomp(\$_);print ' ' x 0;print \$_;print qq(\n);" ${APPNAME}/charts/${name}/env.txt.old >> ${APPNAME}/charts/$name/files/env.txt
        rm -f ${APPNAME}/${name}/env.txt.old
     fi
+    if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
+      /bin/cp -rf  ${APPNAME}/charts/$name/cicd-ns-rabc-templates/* ${APPNAME}/charts/$name/templates/
+    fi
     perl -ni -e "s/^name:.+/name: ${name}/g;print" ${APPNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^version:.+/version: ${COMMONCHARTVERSION}/g;print" ${APPNAME}/charts/$name/Chart.yaml
     perl -ni -e "s/^icev3-xxx-generic/$name/g;print" ${APPNAME}/charts/$name/values-single.yaml
@@ -135,6 +149,18 @@ cat >> ${APPNAME}/requirements.yaml <<EOF
   version: ~${COMMONCHARTVERSION}
   repository: "file://charts/${name}"
 EOF
+if [[ -n ${GITLAB_CI} ]];then
+cat > ${APPNAME}/charts/$name/files/srcmeta.txt <<EOF
+CI_PROJECT_URL=${CI_PROJECT_URL}
+CI_PROJECT_PATH=${CI_PROJECT_PATH}
+CI_PROJECT_NAMESPACE=${CI_PROJECT_NAMESPACE}
+CI_PROJECT_NAME=${CI_PROJECT_NAME}
+CI_BUILD_REF_SLUG=${CI_BUILD_REF_SLUG}
+CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA}
+CI_PROJECT_ID=${CI_PROJECT_ID}
+CI_COMMIT_SHA=${CI_COMMIT_SHA}
+EOF
+fi
 done
 
 echo "##########################gen value file"
@@ -143,10 +169,10 @@ global:
   rc-fullname: false
   ingress:
     internal:
-      annotations-ingress-class: kong-ingress-internal
+      annotations-ingress-class: ${INGRESS_CLASS_INTERNAL}
       domain: ${DOMAIN_INTERNAL}
     public:
-      annotations-ingress-class: kong-ingress-public
+      annotations-ingress-class: ${INGRESS_CLASS_PUBLIC}
       domain: ${DOMAIN_PUBLIC}
   containers:
     securityContext:
@@ -164,9 +190,10 @@ ${name}:
     replicaCount: 1
     ingress:
       internal: 
+        enabled: ${INGRESS_INTERNAL_ENABLED}
         host: {}
       public: 
-        enabled: true
+        enabled: ${INGRESS_PUBLIC_ENABLED}
         host: {}
     image: ${IMG}
     service:
@@ -204,6 +231,13 @@ set -e
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
    echo "###########################################auto deploy"
    helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+   if [[ $? -ne 0 ]];then
+     helm delete --purge ${K8S_NS}-${SVCNAME}   
+     helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+   fi 
+   if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
+     kubectl set -n  ${K8S_NS}  serviceaccount deployment ${SVCNAME}  ${SVCNAME}
+   fi
 fi
 set +xv
 
