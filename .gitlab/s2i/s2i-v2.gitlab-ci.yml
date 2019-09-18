@@ -1,7 +1,7 @@
 stages:
   - analysis-code
-  - artifact-build
-  - docker-build
+  - artifact-docker-build
+  - unit-test
   - deploy-env
 
 after_script:
