@@ -79,7 +79,7 @@ function do_src_get_srctype_by_topdir()
 function do_src_get_srctype_by_subdir()
 {
     echo "$FUNCNAME"
-    THIS_SRCDIR=$(realpath -m $1)
+    THIS_SRCDIR=$(realpath $1)
     
     echo "THIS_SRCDIR=${THIS_SRCDIR}"
     if [[ -z ${THIS_SRCDIR} ]];then
