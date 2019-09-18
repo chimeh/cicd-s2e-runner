@@ -410,6 +410,8 @@ function do_deploy_k8s()
     echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
     echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
     echo "##########################################"
+    kubectl get node
+    kubectl  cluster-info
     echo "detect Dockerfile"
     DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 2 -iname Dockerfile | sort"
     eval ${DETECT_DOCKERFILE}
