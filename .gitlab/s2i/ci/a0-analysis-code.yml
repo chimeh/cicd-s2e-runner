@@ -1,10 +1,9 @@
 stages:
-  - s4
-s4:
-  stage: s4
-  when: manual
+  - analysis-code
+code-analysis:
+  stage: analysis-code
   script:
-     - echo s4
+     - ./s2e/s2i . analysis-code
   only:
     - master
     - /^rc.*$/

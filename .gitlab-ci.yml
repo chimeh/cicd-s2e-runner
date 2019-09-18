@@ -1,2 +1,3 @@
 include:
-  - local: .gitlab/sanbox/sanbox.gitlab-ci.yml 
+#  - local: .gitlab/s2i/s2i-v1.gitlab-ci.yml
+  - local: .gitlab/s2i/s2i-v2.gitlab-ci.yml

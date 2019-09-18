@@ -1,0 +1,14 @@
+stages:
+  - artifact-build
+code-analysis:
+  stage: artifact-build
+  script:
+     - ./s2e/s2i . artifact-build
+  only:
+    - master
+    - /^rc.*$/
+    - /^bugfix.*$/
+    - /^hotfix.*$/
+    - /^feature.*$/ 
+  except:
+    - /^dev.*$/

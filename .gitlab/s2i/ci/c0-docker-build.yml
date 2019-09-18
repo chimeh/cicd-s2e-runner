@@ -1,9 +1,9 @@
 stages:
-  - s2
-s2:
-  stage: s2
+  - docker-build
+code-analysis:
+  stage: docker-build
   script:
-     - echo s2
+     - ./s2e/s2i . docker-build
   only:
     - master
     - /^rc.*$/

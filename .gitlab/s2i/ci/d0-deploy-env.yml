@@ -1,9 +1,10 @@
 stages:
-  - s3
-s3-deploy-to-env1:
-  stage: s3
+  - deploy
+deploy-to-dev:
+  stage: deploy-to-dev
   script:
-     - echo s3-deploy-to-env1 $CI_JOB_NAME
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_DEV}
+     - s2i . deploy 
   only:
     - master
     - /^rc.*$/
@@ -12,11 +13,12 @@ s3-deploy-to-env1:
     - /^feature.*$/ 
   except:
     - /^dev.*$/
-s3-deploy-to-env2:
-  stage: s3
+deploy-to-test:
+  stage: deploy-to-test
   when: manual
   script:
-     - echo s3-deploy-to-env2 $CI_JOB_NAME
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_TEST}
+     - s2i . deploy 
   only:
     - master
     - /^rc.*$/
@@ -25,11 +27,12 @@ s3-deploy-to-env2:
     - /^feature.*$/ 
   except:
     - /^dev.*$/
-s3-deploy-to-env3:
-  stage: s3
+deploy-to-prod:
+  stage: deploy-to-prod
   when: manual
   script:
-     - echo s3-deploy-to-env3 $CI_JOB_NAME
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_PROD}
+     - s2i . deploy 
   only:
     - master
     - /^rc.*$/
