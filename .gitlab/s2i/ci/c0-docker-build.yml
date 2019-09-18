@@ -1,6 +1,6 @@
 stages:
   - docker-build
-code-analysis:
+docker-build:
   stage: docker-build
   script:
      - s2i . docker-build

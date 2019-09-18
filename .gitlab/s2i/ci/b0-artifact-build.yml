@@ -1,6 +1,6 @@
 stages:
   - artifact-build
-code-analysis:
+artifact-build:
   stage: artifact-build
   script:
      - s2i . artifact-build
