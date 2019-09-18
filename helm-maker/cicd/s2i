@@ -1,27 +1,28 @@
 #!/bin/bash
+#cicd toolset
 #author: jimin.huang
 #email: jimin.huang@nx-engine.com
 set -e
-USAGE="usage: $0 /path/to/srctop
-       usage: $0 "
-echo "${USAGE}"
+
 ###################################################################
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
-if [[ $# -lt 1 ]];then
-    cat <<EOF
+USAGE="
   usage:
-  s2i, a cicd tool, from src to artifact, to docker img, deploy to environment
-
-  $(basename $(realpath $0)) /path/to/srctop [ACTION_STAGE:{analysis|artifact|docker|deploy} ]
+  s2i, a cicd tool, from src to artifact, to docker img, deploy into environment
+  $(basename $(realpath $0)) /path/to/srctop [ analysis|artifact|docker|deploy ]
+  
   $(basename $(realpath $0)) /path/to/srctop analysis
   $(basename $(realpath $0)) /path/to/srctop artifact
   $(basename $(realpath $0)) /path/to/srctop docker
   $(basename $(realpath $0)) /path/to/srctop deploy
 
-EOF
+"
+echo "${USAGE}"
+if [[ $# -lt 1 ]];then
+    echo "${USAGE}"
     exit 1
 else
     GAVE_SRC_TOP=$(realpath $1)
@@ -34,13 +35,11 @@ else
     ACTION_STAGE="ACTION_ALL"
 fi
 
-echo "##########################################"
-echo "TRYTOP=${TRYTOP}"
-env |egrep -v LS_COLORS
-echo "##########################################"
 
-function do_src_getype()
+
+function do_src_get_srctype_by_topdir()
 {
+    echo "$FUNCNAME"
     # try to guest java or nodejs, ...
     echo "try to detect java or nodejs source"
     DETECT_JAVA="find ${GAVE_SRC_TOP} -maxdepth 1 -iname pom.xml"
@@ -74,61 +73,106 @@ function do_src_getype()
         SRC_VERSION="v1"
         echo "Warn can't detect SRC_VERSION !!!!"
     fi
-    if [[ -z ${SRC_VERSION} ]];then
-        SRC_VERSION=v1
-    fi
-    if [[ -f ${SRC_TOP}/src_version.txt ]];then
-        SRC_VERSION=`echo ${SRC_TOP}/src_version.txt | head -n 1 | awk '{print $1}'`
-    fi
+    echo "SRC_TYPE=${SRC_TYPE}"
     ###################################################################  
-    if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-        ARTIFACT_DEPLOY=1
+}
+function do_src_get_srctype_by_subdir()
+{
+    echo "$FUNCNAME"
+    THIS_SRCDIR=$(realpath -m $1)
+    
+    echo "THIS_SRCDIR=${THIS_SRCDIR}"
+    if [[ -z ${THIS_SRCDIR} ]];then
+        echo "please specify your THIS_SRCDIR"
+        exit 1
+    fi  
+    echo "try to detect java or nodejs source"
+    DETECT_JAVA="find ${THIS_SRCDIR} -maxdepth 1 -iname pom.xml"
+    DETECT_NODEJS="find ${THIS_SRCDIR} -maxdepth 2 -iname package.json"
+    DETECT_DEFAULT_TOP="find ${THIS_SRCDIR}   -maxdepth 2 -iname .TOP"
+    DETECT_DEFAULT_GIT="find ${THIS_SRCDIR}   -maxdepth 2 -iname .git"
+    eval ${DETECT_JAVA}
+    eval ${DETECT_NODEJS}
+    if [[ -n $(eval ${DETECT_JAVA}) ]];then
+        pom=`echo $(eval ${DETECT_JAVA}) | head -n 1`
+        SRC_TYPE=java
+        echo "SRC_TYPE=${SRC_TYPE}"
+        #mvn --file ${SRC_TOP} -N  -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec 
+        #SRC_VERSION=`mvn --file ${SRC_TOP} -q -N -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec | tail -n 1`
+    elif [[ -n $(eval ${DETECT_NODEJS}) ]];then
+#        package=`echo $(eval ${DETECT_NODEJS}) | head -n 1`
+#        SRC_TOP=$(realpath $(dirname ${package}))
+        SRC_TYPE=nodejs
+        echo "SRC_TYPE=${SRC_TYPE}"
+        #SRC_VERSION=$(cd ${SRC_TOP};npm run packageVersion |tail -n 1)
+    elif [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
+#        topfile=`echo $(eval ${DETECT_DEFAULT_GIT}) | head -n 1 | awk '{print $1}'`
+#        SRC_TOP=`echo $(realpath $(dirname ${topfile})) | head -n 1`
+        SRC_TYPE=none
+        echo "SRC_TYPE=${SRC_TYPE}"
+        #SRC_VERSION="$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
     else
-        ARTIFACT_DEPLOY=0
+        SRC_TYPE=none
+        echo "SRC_TYPE=${SRC_TYPE}"
+#        SRC_VERSION="v1"
+        echo "Warn can't detect SRC_VERSION !!!!"
     fi
-    ###################################################################  
+    echo "SRC_TYPE=${SRC_TYPE} on subdir ${THIS_SRCDIR}" 
+}
+
+
+function do_src_get_reponame()
+{
+    echo "$FUNCNAME"
+    if [[ -z ${SRC_TOP} ]];then
+        echo "can't detect SRC_TOP"
+        exit 1
+    fi
     if [[ -n ${TEAMCITY_GIT_PATH} ]];then
-        echo "Teamcity CI"
+        echo "Teamcity CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
         SRC_REPO_NAME=${TEAMCITY_BUILDCONF_NAME}
-        BUILD_COUNTER="-t-${BUILD_NUMBER}"
+        BUILD_COUNTER="t${BUILD_NUMBER}"
     elif [[ -n ${JENKINS_URL} ]];then
-        echo "Jenkins CI"
+        echo "Jenkins CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
         SRC_REPO_NAME="${JOB_NAME}"
-        BUILD_COUNTER="-j-${BUILD_NUMBER}"
+        BUILD_COUNTER="j${BUILD_NUMBER}"
     elif [[ -n ${GITLAB_CI} ]];then
-        echo "GITLAB CI"
+        echo "GITLAB CICD"
         SRC_BRANCHER_NAME=${CI_COMMIT_REF_SLUG}
         SRC_REPO_NAME="${CI_PROJECT_NAME}"
-        BUILD_COUNTER="-${CI_COMMIT_REF_SLUG}${SRC_GIT_COMMIT_ID}-g-${CI_BUILD_ID}"
+        BUILD_COUNTER="g${CI_BUILD_ID}"
     else
-        echo "manual CI"
+        echo "manual CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)   
         SRC_REPO_NAME=$(basename $(realpath ${SRC_TOP}))
-        BUILD_COUNTER="-custom-1"
+        BUILD_COUNTER="c1"
     fi
-    SRC_GIT_COMMIT_ID="-$(cd ${SRC_TOP};git rev-parse --short HEAD )"
-    echo "##########################################${ACTION_STAGE}"
+    if [[ -f ${SRC_TOP}/VERSION ]]; then
+        SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION | awk '{print $1}')
+    else
+        SRC_VERSION=1.0.0
+    fi
+    SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
+    
     echo "SRC_TOP=${SRC_TOP}"
     echo "SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
-    echo "SRC_TYPE=${SRC_TYPE}"
     echo "SRC_VERSION=${SRC_VERSION}"
     echo "SRC_REPO_NAME=${SRC_REPO_NAME}"
     echo "SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
-    echo "##########################################${ACTION_STAGE}"
-    echo "NEXUS_REPO=${NEXUS_REPO}"
-    echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
-    echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
-    echo "ENABLE_SONAR=${ENABLE_SONAR}"
+    echo "BUILD_COUNTER=${BUILD_COUNTER}"
 }
+
 function do_src_analysis_nodejs()
 {
-    echo "todo"
+    echo "$FUNCNAME"
+    echo "TODO"
 }
 
 function do_src_analysis_java()
 {
+   echo "$FUNCNAME"
    if [[ -z ${CI_PROJECT_PATH} ]];then
     CI_PROJECT_PATH=${SRC_TOP}
    fi
@@ -136,8 +180,10 @@ function do_src_analysis_java()
 }
 function do_src_analysis()
 {
-    echo "do_src_analysis begin"
-    do_src_getype
+    echo "$FUNCNAME"
+    echo "ENABLE_SONAR=${ENABLE_SONAR}"
+    do_src_get_srctype_by_topdir
+    
     case ${SRC_TYPE} in
         nodejs)
             do_src_analysis_nodejs
@@ -159,35 +205,35 @@ function do_src_analysis()
 
 function do_artifact_build_nodejs()
 {
-        echo "soure2image begin, nodejs source, webpack, to docker image"
-        pushd ${SRC_TOP}
-        popd
+    echo "$FUNCNAME"
+    pushd ${SRC_TOP}
+    popd
 }
 function do_artifact_build_java()
 {
-        echo "soure2image begin, java source, to jar, to docker image"
-        pushd ${SRC_TOP}
-
-        if [[ ${ENABLE_SONAR} -gt 0 ]];then
-            if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-                  mvn clean deploy sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .) -Dsonar.projectName=$(echo ${CI_PROJECT_PATH}| tr / .)
-                  exit 0
-            else
-                mvn clean package sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .) -Dsonar.projectName=$(echo ${CI_PROJECT_PATH}| tr / .)
-            fi
-        else
-            if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-                mvn clean deploy
-                exit 0
-            else
-                mvn clean package
-            fi
-        fi
+    echo "$FUNCNAME"
+    pushd ${SRC_TOP}
+    
+    if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
+        mvn clean deploy
+        exit 0
+    else
+        mvn clean package
+    fi
+    popd
 }
 function do_artifact_build()
 {
-    echo "do_artifact_build begin"
-    do_src_getype
+    echo "$FUNCNAME"
+    if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
+        ARTIFACT_DEPLOY=1
+    else
+        ARTIFACT_DEPLOY=0
+    fi
+    echo "NEXUS_REPO=${NEXUS_REPO}"
+    echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
+    echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
+    do_src_get_srctype_by_topdir
     case ${SRC_TYPE} in
         nodejs)
             do_artifact_build_nodejs
@@ -207,8 +253,52 @@ function do_artifact_build()
     esac
 }
 
+function do_docker_get_imgurl_by_dockerfile()
+{
+    echo "$FUNCNAME"
+    DOCKER_THIS_DOCKERFILE=$(realpath -m $1)
+    
+    echo "DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
+    if [[ -z ${DOCKER_THIS_DOCKERFILE} ]];then
+        echo "can't detect Dockerfile"
+        exit 1
+    fi
+    DOCKFILE_DIR=$(dirname ${DOCKER_THIS_DOCKERFILE})
+    
+    if [[ -z ${DOCKER_REPO} ]];then
+        DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
+    fi
+    if [[ -z ${DOCKER_NS} ]];then
+        DOCKER_NS=default
+    fi
+    
+    do_src_get_reponame
+    
+    if [[ "${DOCKFILE_DIR}" = ${SRC_DIR} ]];then
+        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-e-${SRC_VERSION}-${BUILD_COUNTER}
+    else
+        DOCKER_SUBDIR_NAME=$(basename $(realpath -m ${DOCKFILE_DIR}))
+        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${DOCKER_SUBDIR_NAME}-${SRC_VERSION}-${BUILD_COUNTER}
+    fi
+    DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
+    DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKER_THIS_DOCKERFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
+    
+    if [[ -z ${DOCKER_SVC_PORTS} ]];then
+        echo "NO EXPOSE in ${DOCKFILE}"
+        DOCKER_SVC_PORTS=""
+    fi
+    echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
+    echo "DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
+    echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
+    echo "DOCKER_REPO=${DOCKER_REPO}"
+    echo "DOCKER_NS=${DOCKER_NS}"
+    echo "DOCKER_SUBDIR_NAME=${DOCKER_SUBDIR_NAME}"
+    echo "DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
+    echo "DOCKER_URL=${DOCKER_URL}"
+}
 function do_docker_build()
 {
+    echo "$FUNCNAME"
     if [[ -z ${DOCKER_BUILD} ]];then
         DOCKER_BUILD=1
     fi
@@ -218,8 +308,6 @@ function do_docker_build()
     else
         echo "start docker build"
     fi
-    
-    do_src_getype
     
     echo "detect Dockerfile"
     DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 2 -iname Dockerfile | sort"
@@ -233,6 +321,9 @@ function do_docker_build()
             echo "can't detect Dockerfile"
             exit 0
         fi
+        
+        do_docker_get_imgurl_by_dockerfile ${d}
+        
         if [[ -z ${DOCKER_REPO} ]];then
             DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
         fi
@@ -247,13 +338,6 @@ function do_docker_build()
             DOCKER_SVC_PORTS=80
         fi
         
-        if [[ "${DOCKFILE_DIR}" = ${SRC_DIR} ]];then
-            DOCKER_IMG_TAG=${SRC_VERSION}${BUILD_COUNTER}
-        else
-            DOCKER_SUBDIR_NAME=$(basename $(realpath -m ${DOCKFILE_DIR}))
-            DOCKER_IMG_TAG=${DOCKER_SUBDIR_NAME}-${SRC_VERSION}${BUILD_COUNTER}
-        fi
-        DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
         
         echo "########################################## ${ACTION_STAGE}"
         echo "build docker image"
@@ -281,6 +365,7 @@ function do_docker_build()
 
 function do_deploy_k8s()
 {
+    echo "$FUNCNAME"
     TRYTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do \
             xdir=`cd ../;pwd`;                       \
             if [ "$xdir" = "/" ] ; then              \
@@ -290,7 +375,6 @@ function do_deploy_k8s()
             cd $xdir;                               \
             done ;                                  \
             pwd;)
-    
     WORKDIR=$(pwd)
     if [[ -z ${TRYTOP} ]];then
         TRYTOP=${WORKDIR}
@@ -299,7 +383,7 @@ function do_deploy_k8s()
         K8S_AUTOCD=0
     fi
     if [[ -z ${K8S_NS} ]];then
-        K8S_NS=sanbox
+        K8S_NS=default
     fi
     if [[ -z ${K8S_DOMAIN_INTERNAL} ]];then
         K8S_DOMAIN_INTERNAL=okd.cd
@@ -308,12 +392,7 @@ function do_deploy_k8s()
         K8S_DOMAIN_PUBLIC=nxengine.cn
     fi
     
-    echo "K8S_AUTOCD=${K8S_AUTOCD}"
-    echo "K8S_NS=${DOCKER_NS}"
-    echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
-    echo "K8S_KUBECONFIG=${K8S_KUBECONFIG}"
-    echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
-    echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
+
     
     if [[ -z ${K8S_SVCNAMES} ]];then
         K8S_SVCNAMES=${SRC_REPO_NAME}
@@ -324,18 +403,55 @@ function do_deploy_k8s()
     else
         echo "default kubeconfig"
     fi
-    if [ ${K8S_AUTOCD} -gt 0 ];then
-        for SVCNAME in ${K8S_SVCNAMES};do
-            bash ${TRYTOP}/script/helm-gen/mk-app-chart.sh ${DOCKER_URL} ${SVCNAME} ${K8S_NS} ${DOCKER_SVC_PORTS} ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
-        done
+    echo "K8S_AUTOCD=${K8S_AUTOCD}"
+    echo "K8S_NS=${K8S_NS}"
+    echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
+    echo "K8S_KUBECONFIG=${K8S_KUBECONFIG}"
+    echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
+    echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
+    echo "##########################################"
+    echo "detect Dockerfile"
+    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 2 -iname Dockerfile | sort"
+    eval ${DETECT_DOCKERFILE}
+    DOCKERFILE_COUNT=`eval ${DETECT_DOCKERFILE}|wc -l`
+    if [[ ${DOCKERFILE_COUNT} -eq 0 ]];then
+        echo "no Dockerfile detect"
+        exit 0
     fi
+    i=0
+    eval ${DETECT_DOCKERFILE} | while read d;do
+        i=$(( $i + 1 ))
+        if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
+            #DOCKFILE=$(realpath `echo $(eval ${DETECT_DOCKERFILE})| head -n 1`)
+            DOCKFILE=$(realpath `echo ${d} | head -n 1`)
+            DOCKFILE_DIR=$(dirname ${DOCKFILE})
+        else
+            echo "can't detect Dockerfile"
+            exit 0
+        fi
+        if [[ ${DOCKERFILE_COUNT} -gt 0 ]];then
+            K8S_SVCNAMES=$(basename $(dirname ${DOCKFILE}))
+        fi
+        
+        echo "$i##########################################${DOCKFILE}"
+        do_docker_get_imgurl_by_dockerfile ${DOCKFILE}
+        echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
+        echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
+        if [ ${K8S_AUTOCD} -gt 0 ];then
+            for SVCNAME in ${K8S_SVCNAMES};do
+                echo bash ${TRYTOP}/script/helm-gen/mk-app-chart.sh ${DOCKER_URL} ${SVCNAME} ${K8S_NS} ${DOCKER_SVC_PORTS} ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
+            done
+        fi
+    done
 }
 
 
 
 # main logic
-
 echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
+###################################################################  
+
+
 case ${ACTION_STAGE} in
     anal*)
         do_src_analysis
