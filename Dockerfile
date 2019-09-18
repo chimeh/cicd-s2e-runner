@@ -3,7 +3,7 @@ FROM  dtzar/helm-kubectl:2.12.2 AS kubectl
 #FROM ${SHELL_IMG_BASE}
 
 RUN  cat /etc/apk/repositories \
-    && echo "https://mirrors.ustc.edu.cn/alpine/v3.8/main/" > /etc/apk/repositories \
+    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories \
     && apk update \
     && apk add --no-cache bash nginx  bash-completion  perl wget curl ca-certificates tzdata jq git python3\
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
