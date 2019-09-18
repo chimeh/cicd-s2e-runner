@@ -256,7 +256,7 @@ function do_artifact_build()
 function do_docker_get_imgurl_by_dockerfile()
 {
     echo "$FUNCNAME"
-    DOCKER_THIS_DOCKERFILE=$(realpath -m $1)
+    DOCKER_THIS_DOCKERFILE=$(realpath $1)
     
     echo "DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
     if [[ -z ${DOCKER_THIS_DOCKERFILE} ]];then
@@ -277,7 +277,7 @@ function do_docker_get_imgurl_by_dockerfile()
     if [[ "${DOCKFILE_DIR}" = ${SRC_DIR} ]];then
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-e-${SRC_VERSION}-${BUILD_COUNTER}
     else
-        DOCKER_SUBDIR_NAME=$(basename $(realpath -m ${DOCKFILE_DIR}))
+        DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${DOCKER_SUBDIR_NAME}-${SRC_VERSION}-${BUILD_COUNTER}
     fi
     DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
