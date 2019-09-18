@@ -1,0 +1,21 @@
+{{- if (index .Values (include "xxxxxx.name" .)) }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  name: {{ template "xxxxxx.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    qcloud-app: {{ template "xxxxxx.name" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "xxxxxx.name" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

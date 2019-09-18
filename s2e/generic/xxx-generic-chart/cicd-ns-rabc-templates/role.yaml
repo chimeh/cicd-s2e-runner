@@ -1,0 +1,16 @@
+{{- if (index .Values (include "xxxxxx.name" .)) }}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ template "xxxxxx.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    qcloud-app: {{ template "xxxxxx.name" . }}
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - "*"
+    verbs:
+      - "*"
+{{- end }}

@@ -1,0 +1,29 @@
+{{- if (index .Values (include "xxxxxx.name" .)) }}
+{{- if (index .Values (include "xxxxxx.name" .) "ingress") }}
+{{- if (index .Values (include "xxxxxx.name" .) "service") }}
+{{- if (index .Values (include "xxxxxx.name" .) "service" "ports") }}
+{{- if (index .Values "global") }}
+{{- if (index .Values "global" "ingress") }}
+{{- if (index .Values "global" "ingress" "public") }}
+{{- if contains "kong" (index .Values "global" "ingress" "public" "annotations-ingress-class") -}}
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  labels:
+    qcloud-app: {{ template "xxxxxx.name" . }}
+  name: {{ template "xxxxxx.name" . }}-public
+proxy:
+  path: /
+route:
+  strip_path: false
+  preserve_host: true
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+
