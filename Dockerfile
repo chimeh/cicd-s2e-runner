@@ -17,10 +17,10 @@ COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
 
-ENV PATH=/s2e/cicd:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/s2e:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 WORKDIR /
 
-RUN chmod -R +x /s2e/cicd \
+RUN chmod -R +x /s2e \
     && echo "${SHELL_IMG_BASE} "
 
 EXPOSE 80
