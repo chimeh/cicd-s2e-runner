@@ -1,0 +1,9 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: dont-change-to-be-replaced-by-template
+  annotations:
+    kubernetes.io/ingress.class: dont-change-to-be-replaced-by-template
+  labels: {}
+spec:
+  rules: []

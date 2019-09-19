@@ -1,0 +1,10 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  name: dont-change-to-be-replaced-by-template
+  annotations: {}
+  labels: {}
+proxy:
+  path: /
+route:
+  strip_path: false

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels: {}
+  name: TOBE-REPLACE
+spec:
+#  ports:
+#  - name: 8080-tcp
+#    port: 8080
+#    protocol: TCP
+#    targetPort: 8080
+  selector: {}
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
