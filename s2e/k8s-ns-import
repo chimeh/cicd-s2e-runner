@@ -50,7 +50,7 @@ echo "start deploy"
 export DOMAIN_PUBLIC
 export DOMAIN_INTERNAL
 
-bash ${SCRIPT_DIR}/helm-maker/script/helm-gen/mk-rc-txt2helm.sh ${K8S_NS_TXT_DIR} ${K8S_NS}-helm
+bash ${SCRIPT_DIR}/mk-rc-txt2helm ${K8S_NS_TXT_DIR} ${K8S_NS}-helm
 
 
 for i in $(dir  ${WORKDIR}/${K8S_NS}-helm/charts);

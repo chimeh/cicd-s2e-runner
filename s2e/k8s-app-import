@@ -199,22 +199,7 @@ ${name}:
     service:
       type: ClusterIP
 EOF
-if [[ ${name} == "ev-gb-gateway" ]];then
-cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
-      ports:
-        - 8111
-        - 8080
-EOF
-elif [[ ${name} == "simu-ve" ]];then
-cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
-      ports:
-        - 8080
-        - 5000
-EOF
-else
-cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
-      ports:
-EOF
+
 
 echo -n ${PORTS} | perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}'  >> ${APPNAME}/${VAULE_FILENAME}
 fi
