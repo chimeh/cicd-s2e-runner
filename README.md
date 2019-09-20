@@ -1,6 +1,7 @@
 # s2e
 是基于Docker、Kubernetes 技术的 CICD 工具集
 包括以下内容
+
 | 变量                 |  默认值       建议       | 
 | -----------------    |  ---------------------   | 
 | s2i                  | 从一个 src 到 artfact、docker image 并部署到多个kubernetes的工具     | 
