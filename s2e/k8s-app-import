@@ -59,7 +59,7 @@ K8S_NS=$3
 if [[ $# -gt 3 ]];then
     PORTS=$4
 else
-    PORTS=8080
+    PORTS=""
 fi
 if [[ $# -gt 4 ]];then
     K8S_AUTOCD=$5
@@ -202,7 +202,6 @@ EOF
 
 
 echo -n ${PORTS} | perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}'  >> ${APPNAME}/${VAULE_FILENAME}
-fi
 
 cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
     env.txt: |
