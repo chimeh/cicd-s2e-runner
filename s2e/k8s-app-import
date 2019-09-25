@@ -164,7 +164,7 @@ fi
 done
 
 echo "##########################gen value file"
-cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
+cat > ${APPNAME}/${VAULE_FILENAME} <<EOF
 global:
   rc-fullname: false
   ingress:
