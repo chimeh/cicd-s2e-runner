@@ -72,7 +72,7 @@ fi
 if [[ -z ${INGRESS_INTERNAL_ENABLED} ]];then
     INGRESS_INTERNAL_ENABLED=true
 fi
-if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
+if [[ -z ${INGRESS_PUBLIC_ENABLED} ]];then
     INGRESS_PUBLIC_ENABLED=true
 fi
 
