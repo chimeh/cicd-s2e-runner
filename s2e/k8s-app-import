@@ -44,7 +44,7 @@ fi
 if [[ -z ${INGRESS_INTERNAL_ENABLED} ]];then
     INGRESS_INTERNAL_ENABLED=true
 fi
-if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
+if [[ -z ${INGRESS_PUBLIC_ENABLED} ]];then
     INGRESS_PUBLIC_ENABLED=true
 fi
 ####################################################################
@@ -106,7 +106,7 @@ fi
 
 
 mkdir -p ${APPNAME}/charts
-cat >> ${APPNAME}/Chart.yaml <<EOF
+cat > ${APPNAME}/Chart.yaml <<EOF
 name: ${CATALOG_NAME}
 version: ${VERSION}
 appVersion: 1.0
@@ -199,9 +199,16 @@ ${name}:
     service:
       type: ClusterIP
 EOF
-
-
+if [[ -z ${PORTS} ]];then
+cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
+      ports: []
+EOF
+else
+cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
+      ports:
+EOF
 echo -n ${PORTS} | perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}'  >> ${APPNAME}/${VAULE_FILENAME}
+fi
 
 cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
     env.txt: |
@@ -222,6 +229,7 @@ if [[ ${K8S_AUTOCD} -gt 0 ]];then
    if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
      kubectl set -n  ${K8S_NS}  serviceaccount deployment ${SVCNAME}  ${SVCNAME}
    fi
+   rm -rf ${K8S_NS}-${SVCNAME}
 fi
 set +xv
 

@@ -1,0 +1,154 @@
+#!/usr/bin/env python
+
+# Import directives
+import os
+import errno
+import array
+import logging
+import atexit
+from collections import deque
+from datetime import datetime, timedelta
+import time
+import re
+import glob
+import locale
+import subprocess
+import inspect
+import yaml
+
+i2e_ctrl = {
+    "dry_run": False
+}
+def do_shell_exe(cmd):
+    if i2e_ctrl["dry_run"]:
+        print(cmd)
+    else:
+        p = subprocess.Popen(cmd, shell=True, bufsize=2048, stdin=subprocess.PIPE)
+        p.wait()
+        if p.returncode == 0:
+            pass
+    return
+def do_svc_list(file, action_args):
+    log.info("do_svc_list")
+    with open(file) as f:
+        y = yaml.load(f, Loader=yaml.SafeLoader)
+    if len(action_args) > 0:
+        for a in action_args:
+            if a in y.keys():
+                print(a)
+            else:
+                log.warning("%s ,not found in file", a)
+            # log.info(y.get(k))
+    else:
+        for k in y.keys():
+            print(k)
+            # log.info(y.get(k))
+    return
+
+def do_svc_deploy(file, action_args):
+    log.info("do_svc_deploy")
+    k8s_script_dir = "%s" % (os.path.dirname(os.path.realpath(__file__)))
+    k8s_app_import = "k8s-app-import"
+    k8s_ns = action_args[0]
+    with open(file) as f:
+        y = yaml.load(f, Loader=yaml.SafeLoader)
+
+    svcs = []
+    if len(action_args) > 1:
+        for a in action_args[1:]:
+            if a in y.keys():
+                svcs.append(a)
+    else:
+        svcs = y.keys()
+
+    for a in svcs:
+        if a == "global":
+            continue
+        print("")
+        log.info(a)
+        app_img = y.get(a)[a]["image"]
+        app_name = a
+        app_ports = ",".join(str(p) for p in y.get(a)[a]["service"]["ports"])
+        app_autocd = "1"
+        app_domain_internal = y.get("global")["ingress"]["internal"]["domain"]
+        app_domain_public = y.get("global")["ingress"]["public"]["domain"]
+        cmd = "%s/%s %s %s %s '%s' %s %s %s  " % (k8s_script_dir, k8s_app_import,
+                           app_img, app_name, k8s_ns, app_ports, app_autocd,
+                                                app_domain_internal, app_domain_public)
+        do_shell_exe(cmd)
+    return
+def do_ns_deploy(file, action_args):
+    log.info("do_ns_deploy")
+    pass
+
+actions_tbl = {
+    "svclist": do_svc_list,
+    "svcdeploy": do_svc_deploy,
+    "nsdeploy": do_ns_deploy
+}
+def action_dispatcher(file, action, action_args):
+    log.info("action: %s, action_args: %s", action, action_args)
+    if action in actions_tbl.keys():
+        actions_tbl[action](file, action_args)
+    else:
+        log.warning("not support action %s", action)
+    return
+
+# Logging
+def logger_init():
+    """Initialize logger instance."""
+    log = logging.getLogger("S2E")
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(
+        # logging.Formatter("[%(asctime)s %(name)s %(levelname)s] %(message)s"))
+        logging.Formatter("[%(name)s %(levelname)s] %(message)s"))
+    log.addHandler(console_handler)
+    log.setLevel(20)
+    return log
+
+def command_line():
+    """
+    help doc
+    """
+    from optparse import OptionParser
+    usage = "usage: %prog -i [images.yaml] " + ("%s" % list(actions_tbl.keys())) + " [args ...]"
+
+    parser = OptionParser(usage=usage)
+    parser.add_option("-v", "--verbose", action="store_true",
+                      dest="verbose", help="Verbose mode")
+    parser.add_option("-i", "--image", action="store",
+                      dest="file",
+                      help="image file")
+    parser.add_option("-d", "--dry-run", action="store_true",
+                      dest="dry_run",
+                      help="simulate an run")
+
+    (options, args) = parser.parse_args()
+    if options.verbose:
+        log.setLevel(10)
+    if options.dry_run:
+        i2e_ctrl["dry_run"] = True
+    file = os.path.realpath("./images.yaml")
+    if options.file:
+        file = os.path.realpath(options.file)
+
+    if len(args) < 1:
+        action = 'help'  # default list service
+        action_args = []
+        parser.print_help()
+    elif len(args) == 1:
+        action = args[0]
+        action_args = []
+    else:
+        action = args[0]
+        action_args = args[1:]
+
+    log.info("file: %s", file)
+    log.debug('Start monitoring deployment into kubernetes')
+    action_dispatcher(file, action, action_args)
+
+
+log = logger_init()
+
+if __name__ == '__main__':
+    command_line()
