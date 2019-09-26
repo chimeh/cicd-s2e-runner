@@ -80,11 +80,15 @@ spec:
           successThreshold: 2
           timeoutSeconds: 3
         resources:
+          {{ if  (index .Values (include "xxxxxx.name" .) "resources")  }}
+{{ toYaml .Values (include "xxxxxx.name" .) "resources" | indent 10 }}
+          {{- else -}}
           limits:
             memory: 1024Mi
           requests:
             cpu: 200m
             memory: 768Mi
+          {{- end}}
           {{- if (index .Values "global") }}
           {{- if (index .Values "global" "containers") }}
           {{- if (index .Values "global" "containers" "securityContext") }}

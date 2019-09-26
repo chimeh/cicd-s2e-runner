@@ -64,7 +64,7 @@ mkdir -p ${RCNAME}
 
 MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|pvc|zookeeper"
 echo "##########################gen img/ env/ port"
-kubectl get -n ${SRC_NS} deployment  --no-headers |  awk '{print $1}' | egrep -v "${MWARE}" | \
+kubectl get -n ${SRC_NS} deployment  --no-headers |  awk '{print $1}' | egrep -v "${MWARE}" |sort | \
 while read i; do 
     name=$i
     echo "export app for ${SRC_NS}/${name}"

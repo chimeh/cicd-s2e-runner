@@ -2,6 +2,7 @@
 #author huangjimin
 #jimin.huang@nx-engine.com
 #convert txtdir to helm 
+echo "##############################################################"
 USAGE="
   export DOMAIN_INTERNAL=xxx.in
   export DOMAIN_PUBLIC=xxx.com
@@ -79,7 +80,7 @@ fi
 
 TXTDIR=$(realpath ${1})
 RCNAME=${PWD}/${CATALOG_NAME}
-vaule_filename=values-release-txt2helm.yaml
+vaule_filename=images.yaml
 commonchartversion=1.0
 
 echo "CATALOG_NAME=${CATALOG_NAME}"
@@ -106,11 +107,25 @@ maintainers:
 engine: gotpl
 EOF
 
+cat > ${RCNAME}/${vaule_filename}  <<EOF
+global:
+  rc-fullname: false
+  ingress:
+    internal:
+      annotations-ingress-class: kong-ingress-internal
+      domain: ${DOMAIN_INTERNAL}
+    public:
+      annotations-ingress-class: kong-ingress-public
+      domain: ${DOMAIN_PUBLIC}
+  containers:
+    securityContext:
+      privileged: true
+EOF
 echo "##########################gen charts, and depencies"
 echo  'dependencies:' > ${RCNAME}/requirements.yaml
-for i in `/bin/ls ${TXTDIR}`;do \
+for i in `/bin/ls ${TXTDIR} | uniq | sort`;do \
     name=$i
-    echo "gen charts for ${name}"
+    echo -n "[ gen charts ]: ${name}"
     
     img=`head -n 1 ${TXTDIR}/${name}/img.txt`
     /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${RCNAME}/charts/${name}
@@ -129,34 +144,20 @@ for i in `/bin/ls ${TXTDIR}`;do \
     fi
     perl -ni -e "s/^name:.+/name: ${name}/g;print" ${RCNAME}/charts/${name}/Chart.yaml
     perl -ni -e "s/^version:.+/version: ${commonchartversion}/g;print" ${RCNAME}/charts/${name}/Chart.yaml
-    echo "dependcies"
 cat >> ${RCNAME}/requirements.yaml <<EOF
 - name: ${name}
   version: ~${commonchartversion}
   repository: "file://charts/${name}"
 EOF
-echo "gen ${name} value file"
+echo ""
 cat > ${RCNAME}/charts/${name}/values-single.yaml <<EOF
-global:
-  rc-fullname: false
-  ingress:
-    internal:
-      annotations-ingress-class: ${INGRESS_CLASS_INTERNAL}
-      domain: ${DOMAIN_INTERNAL}
-    public:
-      annotations-ingress-class: ${INGRESS_CLASS_PUBLIC}
-      domain: ${DOMAIN_PUBLIC}
-EOF
-cat >> ${RCNAME}/charts/${name}/values-single.yaml <<EOF
 ${name}:
   replicaCount: 1
   ingress:
     internal: 
       enabled: ${INGRESS_INTERNAL_ENABLED}
-      host: {}
     public: 
       enabled: ${INGRESS_PUBLIC_ENABLED}
-      host: {}
   image: $img
   service:
     type: ClusterIP
@@ -168,9 +169,28 @@ EOF
 perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 6;print  " - $_\n"}' ${TXTDIR}/${name}/ports.txt  >> ${RCNAME}/charts/${name}/values-single.yaml  
 else
 cat >> ${RCNAME}/charts/${name}/values-single.yaml  <<EOF
-    ports:
+    ports: []
 EOF
 fi
+
+cat >> ${RCNAME}/${vaule_filename}  <<EOF
+${name}:
+EOF
+perl -ne "chomp(\$_);print ' ' x 6;print \$_;print qq(\n);" ${RCNAME}/charts/${name}/values-single.yaml >> ${RCNAME}/${vaule_filename}
+
+cat >> ${RCNAME}/charts/${name}/values-single.yaml <<EOF
+global:
+  rc-fullname: false
+  ingress:
+    internal:
+      annotations-ingress-class: ${INGRESS_CLASS_INTERNAL}
+      domain: ${DOMAIN_INTERNAL}
+    public:
+      annotations-ingress-class: ${INGRESS_CLASS_PUBLIC}
+      domain: ${DOMAIN_PUBLIC}
+EOF
+
+
 cat >> ${RCNAME}/charts/${name}/values-single.yaml  <<EOF
   env.txt: |
 EOF
@@ -179,36 +199,6 @@ if [[ -f ${TXTDIR}/${name}/env.txt ]];then
    perl -ne "chomp(\$_);print ' ' x 4;print \$_;print qq(\n);" ${TXTDIR}/${name}/env.txt  >> ${RCNAME}/charts/${name}/values-single.yaml 
 fi
 done
-
-echo "##########################gen value file"
-cat >> ${RCNAME}/${vaule_filename}  <<EOF
-global:
-  rc-fullname: false
-  ingress:
-    internal:
-      annotations-ingress-class: kong-ingress-internal
-      domain: ${DOMAIN_INTERNAL}
-    public:
-      annotations-ingress-class: kong-ingress-public
-      domain: ${DOMAIN_PUBLIC}
-  containers:
-    securityContext:
-      privileged: true
-EOF
-
-
-for i in `/bin/ls ${TXTDIR}`;do \
-    name=$i
-    echo "gen charts for ${name}"
-    img=`head -n 1 ${TXTDIR}/${name}/img.txt`
-cat >> ${RCNAME}/${vaule_filename}  <<EOF
-${name}:
-EOF
-perl -ne "chomp(\$_);print ' ' x 6;print \$_;print qq(\n);" ${RCNAME}/charts/${name}/values-single.yaml >> ${RCNAME}/${vaule_filename}
-done
-
-echo "##############################################################"
-
 
 /bin/cp  ${RCNAME}/${vaule_filename}  ${RCNAME}/values.yaml
 

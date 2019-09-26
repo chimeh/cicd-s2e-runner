@@ -52,7 +52,7 @@ def do_svc_deploy(file, action_args):
                 svcs.append(a)
     else:
         svcs = y.keys()
-
+    svcs.sort()
     for a in svcs:
         if a == "global":
             continue
@@ -64,6 +64,8 @@ def do_svc_deploy(file, action_args):
         app_autocd = "1"
         app_domain_internal = y.get("global")["ingress"]["internal"]["domain"]
         app_domain_public = y.get("global")["ingress"]["public"]["domain"]
+        if i2e_ctrl["dry_run"]:
+            app_autocd="0"
         cmd = "%s/%s %s %s %s '%s' %s %s %s  " % (k8s_script_dir, k8s_app_import,
                            app_img, app_name, k8s_ns, app_ports, app_autocd,
                                                 app_domain_internal, app_domain_public)
