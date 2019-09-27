@@ -41,8 +41,8 @@ echoserver:
           type: ClusterIP
           ports:
              - 8080
-dynamic-data-service:
-      dynamic-data-service:
+xxx:
+      xxx:
         replicaCount: 1
         ingress:
           internal: 
