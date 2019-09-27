@@ -7,6 +7,7 @@ import os
 import logging
 import subprocess
 import yaml
+import requests
 
 i2e_ctrl = {
     "dry_run": False
@@ -20,6 +21,23 @@ def do_shell_exe(cmd):
         if p.returncode == 0:
             pass
     return
+
+#curl -X GET --header 'Accept: application/json' 'https://harbor.nx-engine.com/api/repositories/icev3%2Fcpsp-integration-service/tags?detail=false&api_key=repositories'
+def do_get_harbor_img_latest(docker_name, docker_ns="library", docker_repo="harbor.nx-engine.com"):
+    if docker_ns == "library":
+        docker_ns = os.environ.get("DOCKER_NS", 'library')
+    url = "http://%s/api/repositories/%s/%s/tags?detail=false" %(docker_repo, docker_ns, docker_name)
+    try:
+        resp = requests.get(url).json()
+    except Exception:
+        print("sss")
+        pass
+    if resp:
+        tag = resp[-1] ["name"]
+    else:
+        tag = "latest"
+    img = "%s/%s/%s:%s" % (docker_repo, docker_ns, docker_name, tag)
+    return img
 def do_svc_list(file, action_args):
     log.info("do_svc_list")
     with open(file) as f:
@@ -42,8 +60,14 @@ def do_svc_deploy(file, action_args):
     k8s_script_dir = "%s" % (os.path.dirname(os.path.realpath(__file__)))
     k8s_app_import = "k8s-app-import"
     k8s_ns = action_args[0]
+    docker_repo = os.environ.get("DOCKER_REPO", 'harbor.nx-engine.com')
+    docker_ns = os.environ.get("DOCKER_NS", 'icev3')
+
     with open(file) as f:
         y = yaml.load(f, Loader=yaml.SafeLoader)
+
+    docker_repo = y.get("global")["docker"]["repo"]
+    docker_ns = y.get("global")["docker"]["ns"]
 
     svcs = []
     if len(action_args) > 1:
@@ -51,21 +75,29 @@ def do_svc_deploy(file, action_args):
             if a in y.keys():
                 svcs.append(a)
     else:
-        svcs = y.keys()
+        svcs = list(y.keys())
+
     svcs.sort()
     for a in svcs:
         if a == "global":
             continue
         print("")
-        log.info(a)
         app_img = y.get(a)[a]["image"]
         app_name = a
         app_ports = ",".join(str(p) for p in y.get(a)[a]["service"]["ports"])
         app_autocd = "1"
         app_domain_internal = y.get("global")["ingress"]["internal"]["domain"]
         app_domain_public = y.get("global")["ingress"]["public"]["domain"]
+
         if i2e_ctrl["dry_run"]:
             app_autocd="0"
+
+        if app_img is None:
+            app_img = do_get_harbor_img_latest(app_name, docker_ns, docker_repo)
+            log.info("%s Latest img", a)
+        else:
+            log.info("%s Manual img", a)
+
         cmd = "%s/%s %s %s %s '%s' %s %s %s  " % (k8s_script_dir, k8s_app_import,
                            app_img, app_name, k8s_ns, app_ports, app_autocd,
                                                 app_domain_internal, app_domain_public)

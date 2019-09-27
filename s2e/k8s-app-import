@@ -176,6 +176,9 @@ global:
     public:
       annotations-ingress-class: ${INGRESS_CLASS_PUBLIC}
       domain: ${DOMAIN_PUBLIC}
+  docker:
+    repo: ${DOCKER_REPO}
+    ns: ${DOCKER_NS}
   containers:
     securityContext:
       privileged: true

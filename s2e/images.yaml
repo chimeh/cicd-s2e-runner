@@ -7,6 +7,9 @@ global:
     public:
       annotations-ingress-class: nginx
       domain: cd-dev.nxengine.cn
+  docker:
+    repo: harbor.nx-engine.com
+    ns: nx-drv
   containers:
     securityContext:
       privileged: true
@@ -34,6 +37,21 @@ echoserver:
             enabled: true
             host: {}
         image: bettercode/echoserver
+        service:
+          type: ClusterIP
+          ports:
+             - 8080
+dynamic-data-service:
+      dynamic-data-service:
+        replicaCount: 1
+        ingress:
+          internal: 
+            enabled: true
+            host: {}
+          public: 
+            enabled: true
+            host: {}
+        image: 
         service:
           type: ClusterIP
           ports:
