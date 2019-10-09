@@ -140,15 +140,23 @@ def command_line():
     usage = "usage: %prog -i [images.yaml] " + ("%s" % list(actions_tbl.keys())) + " [args ...]"
 
     parser = OptionParser(usage=usage)
-    parser.add_option("-v", "--verbose", action="store_true",
-                      dest="verbose", help="Verbose mode")
     parser.add_option("-i", "--image", action="store",
                       dest="file",
                       help="image file")
+    parser.add_option("--namespace", action="store",
+                      dest="namespace",
+                      help="deploy into namespace")
+    parser.add_option("--kubeconfig", action="store",
+                      dest="kubeconfig",
+                      help="the k8s kubeconfig")
+    parser.add_option("--force", action="store_true",
+                      dest="force",
+                      help="force redeploy,not just update img")
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run",
                       help="simulate an run")
-
+    parser.add_option("-v", "--verbose", action="store_true",
+                      dest="verbose", help="Verbose mode")
     (options, args) = parser.parse_args()
     if options.verbose:
         log.setLevel(10)

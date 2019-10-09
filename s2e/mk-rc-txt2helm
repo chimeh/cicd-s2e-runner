@@ -91,6 +91,7 @@ echo "DOMAIN_PUBLIC=${DOMAIN_PUBLIC}"
 
 
 mkdir -p ${RCNAME}/charts
+/bin/cp -rf ${TXTDIR} ${RCNAME}
 cat >> ${RCNAME}/Chart.yaml <<EOF
 name: ${CATALOG_NAME}
 version: ${VERSION}
