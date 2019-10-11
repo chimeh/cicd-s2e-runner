@@ -9,8 +9,7 @@ RUN  cat /etc/apk/repositories \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && rm -rf /var/cache/apk/*
 
-RUN pip3 install --index-url='https://mirrors.aliyun.com/pypi/simple' kubernetes python-gitlab yaml
-
+RUN pip3 install --index-url='https://mirrors.aliyun.com/pypi/simple' kubernetes python-gitlab PyYAML
 
 COPY s2e /s2e
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
