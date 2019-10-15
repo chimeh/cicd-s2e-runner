@@ -257,6 +257,11 @@ function do_docker_get_imgurl_by_dockerfile()
 {
     echo "$FUNCNAME"
     DOCKER_THIS_DOCKERFILE=$(realpath $1)
+    if [[ $# -gt 1 ]];then
+        MY_SLOT=$2
+     else
+        MY_SLOT=0
+    fi
     
     echo "DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
     if [[ -z ${DOCKER_THIS_DOCKERFILE} ]];then
@@ -264,7 +269,10 @@ function do_docker_get_imgurl_by_dockerfile()
         exit 1
     fi
     DOCKFILE_DIR=$(dirname ${DOCKER_THIS_DOCKERFILE})
-    
+
+    DOCKER_THIS_NS=$(perl -e "@DOCKERNS = split(/\s+/, \$ENV{DOCKER_NS});print STDOUT \$DOCKERNS[$MY_SLOT];")
+    K8S_THIS_NS=$(perl -e "@K8SNS = split(/\s+/, \$ENV{K8S_NS});print STDOUT \$K8SNS[$MY_SLOT];")
+
     if [[ -z ${DOCKER_REPO} ]];then
         DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
     fi
@@ -280,7 +288,7 @@ function do_docker_get_imgurl_by_dockerfile()
         DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${DOCKER_SUBDIR_NAME}-${SRC_VERSION}-${BUILD_COUNTER}
     fi
-    DOCKER_URL=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
+    DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
     DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKER_THIS_DOCKERFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
     
     if [[ -z ${DOCKER_SVC_PORTS} ]];then
@@ -292,10 +300,15 @@ function do_docker_get_imgurl_by_dockerfile()
     echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
     echo "DOCKER_REPO=${DOCKER_REPO}"
     echo "DOCKER_NS=${DOCKER_NS}"
+    echo "DOCKER_THIS_NS=${DOCKER_THIS_NS}"
     echo "DOCKER_SUBDIR_NAME=${DOCKER_SUBDIR_NAME}"
     echo "DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
     echo "DOCKER_URL=${DOCKER_URL}"
+    echo "K8S_THIS_NS=${K8S_THIS_NS}"
 }
+
+
+
 function do_docker_build()
 {
     echo "$FUNCNAME"
@@ -321,15 +334,7 @@ function do_docker_build()
             echo "can't detect Dockerfile"
             exit 0
         fi
-        
-        do_docker_get_imgurl_by_dockerfile ${d}
-        
-        if [[ -z ${DOCKER_REPO} ]];then
-            DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
-        fi
-        if [[ -z ${DOCKER_NS} ]];then
-            DOCKER_NS=default
-        fi
+
         
         DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
         
@@ -338,7 +343,7 @@ function do_docker_build()
             DOCKER_SVC_PORTS=80
         fi
         
-        
+        do_docker_get_imgurl_by_dockerfile ${d} 0
         echo "########################################## ${ACTION_STAGE}"
         echo "build docker image"
         echo "DOCKFILE=${DOCKFILE}"
@@ -353,13 +358,24 @@ function do_docker_build()
         echo "##########################################"
         docker build --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
         docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
+
+        slot=0
+        echo ${DOCKER_NS}
+        echo ${DOCKER_NS} | perl -ne '@ns=split /\s+/, $_;foreach(@ns){print "$_\n"} '  |
+        while read ns;do
+            if [[ ${slot} -gt 0 ]];then
+                do_docker_get_imgurl_by_dockerfile ${d} ${slot}
+            fi
+            echo "DOCKER_URL=${DOCKER_URL}"
+            docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
+            docker push ${DOCKER_URL}
+            docker rmi ${DOCKER_URL}
+            slot=$((${slot} + 1))
+        done
         
-        
-        
-        docker push ${DOCKER_URL}
-        docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
-        docker rmi ${DOCKER_URL}
-        echo ${DOCKER_URL}
+
+       docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
+        echo -e "\n\n"
     done
 }
 
@@ -435,12 +451,11 @@ function do_deploy_k8s()
             K8S_SVCNAMES=$(basename $(dirname ${DOCKFILE}))
         fi
         
-        echo "$i##########################################${DOCKFILE}"
-        do_docker_get_imgurl_by_dockerfile ${DOCKFILE}
-        echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
-        echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
         if [ ${K8S_AUTOCD} -gt 0 ];then
+          slot=0
           for MY_K8S_NS in ${K8S_NS};do
+            echo "$i##########################################${DOCKFILE}"
+            do_docker_get_imgurl_by_dockerfile ${d} $slot
             for SVCNAME in ${K8S_SVCNAMES};do
                 set +e
                 kubectl get -n ${MY_K8S_NS}  deployments ${SVCNAME}
@@ -452,6 +467,7 @@ function do_deploy_k8s()
                     bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
                fi
             done
+            slot=$(( $slot + 1 ))
           done
         fi
     done
