@@ -41,7 +41,7 @@ function do_src_get_srctype_by_topdir()
 {
     echo "$FUNCNAME"
     # try to guest java or nodejs, ...
-    echo "try to detect java or nodejs source"
+    echo "try to detect java/nodejs source"
     DETECT_JAVA="find ${GAVE_SRC_TOP} -maxdepth 1 -iname pom.xml"
     DETECT_NODEJS="find ${GAVE_SRC_TOP} -maxdepth 2 -iname package.json"
     DETECT_DEFAULT_TOP="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .TOP"
@@ -270,7 +270,7 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     DOCKFILE_DIR=$(dirname ${DOCKER_THIS_DOCKERFILE})
 
-    DOCKER_THIS_NS=$(perl -e "@DOCKERNS = split(/\s+/, \$ENV{DOCKER_NS});print STDOUT \$DOCKERNS[$MY_SLOT];")
+    DOCKER_THIS_NS=$(perl -e "@DOCKERNS = split(/\s+/, \$ENV{DOCKER_NS});\$NS=\$DOCKERNS[$MY_SLOT];\$NS =~ s/[\p{Pi}\p{Pf}'\"]//g;print STDOUT \$NS")
     K8S_THIS_NS=$(perl -e "@K8SNS = split(/\s+/, \$ENV{K8S_NS});print STDOUT \$K8SNS[$MY_SLOT];")
 
     if [[ -z ${DOCKER_REPO} ]];then
