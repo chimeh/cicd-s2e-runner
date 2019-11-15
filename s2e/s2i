@@ -367,9 +367,12 @@ function do_docker_build()
                 do_docker_get_imgurl_by_dockerfile ${d} ${slot}
             fi
             echo "DOCKER_URL=${DOCKER_URL}"
+            docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
             docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
             docker push ${DOCKER_URL}
+            docker push ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
             docker rmi ${DOCKER_URL}
+            docker rmi ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
             slot=$((${slot} + 1))
         done
         
