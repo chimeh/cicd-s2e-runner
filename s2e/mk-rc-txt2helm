@@ -113,10 +113,10 @@ global:
   rc-fullname: false
   ingress:
     internal:
-      annotations-ingress-class: kong-ingress-internal
+      annotations-ingress-class: ${INGRESS_CLASS_INTERNAL}
       domain: ${DOMAIN_INTERNAL}
     public:
-      annotations-ingress-class: kong-ingress-public
+      annotations-ingress-class: ${INGRESS_CLASS_PUBLIC}
       domain: ${DOMAIN_PUBLIC}
   docker:
     repo: ${DOCKER_REPO}
