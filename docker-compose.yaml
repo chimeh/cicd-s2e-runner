@@ -1,0 +1,35 @@
+version: '3'
+
+
+volumes:
+  maven-cache: {}
+  gitlab-runner: {}
+  root-home: {}
+
+
+services:
+  gitlab-runner:
+    restart: always
+#    build: .
+    image: harbor.nx-engine.com/devops/gitlab-runner:latest
+    privileged: true
+    command: ["run", "--user=root", "--working-directory=/home/gitlab-runner"]
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - root-home:/root
+    - maven-cache:/root/.m2/repository
+    - gitlab-runner:/home/gitlab-runner
+##########################tools override
+    - ./cicd-s2e/s2e:/opt/bin
+##########################default secrets 
+    - ./secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
+    - ./secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
+    - ./secrets/maven/settings.xml:/root/.m2/settings.xml
+    - ./secrets/docker/config.json:/root/.docker/config.json
+    - ./secrets/k8s/:/root/.kube
+###########################proj a secrets 
+#    - ./proj-a-secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
+#    - ./proj-a-secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
+#    - ./proj-a-secrets/maven/settings.xml:/root/.m2/settings.xml
+#    - ./proj-a-secrets/docker/config.json:/root/.docker/config.json
+#    - ./proj-a-secrets/k8s/:/root/.kube

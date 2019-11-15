@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <interactiveMode>false</interactiveMode>
+
+  <pluginGroups>
+    <pluginGroup>org.sonarsource.scanner.maven</pluginGroup>
+  </pluginGroups>
+
+  <profiles>
+    <profile>
+      <id>sonar</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <sonar.host.url>http://sonarqube.xxx.com</sonar.host.url>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>default-deploy</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <altReleaseDeploymentRepository>nexus-release::default::https://maven.aliyun.com/repository/releases</altReleaseDeploymentRepository>
+        <altSnapshotDeploymentRepository>nexus-snapshot::default::https://maven.aliyun.com/repository/snapshots</altSnapshotDeploymentRepository>
+      </properties>
+    </profile>
+  </profiles>
+
+  <servers>
+    <server>
+      <id>nexus-release</id>
+      <username>nexus-release</username>
+      <password>xxxx</password>
+    </server>
+    <server>
+      <id>nexus-snapshot</id>
+      <username>nexus-snapshot</username>
+      <password>xxx</password>
+    </server>
+  </servers>
+
+
+  <mirrors>
+    <mirror>
+      <id>default-nexus</id>
+      <mirrorOf>*</mirrorOf>
+      <url>https://maven.aliyun.com/repository/public</url>
+    </mirror>
+  </mirrors>
+
+</settings>
+
