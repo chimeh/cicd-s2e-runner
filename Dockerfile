@@ -12,7 +12,7 @@ RUN apk add --no-cache bash  bash-completion wget curl ca-certificates tzdata jq
     && apk add --no-cache git \
     && apk add --no-cache maven openjdk8 \
     && apk add --no-cache python3 python2 py2-pip \
-    && RUN pip3 install --index-url='https://mirrors.aliyun.com/pypi/simple' kubernetes python-gitlab PyYAML \
+    && pip3 install --index-url='https://mirrors.aliyun.com/pypi/simple' kubernetes python-gitlab PyYAML \
     && apk add --no-cache go \
     && apk add --no-cache perl \
     && apk add --no-cache coreutils gcc g++ make \
