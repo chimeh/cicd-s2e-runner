@@ -19,8 +19,8 @@ services:
     - root-home:/root
     - maven-cache:/root/.m2/repository
     - gitlab-runner:/home/gitlab-runner
-##########################tools override
-    - ./cicd-s2e/s2e:/opt/bin
+##########################ucomment to override cotainer /s2e-default, because PATH=/s2e:/s2e-default
+    - ./s2e:/s2e
 ##########################default secrets 
     - ./secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
     - ./secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
