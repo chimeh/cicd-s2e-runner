@@ -1,6 +1,6 @@
 ARG KUBE_VERSION=v1.15.0
 ARG HELM_VERSION=v2.12.2
-ROM gitlab/gitlab-runner:alpine
+FROM gitlab/gitlab-runner:alpine
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories \
    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
