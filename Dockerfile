@@ -6,13 +6,15 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
    && apk update 
 
-ENV PATH=/s2e:/s2e-default:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH='/s2e:/s2e-default:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+RUN echo 'export PATH=/s2e:/s2e-default:${PATH}' > /etc/profile.d/0-path.sh 
 # add {src,artifact build/container} toolchain   
 RUN apk add --no-cache bash  bash-completion wget curl ca-certificates tzdata jq openssh-client vim \
     && apk add --no-cache git \
     && apk add --no-cache maven openjdk8 \
+    && apk add --no-cache npm \
     && apk add --no-cache python3 python2 py2-pip \
-    && pip3 install --index-url='https://mirrors.aliyun.com/pypi/simple' kubernetes python-gitlab PyYAML \
+    && pip3 install --index-url='https://mirrors.aliyun.com/pypi/simple' kubernetes python-gitlab PyYAML requests \
     && apk add --no-cache go \
     && apk add --no-cache perl \
     && apk add --no-cache coreutils gcc g++ make \
