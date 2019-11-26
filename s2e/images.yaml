@@ -1,18 +1,29 @@
 global:
-  rc-fullname: false
-  ingress:
-    internal:
-      annotations-ingress-class: nginx
-      domain: k8s-dev.cd
-    public:
-      annotations-ingress-class: nginx
-      domain: cd-dev.nxengine.cn
-  docker:
-    repo: harbor.nx-engine.com
-    ns: nx-drv
-  containers:
-    securityContext:
-      privileged: true
+  src:
+    k8s:
+      kubeconfig: /root/.kube/test.config
+      ns: nx-cloud-eco-test
+    docker:
+      repo: harbor.nx-engine.com
+      ns: nx-cloud-eco
+  dst:
+    docker:
+      repo: harbor.nx-engine.com
+      ns: nx-cloud-eco
+    k8s:
+      rc-fullname: false
+      ns: nx-cloud-eco-prd
+      kubeconfig: /root/.kube/test.config
+      ingress:
+        internal:
+          annotations-ingress-class: nginx
+          domain: bu5-prd.tx
+        public:
+          annotations-ingress-class: nginx
+          domain: bu5-prd.nx-engine.com
+      containers:
+        securityContext:
+          privileged: true
 nginx:
       nginx:
         image: nginx

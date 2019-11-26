@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# author: huangjimin
+# e-mail: jimin.huang@nx-engine.com
+
+import argparse
+import os
+import urllib
+import re
+from urllib.parse import urlparse
+import Pynacos
+import requests
+import json
+from Pynacos.func import *
+
+def saveitem(item, nacos_rootfs):
+    content = item['content']
+    dataId = item['dataId']
+    group = item["group"]
+    tenant = item["tenant"]
+    save_path = os.path.realpath(os.path.join(nacos_rootfs, tenant, group, dataId))
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    print(save_path)
+    save_file(os.path.dirname(save_path), os.path.basename(save_path), content)
+
+def fetchall(pynacos, data_id: str = "", group: str = "",
+        tenant: str = "", nacos_rootfs: str ="nacos-export"):
+    pageNo = 1
+    pagesAvailable = 1
+    while( pageNo <= pagesAvailable) :
+        html = requests.get(
+            url=getUrl(pynacos.NacosConfig.ip, pynacos.NacosConfig.port, "/nacos/v1/cs/configs", scheme=pynacos.NacosConfig.scheme),
+            params={
+                "search": "accurate",
+                "tenant": tenant,
+                "dataId": data_id,
+                "group": group,
+                "pageSize": 10,
+                "pageNo": pageNo
+            })
+        pageNo += 1
+        res = html.json()
+        pagesAvailable = res["pagesAvailable"]
+        # print(json.dumps(html.json(), indent=2, sort_keys=True, separators=(',', ': ')))
+        items = res["pageItems"]
+        for i in items:
+            saveitem(i, nacos_rootfs)
+
+def detaput(pynacos, data_id: str, group: str, content: str,
+            tenant: str = ""):
+    local_contentMD5 = getMD5(content)
+    try:
+        remote_content = pynacos.NacosConfig.Get(data_id, group, tenant, to_json = False)
+        if remote_content.status_code == 200:
+            remote_contentMD5 = getMD5(remote_content.text)
+            print("MD5", remote_contentMD5, local_contentMD5)
+            if remote_contentMD5 != local_contentMD5:
+                print("put", data_id, group, tenant)
+                html = pynacos.NacosConfig.Put(data_id, group, content, tenant)
+                print(html)
+            else:
+                print("MD5 same, not update")
+        elif remote_content.status_code == 404:
+            print("put", data_id, group, tenant)
+            html = pynacos.NacosConfig.Put(data_id, group, content, tenant)
+            print(html)
+        else:
+            print(remote_content)
+    except Exception as e:
+        print("Exception", e)
+        pass
+    finally:
+        print("finally")
+        return True
+
+def main():
+    parser = argparse.ArgumentParser(description="nacos cli util")
+    parser.add_argument("-a", "--action", action="store", nargs=1, dest="action",
+                        required=True,
+                        default='export',
+                        help="import or export")
+    parser.add_argument("-u", "--url", action="store", nargs=1, dest="url",
+                        required=True,
+                        help="the nacos url")
+    parser.add_argument("-g", "--group", action="store", nargs=1, dest="group",
+                        required=False,
+                        default="DEFAULT_GROUP",
+                        help="the nacos group")
+    parser.add_argument("-n", "--namespace", action="store", nargs=1, dest="namespace",
+                        required=False,
+                        default="",
+                        help="the nacos namespace")
+    parser.add_argument("-d", "--dir", action="store", nargs=1, dest="dir",
+                        required=False,
+                        default="nacos-export",
+                        help="the directory import into nacos")
+    parser.add_argument("-f", "--file", action="store", nargs=1, dest="file",
+                        required=False,
+                        default="",
+                        help="the file to import into nacos")
+    options = parser.parse_args()
+
+    if options.file is None and options.dir is None:
+        parser.print_help()
+        return False
+    print(options.url[0])
+    u = urllib.parse.urlparse(options.url[0])
+    print(u)
+    if u.scheme is None:
+        raise ValueError("unknown URL type: %s" % options.url[0])
+    scheme = u.scheme
+    host = u.netloc.split(':')[0]
+    port= u.port
+    if host.startswith('[') and host.endswith(']'):
+        host = host[1:-1]
+    if port is None:
+        if u.scheme == "http":
+            port = "80"
+        elif u.scheme == "https":
+            port = "443"
+
+    print(options)
+    pynacos = Pynacos.CreatNewNacos(
+    ip = host,
+    port = port,
+    scheme = scheme
+    )
+    if options.action[0] == 'import':
+        if options.dir:
+            NACOS_ROOTDIR = os.path.realpath(options.dir[0])
+            nss = [d for d in os.listdir(os.path.join(NACOS_ROOTDIR))]
+            for ns in nss:
+                ignore_ns = "%s" % (os.environ.get("NACOS_DISABLE_NS", 'disable'))
+                if re.match(ignore_ns, ns):
+                    print("ns %s match NACOS_DISABLE_NS %s, ignore" % (ns, ignore_ns))
+                    continue
+                groups = [f for f in os.listdir(os.path.join(NACOS_ROOTDIR, ns)) if not re.match(r'-TOBEFILL--', f)]
+                if not groups:
+                    groups = ['public']
+                for group in groups:
+                    files = [f for f in os.listdir(os.path.join(NACOS_ROOTDIR, ns, group))]
+                    print(files)
+                    for file in files:
+                        file_fp = os.path.join(NACOS_ROOTDIR, ns, group, file)
+                        print(file_fp)
+                        key = os.path.basename(file_fp)
+                        content = read_file_str(file_fp)
+                        detaput(pynacos, key, group, content, ns)
+        elif options.file:
+            print(options.file)
+            file = os.path.realpath(options.file[0])
+            key = os.path.basename(options.file[0])
+            content = read_file_str(os.path.dirname(file), os.path.basename(file))
+            detaput(pynacos, key, options.group, content, options.namespace)
+        else:
+            print("need -d or -f")
+    elif options.action[0] == 'export':
+        if options.dir:
+            NACOS_ROOTDIR = os.path.realpath(options.dir)
+        else:
+            NACOS_ROOTDIR = 'nacos-export'
+        fetchall(pynacos, tenant = options.namespace, nacos_rootfs = NACOS_ROOTDIR)
+        pass
+    else:
+        parser.print_help()
+if __name__ == '__main__':
+    main()

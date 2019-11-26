@@ -5,35 +5,42 @@
 USAGE="usage: $0 K8S_NS [O_DIR]"
 
 ###################################################################
-THIS_SCRIPT=$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0})
+THIS_SCRIPT=$(cd $(dirname "${BASH_SOURCE:-$0}"); pwd)/$(basename "${BASH_SOURCE:-$0}")
 #automatic detection TOPDIR
-CUR_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
-TRYTOP=$(xdir=${CUR_DIR};cd ${CUR_DIR}; while /usr/bin/test ! -e .TOP ; do \
-        xdir=`cd ../;pwd`;                       \
-        if [ "$xdir" = "/" ] ; then             \
-           echo  1>&2; \
-           break;                              \
-        fi ;                                    \
-        cd $xdir;                               \
-        done ;                                  \
-        pwd;)
+SCRIPT_DIR_A=$(dirname  "${THIS_SCRIPT}")
+SCRIPT_DIR=$(realpath "${SCRIPT_DIR_A}")
+#automatic detection TOPDIR
 
-if [[ -z ${TRYTOP} ]];then
-TRYTOP=${CUR_DIR}
+TEMPLATE_DIR="$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do \
+        xdir=`cd ../;pwd`;                        \
+        if [ "$xdir" = "/" ] ; then               \
+           echo  1>&2;                            \
+           break;                                 \
+        fi ;                                      \
+        cd "$xdir";                               \
+        done ;                                    \
+        pwd;)"
+
+if [[ -z "${TEMPLATE_DIR}" ]];then
+TEMPLATE_DIR="${SCRIPT_DIR}"
 fi
-echo THIS_SCRIPT=$THIS_SCRIPT
-echo CUR_DIR=$CUR_DIR
-echo TRYTOP=$TRYTOP
+echo "THIS_SCRIPT  = $THIS_SCRIPT"
+echo "SCRIPT_DIR   = SCRIPT_DIR"
+echo "TEMPLATE_DIR = ${TEMPLATE_DIR}"
 
-if [[ -n ${TEAMCITY_GIT_PATH} ]];then
+if [[ -n "${TEAMCITY_GIT_PATH}" ]];then
     echo "Run on Teamcity"
     BUILD_COUNTER="-t${BUILD_NUMBER}"
 elif [[ -n ${JENKINS_URL} ]];then
     echo "Run on Jenkins CI"
     BUILD_COUNTER="-j${BUILD_NUMBER}"
+    GITLAB_CI
+elif [[ -n "${GITLAB_CI}" ]];then
+    echo "Run on Gitlab CI"
+    BUILD_COUNTER="-g${BUILD_NUMBER}"
 else
-    echo "personal rc"
-    BUILD_COUNTER=""
+    echo "Run manual"
+    BUILD_COUNTER="-m"
 fi
 
 
@@ -43,58 +50,124 @@ if [ $# -lt 1 ];then
   echo "${USAGE}"
   exit 1;
 fi
-SRC_NS=$1
+SRC_NS="$1"
 CURDATE=$(date +%Y%m%d%H%M%S)
 VERSION=${CURDATE}${BUILD_COUNTER}
-echo "NS ${SRC_NS}"
-RCNAME=$(pwd)/${SRC_NS}-txt
+RCNAME="$(pwd)/${SRC_NS}"
+RCNAME="$(pwd)/${SRC_NS}"
 if [ $# -gt 1 ];then         
   RCNAME=$2
-fi 
-echo "${SRC_NS}-${CURDATE}"
-echo "${RCNAME}"
+fi
 
+echo "NS         =${SRC_NS}"
+echo "KUBECONFIG =${KUBECONFIG}"
+echo "RCNAME     =${RCNAME}"
 kubectl cluster-info
 kubectl get ns ${SRC_NS}
 if [ $? -ne 0 ];then
-  echo "NS ${SRC_NS} no exist"
+  echo "Error k8s NS ${SRC_NS} no exist"
   exit 2;
 fi
-mkdir -p ${RCNAME}
 
-MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|pvc|zookeeper"
+mkdir -p "${RCNAME}"
+rm -rf "${RCNAME}/images.yaml"
+rm -rf "${RCNAME}/images.txt"
+cat > "${RCNAME}/images.yaml" <<EOF
+global:
+  src:
+    k8s:
+      kubeconfig: ${HOME}/.kube/config
+      ns: ${SRC_NS}
+    docker:
+      repo: docker.io
+      ns: default
+  dst:
+    docker:
+      repo: docker.io
+      ns: default
+    k8s:
+      rc-fullname: false
+      ns: ${SRC_NS}
+      kubeconfig: ${HOME}/.kube/config
+      ingress:
+        internal:
+          annotations-ingress-class: nginx
+          domain: ${SRC_NS}-internal.tofill
+        public:
+          annotations-ingress-class: nginx
+          domain: ${SRC_NS}-public.tofill
+      containers:
+        securityContext:
+          privileged: true
+EOF
+
+
+MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|es|pvc|zookeeper"
 echo "##########################gen img/ env/ port"
 kubectl get -n ${SRC_NS} deployment  --no-headers |  awk '{print $1}' | egrep -v "${MWARE}" |sort | \
 while read i; do 
     name=$i
     echo "export app for ${SRC_NS}/${name}"
-    mkdir -p ${RCNAME}/${name}
+    mkdir -p "${RCNAME}/${name}"
     img=`kubectl get -n ${SRC_NS} deployment $i  -o=jsonpath='{.spec.template.spec.containers[0].image}'`
-    echo ${img} > ${RCNAME}/${name}/img.txt
-    perl -ni -e "s@harbor.nxe.local@harbor-chengdu.nx-engine.com@g;print"   ${RCNAME}/${name}/img.txt
-    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' > ${RCNAME}/${name}/env.txt
-    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.default-entrypoint\.sh}' 2>/dev/null > ${RCNAME}/${name}/default-entrypoint.sh
-    if [[ $(wc -l ${RCNAME}/${name}/default-entrypoint.sh  | awk '{print $1}') -lt 1 ]];then
-      rm -f  ${RCNAME}/${name}/default-entrypoint.sh
+    echo ${img} > "${RCNAME}/${name}/img.txt"
+    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.env\.txt}' > "${RCNAME}/${name}/env.txt"
+    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.default-entrypoint\.sh}' 2>/dev/null > "${RCNAME}/${name}/default-entrypoint.sh"
+    if [[ $(wc -l "${RCNAME}/${name}/default-entrypoint.sh"  | awk '{print $1}') -lt 1 ]];then
+      rm -f  "${RCNAME}/${name}/default-entrypoint.sh"
     fi
-    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.override-entrypoint\.sh}' 2>/dev/null > ${RCNAME}/${name}/override-entrypoint.sh
-    if [[ $(wc -l ${RCNAME}/${name}/override-entrypoint.sh  | awk '{print $1}') -lt 1 ]];then
-      rm -f  ${RCNAME}/${name}/override-entrypoint.sh
+    kubectl get -n ${SRC_NS} cm $name -o=jsonpath='{.data.override-entrypoint\.sh}' > "${RCNAME}/${name}/override-entrypoint.sh" 2>/dev/null
+    if [[ $(wc -l "${RCNAME}/${name}/override-entrypoint.sh"  | awk '{print $1}') -lt 1 ]];then
+      rm -f  "${RCNAME}/${name}/override-entrypoint.sh"
     fi
-    kubectl get -n ${SRC_NS} --export cm ${name}-initdata -o=yaml >${RCNAME}/${name}/${name}-initdata.yaml 2>/dev/null
-    if [[ $(wc -l ${RCNAME}/${name}/${name}-initdata.yaml  | awk '{print $1}') -lt 1 ]];then
-      rm -f  ${RCNAME}/${name}/${name}-initdata.yaml
+    kubectl get -n ${SRC_NS} --export cm ${name}-initdata -o=yaml >"${RCNAME}/${name}/${name}-initdata.yaml" 2>/dev/null
+    if [[ $(wc -l "${RCNAME}/${name}/${name}-initdata.yaml"  | awk '{print $1}') -lt 1 ]];then
+      rm -f  "${RCNAME}/${name}/${name}-initdata.yaml"
     fi
-    
+
     kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  &> /dev/null
     if [[ $? -eq 0 ]];then
-    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  > ${RCNAME}/${name}/ports.txt
+        kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[0].port}'  > "${RCNAME}/${name}/ports.txt"
+        kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  &> /dev/null
+        if [[ $? -eq 0 ]];then
+            echo -n ',' >> "${RCNAME}/${name}/ports.txt"
+            kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  >> "${RCNAME}/${name}/ports.txt"
+            kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[2].port}'  &> /dev/null
+            if [[ $? -eq 0 ]];then
+                echo -n ',' >> "${RCNAME}/${name}/ports.txt"
+                kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[2].port}'  >> "${RCNAME}/${name}/ports.txt"
+            fi
+        fi
     fi
-    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  &> /dev/null
-    if [[ $? -eq 0 ]];then
-    echo -n ',' >> ${RCNAME}/${name}/ports.txt
-    kubectl get -n  ${SRC_NS} svc $i  -o=jsonpath='{.spec.ports[1].port}'  >> ${RCNAME}/${name}/ports.txt               
-    fi
+cat >> "${RCNAME}/images.yaml" <<EOF
+${name}:
+  ${name}:
+    replicaCount: 1
+    ingress:
+      internal:
+        enabled: true
+        host: {}
+      public:
+        enabled: true
+        host: {}
+    image: ${img}
+    service:
+      type: ClusterIP
+EOF
+
+PORTS=$(head -n 1 "${RCNAME}/${name}/ports.txt")
+if [[ -z ${PORTS} ]];then
+cat >> "${RCNAME}/images.yaml" <<EOF
+      ports: []
+EOF
+else
+cat >> "${RCNAME}/images.yaml" <<EOF
+      ports:
+EOF
+echo ${PORTS} | perl -n  -e 'my $pl=$_;chomp($pl);my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}'  >> ${RCNAME}/images.yaml 
+fi
+
+echo ${img} >> "${RCNAME}/images.txt"
 done
 
 
