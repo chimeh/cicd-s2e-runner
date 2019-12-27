@@ -1,6 +1,7 @@
 FROM gitlab/gitlab-runner:alpine
 ARG KUBE_VERSION=v1.15.0
-ARG HELM_VERSION=v2.12.2
+ARG HELM2_VERSION=v2.12.2
+ARG HELM3_VERSION=v3.0.2
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories \
    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
@@ -28,9 +29,12 @@ RUN mkdir -pv /root/.m2 /root/.docker /root/.kube /s2e-default
 
 RUN  wget -q https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl \
-    && wget -q https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm \
-    && chmod +x /usr/local/bin/helm
-
+    && apk add ansible \
+    && wget -q https://storage.googleapis.com/kubernetes-helm/helm-${HELM2_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm2 \
+    && chmod +x /usr/local/bin/helm2 \
+    && wget -q https://storage.googleapis.com/kubernetes-helm/helm-${HELM3_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm3 \
+    && chmod +x /usr/local/bin/helm3 \
+    && ln -sf /usr/local/bin/helm2 /usr/local/bin/helm
 COPY s2e    /s2e-default
 
 COPY default-secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml

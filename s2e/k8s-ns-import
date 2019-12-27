@@ -71,10 +71,10 @@ do
     if [[ ${rv} -eq 0 ]];then
       helm upgrade  --install  --namespace ${K8S_NS} ${K8S_NS}-${i} ${WORKDIR}/${K8S_NS}-helm/charts/$i -f ${WORKDIR}/${K8S_NS}-helm/charts/$i/values-single.yaml
        # helm 2.x
-       helm upgrade --force --install  --namespace ${K8S_NS} --namespace ${K8S_NS} ${K8S_NS}-${i} ${WORKDIR}/${K8S_NS}-helm/charts/$i -f ${WORKDIR}/${K8S_NS}-helm/charts/$i/values-single.yaml
+       helm2 upgrade --force --install  --namespace ${K8S_NS} --namespace ${K8S_NS} ${K8S_NS}-${i} ${WORKDIR}/${K8S_NS}-helm/charts/$i -f ${WORKDIR}/${K8S_NS}-helm/charts/$i/values-single.yaml
     else
        # helm 3.x
-       helm upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${i} ${WORKDIR}/${K8S_NS}-helm/charts/$i -f ${WORKDIR}/${K8S_NS}-helm/charts/$i/values-single.yaml
+       helm3 upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${i} ${WORKDIR}/${K8S_NS}-helm/charts/$i -f ${WORKDIR}/${K8S_NS}-helm/charts/$i/values-single.yaml
     fi
   else
       echo "upgrade img on $i"

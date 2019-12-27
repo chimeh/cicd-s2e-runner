@@ -242,10 +242,10 @@ set -v
     rv=$?
     if [[ ${rv} -eq 0 ]];then
        # helm 2.x
-       helm upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+       helm2 upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
     else
        # helm 3.x
-       helm upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+       helm3 upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
     fi
   fi
 #  kubectl set resources deployment -n ${K8S_NS} deployment ${i} --limits=cpu=200m,memory=1024Mi 
