@@ -222,7 +222,6 @@ done
 /bin/cp -f ${APPNAME}/${VAULE_FILENAME}  ${APPNAME}/values.yaml
 
 
-set -v
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
 echo "#auto deploy"
   set +e
@@ -230,15 +229,30 @@ echo "#auto deploy"
   rv=$?
   set -e
   set -x
+set -v
   if [[ ${rv} -eq 0 ]];then
     kubectl set image -n ${K8S_NS} deployment ${SVCNAME}  ${SVCNAME}=${IMG}
+  else
+    set +e
+    kubectl version
+    helm version
+    set -e
+    # detect helm version on k8s
+    kubectl get pod --all-namespaces |egrep tiller
+    rv=$?
+    if [[ ${rv} -eq 0 ]];then
+       # helm 2.x
+       helm upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+    else
+       # helm 3.x
+       helm upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+    fi
   fi
-  helm upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
 #  kubectl set resources deployment -n ${K8S_NS} deployment ${i} --limits=cpu=200m,memory=1024Mi 
   set +x
   if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
     kubectl set -n  ${K8S_NS}  serviceaccount deployment ${SVCNAME}  ${SVCNAME}
   fi
 fi
-rm -rf ${K8S_NS}-${SVCNAME}
 set +v
+rm -rf ${K8S_NS}-${SVCNAME}
