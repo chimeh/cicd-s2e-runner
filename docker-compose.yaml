@@ -11,7 +11,7 @@ services:
   gitlab-runner:
     restart: always
 #    build: .
-    image: harbor.nx-engine.com/devops/gitlab-runner:latest
+    image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:master-7d346ac-cicd-gitlab-runner-s2e-1.0.0-g52376
     privileged: true
     command: ["run", "--user=root", "--working-directory=/home/gitlab-runner"]
     volumes:
