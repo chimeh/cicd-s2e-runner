@@ -243,4 +243,8 @@ rv=$?
 exit ${rv}
 ```
 
-
+###
+ * s2i 支持从cicd 页面自助点击推送到test,推送到prod, test 和 prod，只做第一次deploy
+ * s2i 对进入生产的image 进行retag
+ * 支持rancher cli 命令行式部署
+ * 如何支持 kubectl和helm等版本的演进，尤其是template的对kubernetes版本的兼容

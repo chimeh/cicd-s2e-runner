@@ -35,7 +35,13 @@ else
     ACTION_STAGE="ACTION_ALL"
 fi
 
+function do_gen_s2e_meta()
+{
+cat >> PWD/s2i.meta.json <<EOF
 
+EOF
+
+}
 
 function do_src_get_srctype_by_topdir()
 {
@@ -186,17 +192,21 @@ function do_src_analysis()
     
     case ${SRC_TYPE} in
         nodejs)
+            echo "nodejs,"
             do_src_analysis_nodejs
             ;;
         java)
+            echo "java,"
             do_src_analysis_java
             ;;
         python)
-            echo "not support yet"
+            echo "python, not support yet"
             ;;
         go)
-            echo "not support yet"
+            echo "go, not support yet"
             ;;
+        c)
+            echo "c/c++, not support yet"
         *)
             echo "not support yet"
             ;;

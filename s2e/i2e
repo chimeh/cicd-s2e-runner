@@ -258,7 +258,7 @@ def command_line():
     Note: value in OPTIONS are higher priority then images.yaml
     ### maintain k8s deploy
     # export all apps to images.yaml from k8s namespaces
-    %prog -o images-dev.yaml --src-k8s-kubeconfig /root/dev.config --src-k8s-ns default k8s-ns-export 
+    %prog -o images-dev.yaml --src-kubeconfig /root/dev.config --k8s-src-ns default k8s-ns-export 
      
     # deploy all apps into k8s ns
     %prog -i images.yaml k8s-ns-import

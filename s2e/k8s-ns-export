@@ -102,7 +102,7 @@ global:
 EOF
 
 
-MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|es|pvc|zookeeper"
+MWARE="redis|kafka|solr|elasticsearch|hbase|mongo|mysql|strimzi-cluster-operator|pvc|zookeeper"
 echo "##########################gen img/ env/ port"
 kubectl get -n ${SRC_NS} deployment  --no-headers |  awk '{print $1}' | egrep -v "${MWARE}" |sort | \
 while read i; do 

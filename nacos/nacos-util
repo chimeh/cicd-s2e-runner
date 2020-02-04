@@ -156,7 +156,7 @@ def main():
             print("need -d or -f")
     elif options.action[0] == 'export':
         if options.dir:
-            NACOS_ROOTDIR = os.path.realpath(options.dir)
+            NACOS_ROOTDIR = os.path.realpath(options.dir[0])
         else:
             NACOS_ROOTDIR = 'nacos-export'
         fetchall(pynacos, tenant = options.namespace, nacos_rootfs = NACOS_ROOTDIR)

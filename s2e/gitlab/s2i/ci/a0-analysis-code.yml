@@ -1,0 +1,14 @@
+stages:
+  - analysis-code
+code-analysis:
+  stage: analysis-code
+  script:
+     - s2i . analysis-code
+  only:
+    - master
+    - /^rc.*$/
+    - /^bugfix.*$/
+    - /^hotfix.*$/
+    - /^feature.*$/ 
+  except:
+    - /^dev.*$/
