@@ -33,3 +33,6 @@ services:
 #    - ./proj-a-secrets/maven/settings.xml:/root/.m2/settings.xml
 #    - ./proj-a-secrets/docker/config.json:/root/.docker/config.json
 #    - ./proj-a-secrets/k8s/:/root/.kube
+##########################android secrets
+    - ./android/local.properties:/etc/android/local.properties
+    - ./android/nxengine.jks:/etc/android/nxengine.jks

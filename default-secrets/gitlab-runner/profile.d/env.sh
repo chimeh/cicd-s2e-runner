@@ -22,3 +22,6 @@ export K8S_KUBECONFIG_DEV=/root/.kube/dev.config
 export K8S_KUBECONFIG_TEST=/root/.kube/test.config
 export K8S_KUBECONFIG_PROD=/root/.kube/prod.config
 
+export LD_LIBRARY_PATH=/lib:/lib64:/usr/lib
+export ANDROID_SDK_ROOT=/usr/local/android
+export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
