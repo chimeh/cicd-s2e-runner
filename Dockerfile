@@ -35,9 +35,9 @@ RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/s
 RUN  wget -q https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl \
     && apk add ansible \
-    && wget -q https://docs.rancher.cn/download/helm/helm-${HELM2_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm2 \
+    && wget -q https://storage.googleapis.com/kubernetes-helm/helm-${HELM2_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm2 \
     && chmod +x /usr/local/bin/helm2 \
-    && wget -q  https://get.helm.sh/helm-${HELM3_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm3 \
+    && wget -q  https://storage.googleapis.com/kubernetes-helm/helm-${HELM3_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm3 \
     && chmod +x /usr/local/bin/helm3 \
     && ln -sf /usr/local/bin/helm2 /usr/local/bin/helm \
     && apk add nginx
