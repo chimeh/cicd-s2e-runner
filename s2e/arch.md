@@ -6,7 +6,13 @@
 快速
 * 新建项目能快速建立CICD
 
+## 思路
+提供默认
+*  源码没有Dockerfile，使用默认Dockerfile
+*  源码没有entrypoint 提供默认entrypoint
 
+* CICD 过程检测分支模型规范
+* CICD 一键merge 代码
 ## 编译自动化
 提交代码后自动检测源码语言类型，并构建
 
@@ -39,3 +45,10 @@
 
 ### 一个
 
+类似于阿里巴巴aone的
+多特性分支集成，CICD 实现设计
+.gitlab-ci include localhost ci yaml
+stage1~stage2~stage3
+在stage1 检测说有feature/分支，生成所有这些分支的merge manual按钮，
+用helm渲染成呈现成job yaml，
+通过stage2 include 去触发复负责人选择哪些feature分支要merge到一起并做CI，并CD到开发环境
