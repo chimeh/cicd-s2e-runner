@@ -61,16 +61,7 @@ RUN mkdir -p /root/ts \
 RUN mkdir -pv /root/.m2 /root/.docker /root/.kube /s2e
 
 # kubernetes client
-RUN echo -e "\n\
-    [kubernetes]\n\
-    name=Kubernetes\n\
-    baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/\n\
-    enabled=1\n\
-    gpgcheck=1\n\
-    repo_gpgcheck=1\n\
-    gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg \
-    https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg" > /etc/yum.repos.d/kubernetes.repo \
-    && wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
+RUN wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl \
     && wget  http://mirror.azure.cn/kubernetes/helm/helm-${HELM2_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm2 \
     && chmod +x /usr/local/bin/helm2 \
