@@ -3,12 +3,15 @@ ARG KUBE_VERSION=v1.15.7
 ARG HELM2_VERSION=v2.12.2
 ARG HELM3_VERSION=v3.0.2
 ARG GIT_VERSION=2.24.1
+ARG NODE_VERSION=v10.16.2
+ARG MAVEN_VERSION=3.6.3
+ARG GO_VERSION=1.13.7
 
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
  && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
 
-ENV PATH='/s2e/tools:/s2e:/opt/apache-maven-3.6.3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+ENV PATH='/s2e/tools:/s2e:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 # add {src,artifact build/container} toolchain
 #gitlab runner
@@ -28,18 +31,21 @@ RUN yum install -y vim bash  bash-completion wget unzip curl ca-certificates tzd
 RUN yum install -y java-1.8.0-openjdk-devel
 # maven
 RUN mkdir -p /root/ts \
- && wget  -P /root/ts http://mirrors.ustc.edu.cn/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz \
- && tar -xvf /root/ts/apache-maven-3.6.3-bin.tar.gz -C /opt \
+ && wget  -P /root/ts http://mirrors.ustc.edu.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+ && tar -xvf /root/ts/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt \
  && mkdir -p /root/.m2 \
- && cp /opt/apache-maven-3.6.3/conf/settings.xml /root/.m2/settings.xml \
- && ln -sf /root/.m2/settings.xml /opt/apache-maven-3.6.3/conf/settings.xml
+ && cp /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml /root/.m2/settings.xml \
+ && ln -sf /root/.m2/settings.xml /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml
 # npm https://github.com/nodesource/distributions
-RUN curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+RUN mkdir -p /root/ts \
+ && wget  -P /root/ts https://npm.taobao.org/mirrors/node/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz\
+ && tar -xvf /root/ts/node-${NODE_VERSION}-linux-x64.tar.gz -C /opt 
+
 # python3
 RUN yum install -y python3-devel python3-pip python3-setuptools 
 # golang
-RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go1.13.7.linux-amd64.tar.gz \
- && tar -xvzf /root/ts/go1.13.7.linux-amd64.tar.gz -C /opt
+RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd64.tar.gz \
+ && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
  && yum-config-manager --add-repo  https://download.docker.com/linux/centos/docker-ce.repo \
