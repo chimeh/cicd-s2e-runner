@@ -22,7 +22,6 @@ RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runne
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 VOLUME ["/etc/gitlab-runner", "/home/gitlab-runner"]
-VOLUME ["/var/run/docker.sock"]
 ## native C/C++ toolchain
 RUN yum install -y vim bash  bash-completion wget unzip curl ca-certificates tzdata jq openssh-client \
   && yum groupinstall -y 'Development Tools' 'Legacy UNIX Compatibility' \
