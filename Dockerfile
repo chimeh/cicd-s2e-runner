@@ -39,7 +39,7 @@ RUN curl -sL https://rpm.nodesource.com/setup_10.x | bash -
 RUN yum install -y python3-devel python3-pip python3-setuptools 
 # golang
 RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go1.13.7.linux-amd64.tar.gz \
- && tar -xvzf go1.13.7.linux-amd64.tar.gz -C /opt
+ && tar -xvzf /root/ts/go1.13.7.linux-amd64.tar.gz -C /opt
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
  && yum-config-manager --add-repo  https://download.docker.com/linux/centos/docker-ce.repo \
