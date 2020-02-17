@@ -48,7 +48,7 @@ RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
  && yum-config-manager --add-repo  https://download.docker.com/linux/centos/docker-ce.repo \
- && yum install -y docker-ce
+ && yum install -y docker-ce docker-compose
 # git
 RUN mkdir -p /root/ts \
  && yum install -y  openssl-devel zlib-devel curl-devel expat-devel gettext-devel \
