@@ -36,8 +36,7 @@ RUN mkdir -p /root/ts \
 # npm https://github.com/nodesource/distributions
 RUN curl -sL https://rpm.nodesource.com/setup_10.x | bash -
 # python3
-RUN yum install -y python3-devel python3-pip python3-setuptools \
-  && pip3 install --index-url='https://mirrors.aliyun.com/pypi/simple' requests
+RUN yum install -y python3-devel python3-pip python3-setuptools 
 # golang
 RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go1.13.7.linux-amd64.tar.gz \
  && tar -xvzf go1.13.7.linux-amd64.tar.gz -C /opt
