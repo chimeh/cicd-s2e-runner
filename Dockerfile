@@ -68,7 +68,7 @@ RUN echo -e "\n\
     enabled=1\n\
     gpgcheck=1\n\
     repo_gpgcheck=1\n\
-    gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg\n\
+    gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg \
     https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg" > /etc/yum.repos.d/kubernetes.repo \
     && wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl \
