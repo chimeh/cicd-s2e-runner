@@ -34,5 +34,5 @@ services:
 #    - ./proj-a-secrets/docker/config.json:/root/.docker/config.json
 #    - ./proj-a-secrets/k8s/:/root/.kube
 ##########################android secrets
-    - ./android/local.properties:/etc/android/local.properties
-    - ./android/nxengine.jks:/etc/android/nxengine.jks
+    - ./secrets/android/local.properties:/etc/android/local.properties
+    - ./secrets/android/nxengine.jks:/etc/android/nxengine.jks

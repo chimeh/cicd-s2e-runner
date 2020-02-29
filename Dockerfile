@@ -11,7 +11,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
  && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
 
-ENV PATH="/s2e/tools:/s2e:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV PATH="/s2e/tools:/s2e:/opt/andriod/tools/bin:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # add {src,artifact build/container} toolchain
 #gitlab runner
@@ -73,6 +73,15 @@ RUN wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd
 # cicd logic
 COPY s2e    /s2e
 
+# andriod
+RUN mkdir -p /root/ts  \
+    &&  wget  -P /root/ts  https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip \
+    && cd /root/ts \
+    && mkdir -p /opt/andriod \
+    && unzip sdk-tools-linux-4333796.zip -d /opt/andriod \
+    && echo 'Y'|/usr/local/android/tools/bin/sdkmanager  "build-tools;29.0.3" \
+    && echo 'Y'|/usr/local/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29"
+
 #
 COPY Dockerfile*    /
 
@@ -85,7 +94,7 @@ COPY default-secrets/maven/settings.xml /root/.m2/settings.xml
 COPY default-secrets/docker/config.json /root/.docker/config.json
 COPY default-secrets/k8s/               /root/.kube
 
-RUN yum -y update && yum clean all && rm -rf /var/cache/yum && rm -rf /root/ts
+COPY docker /
+RUN yum -y update && yum clean all && rm -rf /var/cache/yum && rm -rf /root/ts && chmod +x /docker/docker-entrypoint.sh
 
-ENTRYPOINT ["gitlab-runner"]
-CMD ["run", "--user=root", "--working-directory=/home/gitlab-runner"]
+ENTRYPOINT ["/docker/docker-entrypoint.sh"]
