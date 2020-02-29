@@ -207,6 +207,7 @@ function do_src_analysis()
             ;;
         c)
             echo "c/c++, not support yet"
+            ;;
         *)
             echo "not support yet"
             ;;

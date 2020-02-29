@@ -11,7 +11,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
  && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
 
-ENV PATH='/s2e/tools:/s2e:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+ENV PATH="/s2e/tools:/s2e:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # add {src,artifact build/container} toolchain
 #gitlab runner
@@ -22,7 +22,6 @@ RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runne
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 VOLUME ["/etc/gitlab-runner", "/home/gitlab-runner"]
-VOLUME ["/var/run/docker.sock"]
 ## native C/C++ toolchain
 RUN yum install -y vim bash  bash-completion wget unzip curl ca-certificates tzdata jq openssh-client \
   && yum groupinstall -y 'Development Tools' 'Legacy UNIX Compatibility' \
@@ -49,7 +48,7 @@ RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
  && yum-config-manager --add-repo  https://download.docker.com/linux/centos/docker-ce.repo \
- && yum install -y docker-ce
+ && yum install -y docker-ce docker-compose
 # git
 RUN mkdir -p /root/ts \
  && yum install -y  openssl-devel zlib-devel curl-devel expat-devel gettext-devel \
