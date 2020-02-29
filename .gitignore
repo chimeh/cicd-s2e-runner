@@ -1,6 +1,8 @@
 release-*/
 release-*
 
+*.gz
+*.zip
 *.iml
 .idea
 # Byte-compiled / optimized / DLL files

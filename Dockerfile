@@ -68,7 +68,8 @@ RUN wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd
     && wget  http://mirror.azure.cn/kubernetes/helm/helm-dev-v3-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm3 \
     && chmod +x /usr/local/bin/helm3 \
     && ln -sf /usr/local/bin/helm2 /usr/local/bin/helm \
-    && yum install -y nginx
+    && yum install -y nginx \
+    && sed -i 's@/usr/share/nginx/html;@/s2e;@' /etc/nginx/nginx.conf
 
 # cicd logic
 COPY s2e    /s2e
@@ -77,7 +78,7 @@ COPY s2e    /s2e
 COPY Dockerfile*    /
 
 # let fetch ci/cd template via http://localhost
-COPY nginx/default.conf /etc/nginx/conf.d/
+COPY nginx/default.conf /etc/nginx/default.d/
 
 COPY default-secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
 COPY default-secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh

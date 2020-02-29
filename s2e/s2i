@@ -287,9 +287,8 @@ function do_docker_get_imgurl_by_dockerfile()
         DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
     fi
     if [[ -z ${DOCKER_NS} ]];then
-        DOCKER_NS=default
+    DOCKER_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
     fi
-    
     do_src_get_reponame
     
     if [[ "${DOCKFILE_DIR}" = ${SRC_DIR} ]];then
@@ -412,13 +411,13 @@ function do_deploy_k8s()
         K8S_AUTOCD=0
     fi
     if [[ -z ${K8S_NS} ]];then
-        K8S_NS=default
+        K8S_NS="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')-dev"
     fi
     if [[ -z ${K8S_DOMAIN_INTERNAL} ]];then
-        K8S_DOMAIN_INTERNAL=okd.cd
+        K8S_DOMAIN_INTERNAL="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1}')-dev.cd"
     fi
     if [[ -z ${K8S_DOMAIN_PUBLIC} ]];then
-        K8S_DOMAIN_PUBLIC=nxengine.cn
+        K8S_DOMAIN_PUBLIC="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1}')-dev.nxengine.com"
     fi
     
 
