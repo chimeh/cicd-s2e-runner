@@ -79,8 +79,8 @@ RUN mkdir -p /root/ts  \
     && cd /root/ts \
     && mkdir -p /opt/andriod \
     && unzip sdk-tools-linux-4333796.zip -d /opt/andriod \
-    && echo 'Y'|/usr/local/android/tools/bin/sdkmanager  "build-tools;29.0.3" \
-    && echo 'Y'|/usr/local/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29"
+    && echo 'Y'|/opt/android/tools/bin/sdkmanager  "build-tools;29.0.3" \
+    && echo 'Y'|/opt/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29"
 
 #
 COPY Dockerfile*    /
