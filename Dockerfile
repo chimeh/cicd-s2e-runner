@@ -93,7 +93,7 @@ COPY default-secrets/maven/settings.xml /root/.m2/settings.xml
 COPY default-secrets/docker/config.json /root/.docker/config.json
 COPY default-secrets/k8s/               /root/.kube
 
-COPY docker /
+COPY docker /docker
 RUN yum -y update && yum clean all && rm -rf /var/cache/yum && rm -rf /root/ts && chmod +x /docker/docker-entrypoint.sh
 
 ENTRYPOINT ["/docker/docker-entrypoint.sh"]
