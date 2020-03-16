@@ -94,8 +94,7 @@ COPY default-secrets/docker/config.json /root/.docker/config.json
 COPY default-secrets/k8s/               /root/.kube
 
 COPY docker /docker
-RUN  pip3 install --upgrade python-gitlab \
- &&
+RUN  pip3 install --upgrade python-gitlab 
 RUN yum -y update && yum clean all && rm -rf /var/cache/yum && rm -rf /root/ts && chmod +x /docker/docker-entrypoint.sh
 
 ENTRYPOINT ["/docker/docker-entrypoint.sh"]
