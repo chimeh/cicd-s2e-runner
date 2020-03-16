@@ -23,7 +23,8 @@ USAGE="
 echo "${USAGE}"
 if [[ $# -lt 1 ]];then
     echo "${USAGE}"
-    exit 1
+    echo "use PWD as SRC_TOP"
+    GAVE_SRC_TOP=${CI_PROJECT_DIR:${PWD}}
 else
     GAVE_SRC_TOP=$(realpath $1)
     SRC_TOP=$(realpath ${GAVE_SRC_TOP})
@@ -478,7 +479,8 @@ function do_deploy_k8s()
                     kubectl set image -n ${MY_K8S_NS} deployments ${SVCNAME} ${SVCNAME}=${DOCKER_URL}
                 else
                     bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
-               fi
+                fi
+                 echo ${DOCKER_URL} > s2i.${SVCNAME}.${CI_COMMIT_SHA}.${DOCKER_SVC_PORTS}.img.txt
             done
             slot=$(( $slot + 1 ))
           done
@@ -491,6 +493,30 @@ function do_deploy_k8s()
 # main logic
 echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
 ###################################################################  
+
+
+# check config valid, not valid will regenerate
+set +e
+gitlab current-user get
+RV=$?
+set -e
+
+if [[ ${RV} -ne 0 ]];then
+# gitlab cli config file not exist
+cat > /root/.python-gitlab.cfg <<EOF
+[global]
+default = default
+ssl_verify = true
+timeout = 5
+
+[default]
+url = ${CI_SERVER_URL}
+private_token = ${CI_PRIVATE_TOKEN}
+api_version = 4
+EOF
+perl -ni -e "s#url.+#url = ${CI_SERVER_URL}#g;print" /root/.python-gitlab.cfg
+perl -ni -e "s#private_token.+#private_token = ${CI_PRIVATE_TOKEN}#g;print" /root/.python-gitlab.cfg
+fi
 
 
 case ${ACTION_STAGE} in

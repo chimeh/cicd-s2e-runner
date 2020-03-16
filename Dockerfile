@@ -41,7 +41,7 @@ RUN mkdir -p /root/ts \
  && tar -xvf /root/ts/node-${NODE_VERSION}-linux-x64.tar.gz -C /opt 
 
 # python3
-RUN yum install -y python3-devel python3-pip python3-setuptools 
+RUN yum install -y python3-devel python3-pip python3-setuptools  yamllint
 # golang
 RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd64.tar.gz \
  && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt
@@ -82,7 +82,7 @@ RUN mkdir -p /root/ts  \
     && echo 'Y'|/opt/android/tools/bin/sdkmanager  "build-tools;29.0.3" > sdkmanager.log\
     && echo 'Y'|/opt/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29" >> sdkmanager.log
 #
-COPY Dockerfile*    /
+
 
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf /etc/nginx/default.d/
@@ -94,6 +94,8 @@ COPY default-secrets/docker/config.json /root/.docker/config.json
 COPY default-secrets/k8s/               /root/.kube
 
 COPY docker /docker
+RUN  pip3 install --upgrade python-gitlab \
+ &&
 RUN yum -y update && yum clean all && rm -rf /var/cache/yum && rm -rf /root/ts && chmod +x /docker/docker-entrypoint.sh
 
 ENTRYPOINT ["/docker/docker-entrypoint.sh"]

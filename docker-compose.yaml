@@ -11,9 +11,9 @@ services:
   gitlab-runner:
     restart: always
 #    build: .
-    image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:master-7d346ac-cicd-gitlab-runner-s2e-1.0.0-g52376
+    image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:feature-centos-0b5759a-cicd-gitlab-runner-s2e-1.0.0-g56631
     privileged: true
-    command: ["run", "--user=root", "--working-directory=/home/gitlab-runner"]
+#    command: ["run", "--user=root", "--working-directory=/home/gitlab-runner"]
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - root-home:/root
@@ -25,8 +25,9 @@ services:
     - ./secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
     - ./secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
     - ./secrets/maven/settings.xml:/root/.m2/settings.xml
+    - ./secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
     - ./secrets/docker/config.json:/root/.docker/config.json
-    - ./secrets/k8s/:/root/.kube
+    - /root/.kube:/root/.kube
 ###########################proj a secrets 
 #    - ./proj-a-secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
 #    - ./proj-a-secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
@@ -36,3 +37,6 @@ services:
 ##########################android secrets
     - ./secrets/android/local.properties:/etc/android/local.properties
     - ./secrets/android/nxengine.jks:/etc/android/nxengine.jks
+
+
+
