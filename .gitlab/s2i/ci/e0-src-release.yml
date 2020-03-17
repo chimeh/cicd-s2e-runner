@@ -2,11 +2,13 @@ stages:
   - src-release
 src-mr-create:
   stage: src-release
+  when: manual
   script:
      - gitlab-mr-create
   except:
     - master
     - /^hotfix.*$/
+    - tags
 stages:
   - src-release
 gitlab-auto-merge:
@@ -15,3 +17,5 @@ gitlab-auto-merge:
      - gitlab-auto-merge
   only:
     - /^hotfix.*$/
+  except:
+    - tags
