@@ -26,7 +26,7 @@ services:
     - ./secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
     - ./secrets/docker/config.json:/root/.docker/config.json
     - ./secrets/.kube:/root/.kube
-   - ./secrets/android/local.properties:/etc/android/local.properties
+    - ./secrets/android/local.properties:/etc/android/local.properties
     - ./secrets/android/nxengine.jks:/etc/android/nxengine.jks
 ###########################
     - ./tools:/s2e/tools

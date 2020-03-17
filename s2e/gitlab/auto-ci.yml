@@ -1,4 +1,4 @@
 include:
 #  - local: .gitlab/s2i/s2i-v1.gitlab-ci.yml
 #  - remote: http://localhost/gitlab/s2i-v1.gitlab-ci.yml
-  - remote: http://localhost/gitlab/s2i/s2i.yml
+#  - remote: http://localhost/gitlab/s2i/s2i.yml
