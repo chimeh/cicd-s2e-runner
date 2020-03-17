@@ -4,6 +4,9 @@ src-mr-create:
   stage: src-release
   script:
      - gitlab-mr-create
+  except:
+    - master
+    - /^hotfix.*$/
 stages:
   - src-release
 gitlab-auto-merge:
