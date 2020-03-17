@@ -4,3 +4,5 @@ unit-test:
   stage: unit-test
   script:
      - echo "TODO"
+  except:
+    - tags

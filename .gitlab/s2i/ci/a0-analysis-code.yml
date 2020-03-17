@@ -4,3 +4,5 @@ code-analysis:
   stage: analysis-code
   script:
      - s2i . analysis-code
+  except:
+    - tags
