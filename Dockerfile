@@ -9,7 +9,7 @@ ARG GO_VERSION=1.13.7
 
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
- && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
+ && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.aliyun.com/centos/$releasever|' /etc/yum.repos.d/*.repo
 
 # add {src,artifact build/container} toolchain
 #gitlab runner
