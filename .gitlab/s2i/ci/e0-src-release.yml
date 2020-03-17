@@ -1,0 +1,19 @@
+stages:
+  - src-release
+src-mr-create:
+  stage: src-release
+  when: on_success
+  script:
+     - gitlab-mr-create
+  except:
+    - master
+    - /^hotfix.*$/
+stages:
+  - src-release
+src-mr-create:
+  stage: src-release
+  when: on_success
+  script:
+     - gitlab-auto-merge
+  only:
+    - /^hotfix.*$/

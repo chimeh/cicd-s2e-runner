@@ -4,11 +4,3 @@ unit-test:
   stage: unit-test
   script:
      - echo "TODO"
-  only:
-    - master
-    - /^rc.*$/
-    - /^bugfix.*$/
-    - /^hotfix.*$/
-    - /^feature.*$/ 
-  except:
-    - /^dev.*$/

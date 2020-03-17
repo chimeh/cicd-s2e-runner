@@ -3,17 +3,20 @@ stages:
 deploy-to-dev:
   stage: deploy-env
   script:
+     - export K8S_NS_SUFFIX="-dev"
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_DEV}
-     - export K8S_NS=${K8S_NS_DEV:${K8S_NS}}
+     - export K8S_NS="" # nil will auto naming namespace
      - s2i . deploy
+     - deploy-dev-post
   only:
-    - master
     - /^rc.*$/
     - /^bugfix.*$/
-    - /^hotfix.*$/
     - /^feature.*$/
     - /^dev.*$/
-deploy-to-test:
+  except:
+    - master
+    - /^hotfix.*$/
+mirror-to-test:
   stage: deploy-env
   when: manual
   script:
@@ -22,28 +25,30 @@ deploy-to-test:
     - export SRC_KUBE=${K8S_KUBECONFIG_DEV}
     - export DST_KUBE=${K8S_KUBECONFIG_TEST}
     - k8s-app-mirror ${SRC_KUBE} ${DST_KUBE} ${CI_PROJECT_NAME}
-    - deploy-test-register
+    - deploy-test-post
   only:
     - master
     - /^rc.*$/
     - /^bugfix.*$/
-    - /^hotfix.*$/
     - /^feature.*$/
     - /^dev.*$/
+  except:
+    - master
+    - /^hotfix.*$/
+
 deploy-to-uat:
   stage: deploy-env
   when: manual
   script:
-     - export SRC_K8S_NS_SUFFIX="-test"
-     - export DST_K8S_NS_SUFFIX="-uat"
-     - export SRC_KUBE=${K8S_KUBECONFIG_TEST}
-     - export DST_KUBE=${K8S_KUBECONFIG_UAT}
-     - k8s-app-mirror ${SRC_KUBE} ${DST_KUBE} ${CI_PROJECT_NAME}
-     - deploy-uat-register
+     - export K8S_NS_SUFFIX="-uat"
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_UAT}
+     - export K8S_NS="" # nil will auto naming namespace
+     - s2i . deploy
+     - deploy-uat-post
   only:
     - master
     - /^hotfix.*$/
-deploy-to-prd:
+mirror-to-prd:
   stage: deploy-env
   when: manual
   script:
@@ -52,7 +57,6 @@ deploy-to-prd:
      - export SRC_KUBE=${K8S_KUBECONFIG_UAT}
      - export DST_KUBE=${K8S_KUBECONFIG_PRD}
      - k8s-app-mirror ${SRC_KUBE} ${DST_KUBEG} ${CI_PROJECT_NAME}
-     - deploy-prd-register
+     - deploy-prd-post
   only:
     - master
-    - /^hotfix.*$/

@@ -43,7 +43,7 @@ if [[ -z ${DOMAIN_INTERNAL} ]];then
     DOMAIN_INTERNAL=bu5-test.tx
 fi
 if [[ -z ${DOMAIN_PUBLIC} ]];then
-    DOMAIN_PUBLIC=bu5-test.nxengine.comn
+    DOMAIN_PUBLIC=bu5-test.nxengine.com
 fi
 if [[ -z ${INGRESS_CLASS_INTERNAL} ]];then
     INGRESS_CLASS_INTERNAL=nginx
@@ -74,7 +74,7 @@ fi
 ####################################################################
 CURDATE=$(date +%Y%m%d)
 if [ $# -lt 2 ];then
-  echo "error args num should >= 2"
+  echo "#error args num should >= 2"
   exit 1;
 fi
 echo $@
@@ -82,31 +82,31 @@ echo $@
 
 function do_src_get_reponame()
 {
-    echo "$FUNCNAME"
-    GAVE_SRC_TOP=$(realpath ${CI_PROJECT_DIR:${PWD}})
+    echo "#$FUNCNAME"
+    GAVE_SRC_TOP=$(realpath ${CI_PROJECT_DIR:-${PWD}})
     SRC_TOP=$(realpath ${GAVE_SRC_TOP})
 
     if [[ -z ${SRC_TOP} ]];then
-        echo "can't detect SRC_TOP"
+        echo "#can't detect SRC_TOP"
         exit 1
     fi
     if [[ -n ${TEAMCITY_GIT_PATH} ]];then
-        echo "Teamcity CICD"
+        echo "#Teamcity CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
         SRC_REPO_NAME=${TEAMCITY_BUILDCONF_NAME}
         BUILD_COUNTER="t${BUILD_NUMBER}"
     elif [[ -n ${JENKINS_URL} ]];then
-        echo "Jenkins CICD"
+        echo "#Jenkins CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
         SRC_REPO_NAME="${JOB_NAME}"
         BUILD_COUNTER="j${BUILD_NUMBER}"
     elif [[ -n ${GITLAB_CI} ]];then
-        echo "GITLAB CICD"
+        echo "#GITLAB CICD"
         SRC_BRANCHER_NAME=${CI_COMMIT_REF_SLUG}
         SRC_REPO_NAME="${CI_PROJECT_NAME}"
         BUILD_COUNTER="g${CI_PIPELINE_ID}"
     else
-        echo "manual CICD"
+        echo "#manual CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
         SRC_REPO_NAME=$(basename $(realpath ${SRC_TOP}))
         BUILD_COUNTER="c1"
@@ -143,7 +143,8 @@ if [[ -z ${DST_K8S_NS} ]];then
     DST_K8S_NS="${DEFAULT_NS}${DST_K8S_NS_SUFFIX}"
 fi
 
-SVCNAME="${$3}"
+shift 2
+SVCNAME="${0}"
 #SVCPORTS= # get from source service
 #SVCIMG= # get from source deployment
 #SVC_SRC_SHA= get from source image url, should contain SHA
@@ -178,7 +179,7 @@ set -e
 ### ensure ns exists
 echo "#check dst ns exist"
 set +e
-kubectl --kubeconfig ${DST_KUBE} get  ns ${DST_K8S_NS}
+kubectl --kubeconfig ${DST_KUBE} get ns ${DST_K8S_NS}
 rv=$?
 set -e
 if [[ ${rv} -ne 0 ]];then
@@ -199,12 +200,13 @@ kubectl --kubeconfig ${SRC_KUBE} -n ${SRC_K8S_NS} get deployment ${SVCNAME} -o=j
 ## not first mirror
 if [[ ${rv} -eq 0 ]];then
     # get all name image pair from default
+    echo "#${SVCNAME} exist on ${DST_K8S_NS}, update image "
     #kubectl get deployment -n default -o=jsonpath="{range .items[*]}{.metadata.name}{' '}{range .spec.template.spec.containers[*]}{.image}{''}{'\n'}{end}{end}"
     SVCIMG=$(kubectl --kubeconfig ${SRC_KUBE} -n ${SRC_K8S_NS} get deployment ${SVCNAME}  -o=jsonpath='{$.spec.template.spec.containers[:1].image}')
     kubectl --kubeconfig ${DST_KUBE} -n ${DST_K8S_NS} set image   deployment ${SVCNAME}  ${SVCNAME}=${SVCIMG}
     continue
 fi
-echo "first mirror, make helm chart template for it"
+echo "#first mirror, make helm chart template for ${SVCNAME} "
 SVCIMG=$(kubectl --kubeconfig ${SRC_KUBE} -n ${SRC_K8S_NS} get deployment ${SVCNAME}  -o=jsonpath='{$.spec.template.spec.containers[:1].image}')
 CATALOG_NAME=$(echo ${SVCNAME} | tr '[A-Z]' '[a-z]')
 APPNAME=${WORKDIR}/${DST_K8S_NS}-${SVCNAME}
@@ -246,7 +248,7 @@ fi
 if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
   /bin/cp -rf  ${APPNAME}/charts/${SVCNAME}/cicd-ns-rabc-templates/* ${APPNAME}/charts/${SVCNAME}ame/templates/
 fi
-echo ${GITLAB_USER_EMAIL} > ${APPNAME}/charts/$name/files/mail.txt
+echo ${GITLAB_USER_EMAIL} > ${APPNAME}/charts/${SVCNAME}/files/mail.txt
 perl -ni -e "s/^name:.+/name: ${SVCNAME}/g;print" ${APPNAME}/charts/${SVCNAME}/Chart.yaml
 perl -ni -e "s/^version:.+/version: ${COMMONCHARTVERSION}/g;print" ${APPNAME}/charts/${SVCNAME}/Chart.yaml
 perl -ni -e "s/^icev3-xxx-generic/${SVCNAME}/g;print" ${APPNAME}/charts/${SVCNAME}/values-single.yaml

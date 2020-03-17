@@ -6,6 +6,7 @@ deploy-to-dev:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_DEV}
      - export K8S_NS=${K8S_NS_DEV:${K8S_NS}}
      - s2i . deploy
+     - deploy-dev-post
   only:
     - master
     - /^rc.*$/
@@ -22,7 +23,7 @@ deploy-to-test:
     - export SRC_KUBE=${K8S_KUBECONFIG_DEV}
     - export DST_KUBE=${K8S_KUBECONFIG_TEST}
     - k8s-app-mirror ${SRC_KUBE} ${DST_KUBE} ${CI_PROJECT_NAME}
-    - deploy-test-register
+    - deploy-test-post
   only:
     - master
     - /^rc.*$/
@@ -39,7 +40,7 @@ deploy-to-uat:
      - export SRC_KUBE=${K8S_KUBECONFIG_TEST}
      - export DST_KUBE=${K8S_KUBECONFIG_UAT}
      - k8s-app-mirror ${SRC_KUBE} ${DST_KUBE} ${CI_PROJECT_NAME}
-     - deploy-uat-register
+     - deploy-uat-post
   only:
     - master
     - /^hotfix.*$/
@@ -52,7 +53,7 @@ deploy-to-prd:
      - export SRC_KUBE=${K8S_KUBECONFIG_UAT}
      - export DST_KUBE=${K8S_KUBECONFIG_PRD}
      - k8s-app-mirror ${SRC_KUBE} ${DST_KUBEG} ${CI_PROJECT_NAME}
-     - deploy-prd-register
+     - deploy-prd-post
   only:
     - master
     - /^hotfix.*$/

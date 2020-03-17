@@ -5,11 +5,3 @@ artifact-docker-build:
   script:
      - s2i . artifact
      - s2i . docker
-  only:
-    - master
-    - /^rc.*$/
-    - /^bugfix.*$/
-    - /^hotfix.*$/
-    - /^feature.*$/ 
-  except:
-    - /^dev.*$/

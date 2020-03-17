@@ -4,5 +4,7 @@
 set -e
 
 # mark the commit that deploy into env using tag
+set +e
 gitlab project-tag delete  --project-id ${CI_PROJECT_ID} --name latest/test
+set -e
 gitlab project-tag create --project-id ${CI_PROJECT_ID} --ref ${CI_COMMIT_SHA} --tag-name latest/test

@@ -1,0 +1,12 @@
+#!/bin/bash
+#email: jimin.huang@nx-engine.com
+#email: jimminh@163.com
+
+gitlab project-tag create --project-id ${CI_PROJECT_ID} --ref ${CI_COMMIT_SHA} --tag-name ${RELEASE_NAME}
+TIMESTAMP=$(date +%Y%m%d-%H%m%S)
+TAGNAME=$(echo release/${DATETIME}-${CI_PROJECT_NAME} | tr _ -)
+
+gitlab project-tag create --project-id ${CI_PROJECT_ID} --ref ${CI_COMMIT_SHA} --tag-name ${TAGNAME} \
+--message "Auto Release by ${GITLAB_USER_LOGIN}"
+
+

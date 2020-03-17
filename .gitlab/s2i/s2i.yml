@@ -3,6 +3,7 @@ stages:
   - artifact-docker-build
   - unit-test
   - deploy-env
+  - src-release
 
 after_script:
   - date
@@ -12,4 +13,5 @@ include:
   - local: .gitlab/s2i/ci/b0-artifact-docker-build.yml
   - local: .gitlab/s2i/ci/c0-unit-test.yml
   - local: .gitlab/s2i/ci/d0-deploy-env.yml
+  - local: .gitlab/s2i/ci/e0-src-release.yml
 

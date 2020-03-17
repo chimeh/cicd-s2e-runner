@@ -1,0 +1,12 @@
+#!/bin/bash
+#email: jimin.huang@nx-engine.com
+#email: jimminh@163.com
+set -e
+gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID}
+ --source-branch ${CI_COMMIT_BRANCH}
+ --target-branch master
+ --title ${CI_COMMIT_TITLE}
+ --description ${CI_COMMIT_MESSAGE}
+ --labels ${GITLAB_USER_LOGIN}
+
+
