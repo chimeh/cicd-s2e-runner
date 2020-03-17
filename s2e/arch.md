@@ -112,3 +112,10 @@ https://stackoverflow.com/questions/40122780/push-files-to-gitlab-ci-via-ci-runn
 
 统计生产次数
 统计测试次数
+
+
+runner 弄一个WEB页面，
+把配置过程放到WEB，配置数据可以放到数据库里或者K8S的secrets里；
+弄成一键部署；
+docker run
+然后就可以通过WEB配置
