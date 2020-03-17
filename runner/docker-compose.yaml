@@ -19,24 +19,18 @@ services:
     - root-home:/root
     - maven-cache:/root/.m2/repository
     - gitlab-runner:/home/gitlab-runner
-##########################ucomment to override cotainer /s2e-default, because PATH=/s2e:/s2e-default
-    - ./s2e:/s2e
-##########################default secrets 
+##########################secrets
     - ./secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
     - ./secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
     - ./secrets/maven/settings.xml:/root/.m2/settings.xml
     - ./secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
     - ./secrets/docker/config.json:/root/.docker/config.json
-    - /root/.kube:/root/.kube
-###########################proj a secrets 
-#    - ./proj-a-secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
-#    - ./proj-a-secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
-#    - ./proj-a-secrets/maven/settings.xml:/root/.m2/settings.xml
-#    - ./proj-a-secrets/docker/config.json:/root/.docker/config.json
-#    - ./proj-a-secrets/k8s/:/root/.kube
-##########################android secrets
-    - ./secrets/android/local.properties:/etc/android/local.properties
+    - ./secrets/.kube:/root/.kube
+   - ./secrets/android/local.properties:/etc/android/local.properties
     - ./secrets/android/nxengine.jks:/etc/android/nxengine.jks
+###########################
+    - ./tools:/s2e/tools
+
 
 
 
