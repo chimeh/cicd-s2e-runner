@@ -98,7 +98,12 @@ COPY default-secrets/k8s/               /root/.kube
 COPY s2e    /s2e
 COPY docker /docker
 
-RUN yum -y update && yum clean all && rm -rf /var/cache/yum && rm -rf /root/ts && chmod -R +x /docker/docker-entrypoint.sh /s2e/
+RUN yum install -y wqy-microhei-fonts \
+ && yum -y update \
+ && yum clean all \
+ && rm -rf /var/cache/yum \
+ && rm -rf /root/ts \
+ && chmod -R +x /docker/docker-entrypoint.sh /s2e/
 
 ENV PATH="/s2e/tools:/s2e:/opt/andriod/tools/bin:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 RUN echo ${PATH} >> /etc/profile.d/env.sh
