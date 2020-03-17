@@ -84,7 +84,7 @@ RUN mkdir -p /root/ts \
     && mkdir -p /opt/gradle \
     && unzip  -qq gradle-6.2.2-all.zip -d /opt/gradle
 
-RUN  pip3 install --upgrade python-gitlab
+RUN  pip3 install --index-url http://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
 
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf /etc/nginx/default.d/
