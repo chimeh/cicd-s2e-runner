@@ -6,7 +6,7 @@ src-mr-create:
      - gitlab-mr-create
 stages:
   - src-release
-src-mr-create:
+gitlab-auto-merge:
   stage: src-release
   script:
      - gitlab-auto-merge
