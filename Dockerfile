@@ -11,8 +11,6 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
  && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
 
-ENV PATH="/s2e/tools:/s2e:/opt/andriod/tools/bin:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
 # add {src,artifact build/container} toolchain
 #gitlab runner
 RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
@@ -80,11 +78,16 @@ RUN mkdir -p /root/ts  \
     && echo 'Y'|/opt/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29" >> sdkmanager.log
 #
 
+RUN mkdir -p /root/ts \
+    &&  wget  -P /root/ts  https://downloads.gradle-dn.com/distributions/gradle-6.2.2-all.zip \
+    && cd /root/ts \
+    && mkdir -p /opt/gradle \
+    && unzip  -qq gradle-6.2.2-all.zip -d /opt/gradle
+
 RUN  pip3 install --upgrade python-gitlab
 
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf /etc/nginx/default.d/
-
 COPY default-secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
 COPY default-secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh
 COPY default-secrets/maven/settings.xml /root/.m2/settings.xml
@@ -95,5 +98,7 @@ COPY s2e    /s2e
 COPY docker /docker
 
 RUN yum -y update && yum clean all && rm -rf /var/cache/yum && rm -rf /root/ts && chmod +x /docker/docker-entrypoint.sh
+
+ENV PATH="/s2e/tools:/s2e:/opt/andriod/tools/bin:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 ENTRYPOINT ["/docker/docker-entrypoint.sh"]
