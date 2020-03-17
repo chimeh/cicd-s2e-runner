@@ -70,9 +70,6 @@ RUN wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd
     && yum install -y nginx \
     && sed -i 's@/usr/share/nginx/html;@/s2e;@' /etc/nginx/nginx.conf
 
-# cicd logic
-COPY s2e    /s2e
-
 # andriod
 RUN mkdir -p /root/ts  \
     &&  wget  -P /root/ts  https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip \
@@ -83,6 +80,7 @@ RUN mkdir -p /root/ts  \
     && echo 'Y'|/opt/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29" >> sdkmanager.log
 #
 
+RUN  pip3 install --upgrade python-gitlab
 
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf /etc/nginx/default.d/
@@ -93,8 +91,9 @@ COPY default-secrets/maven/settings.xml /root/.m2/settings.xml
 COPY default-secrets/docker/config.json /root/.docker/config.json
 COPY default-secrets/k8s/               /root/.kube
 
+COPY s2e    /s2e
 COPY docker /docker
-RUN  pip3 install --upgrade python-gitlab 
+
 RUN yum -y update && yum clean all && rm -rf /var/cache/yum && rm -rf /root/ts && chmod +x /docker/docker-entrypoint.sh
 
 ENTRYPOINT ["/docker/docker-entrypoint.sh"]
