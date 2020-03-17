@@ -8,8 +8,8 @@ after_script:
   - date
 
 include:
-  - remote: http://localhost/gitlab/s2i/ci/a0-analysis-code.yml
-  - remote: http://localhost/gitlab/s2i/ci/b0-artifact-docker-build.yml
-  - remote: http://localhost/gitlab/s2i/ci/c0-unit-test.yml
-  - remote: http://localhost/gitlab/s2i/ci/d0-deploy-env.yml
+  - local: .gitlab/s2i/ci/a0-analysis-code.yml
+  - local: .gitlab/s2i/ci/b0-artifact-docker-build.yml
+  - local: .gitlab/s2i/ci/c0-unit-test.yml
+  - local: .gitlab/s2i/ci/d0-deploy-env.yml
 
