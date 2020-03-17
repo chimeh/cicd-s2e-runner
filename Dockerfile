@@ -15,7 +15,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
 #gitlab runner
 RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
  && yum install -y --nogpgcheck gitlab-runner \
- && wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo \
+ && curl -L http://mirrors.aliyun.com/repo/epel-7.repo > /etc/yum.repos.d/epel.repo \
  && yum install -y ansible \
  && yum install -y sudo \
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
