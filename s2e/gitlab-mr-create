@@ -5,6 +5,7 @@ set -e
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 export LANG=en_US.UTF-8
+set +e
 gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
  --source-branch ${CI_COMMIT_BRANCH} \
  --target-branch master \
@@ -13,12 +14,23 @@ gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
  --labels ${GITLAB_USER_LOGIN} \
  --assignee-id ${GITLAB_USER_ID} \
 
-gitlab  project-merge-request  list \
---project-id ${CI_PROJECT_ID}   \
---source-branch ${CI_COMMIT_BRANCH} \
---target-branch master  | head -n 1 | awk '{print $2}' > $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -)
+RV=$?
+if [[  ! -f s2i.request-note.txt ]];then
+cat "Docker镜像地址：" > s2i.request-note.txt
+cat .s2i.*img.txt >> s2i.request-note.txt
+fi
 
-gitlab project-merge-request-note create \
---project-id ${CI_PROJECT_ID}  \
---mr-iid $(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -)) \
---body "请相关Code Reviewer comment相关意见" \
+set -e
+
+if [[ ${RV=$?} -ne 0 ]];then
+    gitlab  project-merge-request  list \
+    --project-id ${CI_PROJECT_ID}   \
+    --source-branch ${CI_COMMIT_BRANCH} \
+    --target-branch master  | head -n 1 | awk '{print $2}' > $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -)
+
+
+    gitlab project-merge-request-note create \
+    --project-id ${CI_PROJECT_ID}  \
+    --mr-iid $(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -)) \
+    --body @s2i.request-note.txt \
+fi
