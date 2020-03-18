@@ -2,11 +2,21 @@
 #email: jimin.huang@nx-engine.com
 #email: jimminh@163.com
 set -e
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
 gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
  --source-branch ${CI_COMMIT_BRANCH} \
  --target-branch master \
- --title ${CI_COMMIT_TITLE} \
- --description ${CI_COMMIT_MESSAGE} \
+ --title "MR: ${CI_COMMIT_TITLE}" \
+ --description @${SCRIPT_DIR}/doc-templates/mr-checklist.md \
  --labels ${GITLAB_USER_LOGIN} \
 
+gitlab  project-merge-request  list \
+--project-id ${CI_PROJECT_ID}   \
+--source-branch ${CI_COMMIT_BRANCH} \
+--target-branch master  | head -n 1 | awk '{print $2}' > .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH}
 
+gitlab project-merge-request-note create \
+--project-id ${CI_PROJECT_ID}  \
+--mr-iid $(head -n 1 .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH}) \
+--body "请相关Code Reviewer comment相关意见"
