@@ -26,7 +26,7 @@ mkdir -p .s2i/
 if [[ $# -lt 1 ]];then
     echo "${USAGE}"
     echo "use PWD as SRC_TOP"
-    GAVE_SRC_TOP=${CI_PROJECT_DIR:${PWD}}
+    GAVE_SRC_TOP=${CI_PROJECT_DIR:-${PWD}}
 else
     GAVE_SRC_TOP=$(realpath $1)
     SRC_TOP=$(realpath ${GAVE_SRC_TOP})
@@ -304,7 +304,7 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     do_src_get_reponame
     
-    if [[ "${DOCKFILE_DIR}" -eq ${SRC_DIR} ]];then
+    if [[ "${DOCKFILE_DIR}" -eq "${SRC_DIR}" ]];then
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-e-${SRC_VERSION}-${BUILD_COUNTER}
     else
         DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
@@ -396,6 +396,7 @@ function do_docker_build()
             docker rmi ${DOCKER_URL}
             docker rmi ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
             slot=$((${slot} + 1))
+            echo ${DOCKER_URL} >> .s2i/s2i.${SRC_REPO_NAME}.${CI_COMMIT_SHA}.${DOCKER_SVC_PORTS}.img.txt
         done
         
 
@@ -499,7 +500,6 @@ function do_deploy_k8s()
                 else
                     bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
                 fi
-                 echo ${DOCKER_URL} > .s2i/s2i.${SVCNAME}.${CI_COMMIT_SHA}.${DOCKER_SVC_PORTS}.img.txt
             done
             slot=$(( $slot + 1 ))
           done

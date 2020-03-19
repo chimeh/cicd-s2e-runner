@@ -2,4 +2,6 @@
 #email: jimin.huang@nx-engine.com
 #email: jimminh@163.com
 set -e
-git merge  --no-ff --no-edit --strategy=recursive --strategy-option=ignore-space-at-eol $(git rev-parse master)
+git config --worktree user.email ${GITLAB_USER_EMAIL}
+git config --worktree user.name ${GITLAB_USER_LOGIN}
+git merge  --no-ff --no-edit --strategy=recursive --strategy-option=ignore-space-at-eol $(head -n 1 .git/refs/remotes/origin/master)
