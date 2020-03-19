@@ -1,0 +1,329 @@
+#!/bin/bash
+#author huangjimin
+#jimin.huang@nx-engine.com
+#jimminh@163.com
+#
+echo "###########################################"
+set -e
+USAGE="
+    #export VAL control DST environment;
+    export INGRESS_CLASS_INTERNAL=nginx;
+    export INGRESS_CLASS_PUBLIC=nginx;
+    export INGRESS_INTERNAL_ENABLED=true;
+    export INGRESS_PUBLIC_ENABLED=true;
+    export SRC_K8S_NS_SUFFIX="-dev"
+    export DST_K8S_NS_SUFFIX="-test"
+    SRC_K8S_NS 的值为环境变量，否则为 ${DEFAULT_NS}${SRC_K8S_NS_SUFFIX}
+    DST_K8S_NS 的值为环境变量，否则为 ${DEFAULT_NS}${DST_K8S_NS_SUFFIX}
+    usage: $0  SRC_KUBE DST_KUBE SVC1 SVC2 ...
+    usage: $0 dev.config test.config [ice-dev] [ice-test] [file-service nginx ...] "
+echo "${USAGE}"
+echo "###########################################"
+
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+TPLTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do \
+        xdir=`cd ../;pwd`;                       \
+        if [ "$xdir" = "/" ] ; then             \
+           echo  1>&2; \
+           break;                              \
+        fi ;                                    \
+        cd $xdir;                               \
+        done ;                                  \
+        pwd;)
+
+WORKDIR=$(realpath $(pwd))
+if [[ -z ${TPLTOP} ]];then
+TPLTOP=${WORKDIR}
+fi
+
+
+if [[ -z ${DOMAIN_INTERNAL} ]];then
+    DOMAIN_INTERNAL=bu5-test.tx
+fi
+if [[ -z ${DOMAIN_PUBLIC} ]];then
+    DOMAIN_PUBLIC=bu5-test.nxengine.com
+fi
+if [[ -z ${INGRESS_CLASS_INTERNAL} ]];then
+    INGRESS_CLASS_INTERNAL=nginx
+fi
+if [[ -z ${INGRESS_CLASS_PUBLIC} ]];then
+    INGRESS_CLASS_PUBLIC=nginx
+fi
+if [[ -z ${INGRESS_INTERNAL_ENABLED} ]];then
+    INGRESS_INTERNAL_ENABLED=true
+fi
+if [[ -z ${INGRESS_PUBLIC_ENABLED} ]];then
+    INGRESS_PUBLIC_ENABLED=true
+fi
+if [[ -n ${TEAMCITY_GIT_PATH} ]];then
+    echo "#Run on Teamcity CICD"
+    BUILD_COUNTER="-t${BUILD_NUMBER}"
+elif [[ -n ${JENKINS_URL} ]];then
+    echo "#Run on Jenkins CICD"
+    BUILD_COUNTER="-j${BUILD_NUMBER}"
+elif [[ -n ${GITLAB_CI} ]];then
+    echo "#Run on Gitlab CICD"
+    BUILD_COUNTER="-g${BUILD_NUMBER}"
+else
+    echo "#Run on Manual CICD"
+    BUILD_COUNTER=""
+fi
+
+####################################################################
+CURDATE=$(date +%Y%m%d)
+if [ $# -lt 2 ];then
+  echo "#error args num should >= 2"
+  exit 1;
+fi
+echo $@
+
+
+function do_src_get_reponame()
+{
+    echo "#$FUNCNAME"
+    GAVE_SRC_TOP=$(realpath ${CI_PROJECT_DIR:-${PWD}})
+    SRC_TOP=$(realpath ${GAVE_SRC_TOP})
+
+    if [[ -z ${SRC_TOP} ]];then
+        echo "#can't detect SRC_TOP"
+        exit 1
+    fi
+    if [[ -n ${TEAMCITY_GIT_PATH} ]];then
+        echo "#Teamcity CICD"
+        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
+        SRC_REPO_NAME=${TEAMCITY_BUILDCONF_NAME}
+        BUILD_COUNTER="t${BUILD_NUMBER}"
+    elif [[ -n ${JENKINS_URL} ]];then
+        echo "#Jenkins CICD"
+        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
+        SRC_REPO_NAME="${JOB_NAME}"
+        BUILD_COUNTER="j${BUILD_NUMBER}"
+    elif [[ -n ${GITLAB_CI} ]];then
+        echo "#GITLAB CICD"
+        SRC_BRANCHER_NAME=${CI_COMMIT_REF_SLUG}
+        SRC_REPO_NAME="${CI_PROJECT_NAME}"
+        BUILD_COUNTER="g${CI_PIPELINE_ID}"
+    else
+        echo "#manual CICD"
+        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
+        SRC_REPO_NAME=$(basename $(realpath ${SRC_TOP}))
+        BUILD_COUNTER="c1"
+    fi
+    if [[ -f ${SRC_TOP}/VERSION ]]; then
+        SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION | awk '{print $1}')
+    else
+        SRC_VERSION=1.0.0
+    fi
+    SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
+
+    echo "SRC_TOP=${SRC_TOP}"
+    echo "SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
+    echo "SRC_VERSION=${SRC_VERSION}"
+    echo "SRC_REPO_NAME=${SRC_REPO_NAME}"
+    echo "SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
+    echo "BUILD_COUNTER=${BUILD_COUNTER}"
+}
+
+do_src_get_reponame
+
+DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+if [[ -z ${DEFAULT_NS} ]];then
+    DEFAULT_NS="default"
+fi
+
+SRC_KUBE=$(realpath "$1")
+DST_KUBE=$(realpath "$2")
+
+if [[ -z ${SRC_K8S_NS} ]];then
+    SRC_K8S_NS="${DEFAULT_NS}${SRC_K8S_NS_SUFFIX}"
+fi
+if [[ -z ${DST_K8S_NS} ]];then
+    DST_K8S_NS="${DEFAULT_NS}${DST_K8S_NS_SUFFIX}"
+fi
+
+shift 2
+SVCNAME="${0}"
+#SVCPORTS= # get from source service
+#SVCIMG= # get from source deployment
+#SVC_SRC_SHA= get from source image url, should contain SHA
+
+
+echo "SRC_KUBE=${SRC_KUBE}"
+echo "DST_KUBE=${DST_KUBE}"
+echo "SRC_K8S_NS=${SRC_K8S_NS}"
+echo "DST_K8S_NS=${DST_K8S_NS}"
+echo ""
+echo "SRC_K8S_NS_SUFFIX=${SRC_K8S_NS_SUFFIX}"
+echo "DST_K8S_NS_SUFFIX=${DST_K8S_NS_SUFFIX}"
+echo ""
+echo "DOMAIN_INTERNAL=${DOMAIN_INTERNAL}"
+echo "DOMAIN_PUBLIC=${DOMAIN_PUBLIC}"
+echo ""
+echo "THIS_SCRIPT=${THIS_SCRIPT}"
+echo "SCRIPT_DIR=${SCRIPT_DIR}"
+echo "WORKDIR=${WORKDIR}"
+echo "TPLTOP=${TPLTOP}"
+
+# env version
+set +e
+echo "######SRC#######"
+kubectl --kubeconfig ${SRC_KUBE} cluster-info
+helm --kubeconfig ${SRC_KUBE} version
+echo "######DST#######"
+kubectl --kubeconfig ${DST_KUBE} cluster-info
+helm --kubeconfig ${DST_KUBE} version
+echo "################deploying"
+set -e
+### ensure ns exists
+echo "#check dst ns exist"
+set +e
+kubectl --kubeconfig ${DST_KUBE} get ns ${DST_K8S_NS}
+rv=$?
+set -e
+if [[ ${rv} -ne 0 ]];then
+    kubectl --kubeconfig ${DST_KUBE} create  namespace ${DST_K8S_NS}
+fi
+
+### iter all app, check app exists in DST, if not, new deploy;if exists, set new img
+for i in $*;do
+SVCNAME=$i
+echo "#deploy SVCNAME=${SVCNAME} to ${DST_K8S_NS}"
+
+echo "#check dst deployment exist"
+set +e
+kubectl --kubeconfig ${DST_KUBE} -n ${DST_K8S_NS} get  deployment ${SVCNAME} >/dev/null 2>&1
+rv=$?
+set -e
+kubectl --kubeconfig ${SRC_KUBE} -n ${SRC_K8S_NS} get deployment ${SVCNAME} -o=jsonpath="{range .items[*]}{.metadata.name}{' '}{range .spec.template.spec.containers[*]}{.image}{''}{'\n'}{end}{end}"
+## not first mirror
+if [[ ${rv} -eq 0 ]];then
+    # get all name image pair from default
+    echo "#${SVCNAME} exist on ${DST_K8S_NS}, update image "
+    #kubectl get deployment -n default -o=jsonpath="{range .items[*]}{.metadata.name}{' '}{range .spec.template.spec.containers[*]}{.image}{''}{'\n'}{end}{end}"
+    SVCIMG=$(kubectl --kubeconfig ${SRC_KUBE} -n ${SRC_K8S_NS} get deployment ${SVCNAME}  -o=jsonpath='{$.spec.template.spec.containers[:1].image}')
+    kubectl --kubeconfig ${DST_KUBE} -n ${DST_K8S_NS} set image   deployment ${SVCNAME}  ${SVCNAME}=${SVCIMG}
+    continue
+fi
+echo "#first mirror, make helm chart template for ${SVCNAME} "
+SVCIMG=$(kubectl --kubeconfig ${SRC_KUBE} -n ${SRC_K8S_NS} get deployment ${SVCNAME}  -o=jsonpath='{$.spec.template.spec.containers[:1].image}')
+CATALOG_NAME=$(echo ${SVCNAME} | tr '[A-Z]' '[a-z]')
+APPNAME=${WORKDIR}/${DST_K8S_NS}-${SVCNAME}
+VAULE_FILENAME=values-${SVCNAME}.yaml
+VERSION=${CURDATE}${BUILD_COUNTER}
+COMMONCHARTVERSION=1.0
+echo "SVCIMG=${SVCIMG}"
+echo "CATALOG_NAME=${CATALOG_NAME}"
+echo "VERSION=${VERSION}"
+echo "APPNAME=${APPNAME}"
+echo "VAULE_FILENAME=${VAULE_FILENAME}"
+echo "COMMONCHARTVERSION=${COMMONCHARTVERSION}"
+
+mkdir -p ${APPNAME}/charts
+cat > ${APPNAME}/Chart.yaml <<EOF
+name: ${CATALOG_NAME}
+version: ${VERSION}
+appVersion: 1.0
+description: gen helm for ${APPNAME}
+maintainers:
+- name: Jimmy Huang
+  email: jimminh@163.com
+engine: gotpl
+EOF
+
+echo "#gen charts and depencies"
+echo  'dependencies:' > ${APPNAME}/requirements.yaml
+echo "#gen ${SVCNAME} charts"
+/bin/cp -rf  ${TPLTOP}/generic/xxx-generic-chart ${APPNAME}/charts/${SVCNAME}
+if [[ -n ${SRC_KUBE} ]];then
+   echo "get env.txt from ${SRC_K8S_NS} "
+   touch ${APPNAME}/charts/${SVCNAME}/env.txt.old
+   set +e
+   kubectl --kubeconfig ${SRC_KUBE} get -n ${SRC_K8S_NS} cm ${SVCNAME} -o=jsonpath='{.data.env\.txt}' > ${APPNAME}/charts/${SVCNAME}/env.txt.old
+   set -e
+   perl -ne "chomp(\$_);print ' ' x 0;print \$_;print qq(\n);" ${APPNAME}/charts/${SVCNAME}/env.txt.old >> ${APPNAME}/charts/${SVCNAME}/files/env.txt
+   rm -f ${APPNAME}/${SVCNAME}/env.txt.old
+fi
+if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
+  /bin/cp -rf  ${APPNAME}/charts/${SVCNAME}/cicd-ns-rabc-templates/* ${APPNAME}/charts/${SVCNAME}ame/templates/
+fi
+echo ${GITLAB_USER_EMAIL} > ${APPNAME}/charts/${SVCNAME}/files/mail.txt
+perl -ni -e "s/^name:.+/name: ${SVCNAME}/g;print" ${APPNAME}/charts/${SVCNAME}/Chart.yaml
+perl -ni -e "s/^version:.+/version: ${COMMONCHARTVERSION}/g;print" ${APPNAME}/charts/${SVCNAME}/Chart.yaml
+perl -ni -e "s/^icev3-xxx-generic/${SVCNAME}/g;print" ${APPNAME}/charts/${SVCNAME}/values-single.yaml
+perl -ni -e "s@image:.+@image: ${SVCIMG}@g;print"  ${APPNAME}/charts/${SVCNAME}/values-single.yaml
+cat >> ${APPNAME}/requirements.yaml <<EOF
+- name: ${SVCNAME}
+  version: ~${COMMONCHARTVERSION}
+  repository: "file://charts/${SVCNAME}"
+EOF
+
+cat > ${APPNAME}/${VAULE_FILENAME} <<EOF
+global:
+  rc-fullname: false
+  ingress:
+    internal:
+      annotations-ingress-class: ${INGRESS_CLASS_INTERNAL}
+      domain: ${DOMAIN_INTERNAL}
+    public:
+      annotations-ingress-class: ${INGRESS_CLASS_PUBLIC}
+      domain: ${DOMAIN_PUBLIC}
+  docker:
+    repo: ${DOCKER_REPO}
+    ns: ${DOCKER_NS}
+  containers:
+    securityContext:
+      privileged: true
+EOF
+
+
+cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
+${SVCNAME}:
+  ${SVCNAME}:
+    replicaCount: 1
+    ingress:
+      internal: 
+        enabled: ${INGRESS_INTERNAL_ENABLED}
+        host: {}
+      public: 
+        enabled: ${INGRESS_PUBLIC_ENABLED}
+        host: {}
+    image: ${SVCIMG}
+    service:
+      type: ClusterIP
+EOF
+PORTS=$(kubectl --kubeconfig ${SRC_KUBE} -n ${SRC_K8S_NS} get svc ${name} -o=jsonpath="{range .spec.ports[*]}{.port}{''}{' '}{end}")
+if [[ -z ${PORTS} ]];then
+cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
+      ports: []
+EOF
+else
+cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
+      ports:
+EOF
+echo -n ${PORTS} | perl -n  -e 'my $pl=$_;my @ports= split /\,/, $pl; foreach(@ports) { print " " x 8;print  " - $_\n"}'  >> ${APPNAME}/${VAULE_FILENAME}
+fi
+
+cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
+    env.txt: |
+EOF
+/bin/cp -f ${APPNAME}/${VAULE_FILENAME}  ${APPNAME}/values.yaml
+
+### helm chart template made done
+
+## helm deploy
+
+# detect helm version on k8s
+kubectl  --kubeconfig ${DST_KUBE} -n ${DST_K8S_NS} get pod --all-namespaces |egrep tiller >/dev/null 2>&1
+rv=$?
+if [[ ${rv} -eq 0 ]];then
+   # helm 2.x
+   helm2 upgrade --force --install  --kubeconfig ${DST_KUBE}  --namespace ${DST_K8S_NS} ${DST_K8S_NS}-${SVCNAME} ${APPNAME}
+else
+   # helm 3.x
+   helm3 upgrade --force --install  --kubeconfig ${DST_KUBE}  --namespace ${DST_K8S_NS} ${DST_K8S_NS}-${SVCNAME} ${APPNAME}
+fi
+
+rm -rf ${APPNAME}
+done

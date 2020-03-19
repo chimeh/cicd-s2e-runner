@@ -1,0 +1,36 @@
+version: '3'
+
+
+volumes:
+  maven-cache: {}
+  gitlab-runner: {}
+  root-home: {}
+
+
+services:
+  gitlab-runner:
+    restart: always
+#    build: .
+    image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:feature-centos-0b5759a-cicd-gitlab-runner-s2e-1.0.0-g56631
+    privileged: true
+#    command: ["run", "--user=root", "--working-directory=/home/gitlab-runner"]
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - root-home:/root
+    - maven-cache:/root/.m2/repository
+    - gitlab-runner:/home/gitlab-runner
+##########################secrets
+    - ./secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
+    - ./secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
+    - ./secrets/maven/settings.xml:/root/.m2/settings.xml
+    - ./secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
+    - ./secrets/docker/config.json:/root/.docker/config.json
+    - ./secrets/.kube:/root/.kube
+    - ./secrets/android/local.properties:/etc/android/local.properties
+    - ./secrets/android/nxengine.jks:/etc/android/nxengine.jks
+###########################
+    - ./tools:/s2e/tools
+
+
+
+

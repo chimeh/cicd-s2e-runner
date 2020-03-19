@@ -1,0 +1,5 @@
+#!/bin/bash
+#email: jimin.huang@nx-engine.com
+#email: jimminh@163.com
+set -e
+git merge  --no-ff --no-edit --strategy=recursive --strategy-option=ignore-space-at-eol $(git rev-parse master)

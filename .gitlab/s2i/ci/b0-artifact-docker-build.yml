@@ -3,13 +3,13 @@ stages:
 artifact-docker-build:
   stage: artifact-docker-build
   script:
+     - git-merge-master
      - s2i . artifact
      - s2i . docker
-  only:
-    - master
-    - /^rc.*$/
-    - /^bugfix.*$/
-    - /^hotfix.*$/
-    - /^feature.*$/ 
   except:
-    - /^dev.*$/
+    - tags
+  artifacts:
+    when: on_success
+    expire_in: 24h
+    paths:
+      - .s2i/
