@@ -3,6 +3,6 @@ stages:
 code-analysis:
   stage: analysis-code
   script:
-     - s2i . analysis-code
+     - echo "TODO"
   except:
     - tags

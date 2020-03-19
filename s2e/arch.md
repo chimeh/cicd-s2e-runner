@@ -119,3 +119,8 @@ runner 弄一个WEB页面，
 弄成一键部署；
 docker run
 然后就可以通过WEB配置
+
+UT 等测试报告放到MR 的讨论页面
+
+WEB IDE Terminal 问题解决
+artifact 机制再stage 之间传递
