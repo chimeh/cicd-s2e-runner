@@ -3,9 +3,14 @@ stages:
 deploy-to-dev:
   stage: deploy-env
   script:
-     - export K8S_NS_SUFFIX="-dev"
-     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_DEV}
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_DEV:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_DEV:-${K8S_NS_SUFFIX:-"-dev"}}
      - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_DEV:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_DEV:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_DEV:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_DEV:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_DEV:-${INGRESS_CLASS_PUBLIC}}
      - s2i . deploy
      - deploy-dev-post
   only:
@@ -16,18 +21,20 @@ deploy-to-dev:
   except:
     - master
     - /^hotfix.*$/
-mirror-to-test:
+deploy-to-test:
   stage: deploy-env
-  when: manual
   script:
-    - export SRC_K8S_NS_SUFFIX="-dev"
-    - export DST_K8S_NS_SUFFIX="-test"
-    - export SRC_KUBE=${K8S_KUBECONFIG_DEV}
-    - export DST_KUBE=${K8S_KUBECONFIG_TEST}
-    - k8s-app-mirror ${SRC_KUBE} ${DST_KUBE} ${CI_PROJECT_NAME}
-    - deploy-test-post
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_TEST:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_TEST:-${K8S_NS_SUFFIX:-"-test"}}
+     - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_TEST:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_TEST:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_TEST:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_TEST:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_TEST:-${INGRESS_CLASS_PUBLIC}}
+     - s2i . deploy
+     - deploy-dev-post
   only:
-    - master
     - /^rc.*$/
     - /^bugfix.*$/
     - /^feature.*$/
@@ -40,9 +47,14 @@ deploy-to-uat:
   stage: deploy-env
   when: manual
   script:
-     - export K8S_NS_SUFFIX="-uat"
-     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_UAT}
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_UAT:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_UAT:-${K8S_NS_SUFFIX:-"-uat"}}
      - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_UAT:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_UAT:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_UAT:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_UAT:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_UAT:-${INGRESS_CLASS_PUBLIC}}
      - s2i . deploy
      - deploy-uat-post
   only:
@@ -52,11 +64,15 @@ mirror-to-prd:
   stage: deploy-env
   when: manual
   script:
-     - export SRC_K8S_NS_SUFFIX="-uat"
-     - export DST_K8S_NS_SUFFIX="-prd"
-     - export SRC_KUBE=${K8S_KUBECONFIG_UAT}
-     - export DST_KUBE=${K8S_KUBECONFIG_PRD}
-     - k8s-app-mirror ${SRC_KUBE} ${DST_KUBEG} ${CI_PROJECT_NAME}
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_PRD:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_PRD:-${K8S_NS_SUFFIX:-"-prd"}}
+     - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_PRD:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_PRD:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_PRD:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_PRD:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_PRD:-${INGRESS_CLASS_PUBLIC}}
+     - s2i . deploy
      - deploy-prd-post
   only:
     - master
