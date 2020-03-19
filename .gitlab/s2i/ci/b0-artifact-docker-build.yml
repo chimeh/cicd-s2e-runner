@@ -8,8 +8,8 @@ artifact-docker-build:
      - s2i . docker
   except:
     - tags
-artifacts:
-  when: on_success
-  expire_in: 24h
-  paths:
-    - .s2i/
+  artifacts:
+    when: on_success
+    expire_in: 24h
+    paths:
+      - .s2i/
