@@ -19,8 +19,9 @@ artifact-docker-build-master:
   script:
      - s2i . artifact
      - s2i . docker
-  except:
-    - tags
+  only:
+    - master
+    - hotfix/*
   artifacts:
     when: on_success
     expire_in: 24h
