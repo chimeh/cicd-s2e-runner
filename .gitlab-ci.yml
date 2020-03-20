@@ -1,6 +1,7 @@
 #s2i:2
 
 stages:
+  - analysis-code
   - artifact-docker-build
   - deploy-env
   - artifact-release
