@@ -33,7 +33,7 @@ deploy-to-test:
      - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_TEST:-${INGRESS_CLASS_INTERNAL}}
      - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_TEST:-${INGRESS_CLASS_PUBLIC}}
      - s2i . deploy
-     - deploy-dev-post
+     - deploy-test-post
   only:
     - /^rc.*$/
     - /^bugfix.*$/
