@@ -5,8 +5,9 @@ artifact-release:
   stage: artifact-release
   when: manual
   script:
-     - export IMG=$(head -n 1 .s2i/s2i.*img.txt)
-     - perl -ni -e "s@image: .+@image: ${IMG}@g;print" runner/docker-compose.yaml
+    - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
+    - "PERL_EXP=s@image: .+@image: ${IMG}@g;print"
+    - perl -ni -e "${PERL_EXP}" runner/docker-compose.yaml
   except:
     - tags
     - master
