@@ -40,7 +40,7 @@ gitlab-auto-merge:
 
 stages:
   - artifact-release
-artifact-release:
+artifact-release-job:
   stage: artifact-release
   when: manual
   script:
