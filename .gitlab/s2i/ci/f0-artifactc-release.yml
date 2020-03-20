@@ -1,0 +1,17 @@
+
+stages:
+  - artifact-release
+artifact-release:
+  stage: artifact-release
+  when: manual
+  script:
+     -
+  except:
+    - tags
+    - master
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - runner

@@ -29,7 +29,7 @@ RUN yum install -y vim bash  bash-completion wget unzip curl ca-certificates tzd
 RUN yum install -y java-1.8.0-openjdk-devel
 # maven
 RUN mkdir -p /root/ts \
- && wget  -P /root/ts http://mirrors.ustc.edu.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+ && wget  -P /root/ts https://mirror.azure.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
  && tar -xvf /root/ts/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt \
  && mkdir -p /root/.m2 \
  && cp /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml /root/.m2/settings.xml \
@@ -42,7 +42,7 @@ RUN mkdir -p /root/ts \
 # python3
 RUN yum install -y python3-devel python3-pip python3-setuptools  yamllint
 # golang
-RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd64.tar.gz \
+RUN wget -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz \
  && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \

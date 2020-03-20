@@ -129,3 +129,9 @@ k8s-app-mirror, k8s-ns-import 等集成到一个，使用python语言
 
 环境变量的KEY 有优先级，根据当前repo所处的STAGE/JOB以及CI_PROJECT_PATH等特征，排优先级；
 比如AAA=1， AAA_DEV=2，则当JOB出于deloy_to_dev 时， AAA=2
+
+
+一键部署权限控制；粒度可以是整个集群、整个NS、单个服务，授权给每个人，其他人点则报错；
+
+实现方式，redis 中存放 权限，并且部署进UAT、PRD的次数数据可以放redis，
+并做统计，在prometheus 展示

@@ -1,6 +1,7 @@
 stages:
   - artifact-docker-build
   - deploy-env
+  - artifact-release
   - src-release
 
 include:
@@ -9,4 +10,4 @@ include:
 #  - local: .gitlab/s2i/ci/c0-unit-test.yml
   - local: .gitlab/s2i/ci/d0-deploy-env.yml
   - local: .gitlab/s2i/ci/e0-src-release.yml
-
+  - local: .gitlab/s2i/ci/f0-artifact-release.yml

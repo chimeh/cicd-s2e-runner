@@ -3,8 +3,8 @@ version: '3'
 
 volumes:
   maven-cache: {}
-  gitlab-runner: {}
-  root-home: {}
+  gitlab-runner-cache: {}
+  root-cache: {}
 
 
 services:
@@ -16,14 +16,14 @@ services:
 #    command: ["run", "--user=root", "--working-directory=/home/gitlab-runner"]
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
-    - root-home:/root
+    - root-cache:/root
     - maven-cache:/root/.m2/repository
-    - gitlab-runner:/home/gitlab-runner
+    - gitlab-runner-cache:/home/gitlab-runner
 ##########################secrets
     - ./secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
     - ./secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
-    - ./secrets/maven/settings.xml:/root/.m2/settings.xml
     - ./secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
+    - ./secrets/maven/settings.xml:/root/.m2/settings.xml
     - ./secrets/docker/config.json:/root/.docker/config.json
     - ./secrets/.kube:/root/.kube
     - ./secrets/android/local.properties:/etc/android/local.properties
