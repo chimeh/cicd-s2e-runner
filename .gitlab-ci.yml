@@ -12,6 +12,6 @@ stages:
 code-check:
   stage: code-check
   script:
-     - gitlab-ci-check
+    - gitlab-ci-check
   except:
     - tags
