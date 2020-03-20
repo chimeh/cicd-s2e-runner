@@ -5,7 +5,8 @@ artifact-release:
   stage: artifact-release
   when: manual
   script:
-     -
+     - IMG=$(head -n 1 .s2i/s2i.*img.txt)
+     - perl -ni -e "s/^image: .+/image: ${IMG}/g;print" runner/docker-compose.yaml
   except:
     - tags
     - master
@@ -14,4 +15,4 @@ artifact-release:
     name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
     expire_in: 24h
     paths:
-      - runner
+      - runner/
