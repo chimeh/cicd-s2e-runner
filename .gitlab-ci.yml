@@ -7,8 +7,9 @@ stages:
   - artifact-release
   - src-release
 #####
-
-code-analysis:
+stages:
+  - code-check
+code-check:
   stage: code-check
   script:
      - gitlab-ci-check
