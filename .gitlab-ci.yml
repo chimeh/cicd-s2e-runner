@@ -1,15 +1,16 @@
 #s2i:2
 
 stages:
+  - code-check
   - artifact-docker-build
   - deploy-env
   - artifact-release
   - src-release
 #####
 stages:
-  - analysis-code
+  - code-check
 code-analysis:
-  stage: analysis-code
+  stage: code-check
   script:
      - gitlab-ci-check
   except:
