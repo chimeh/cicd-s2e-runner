@@ -3,6 +3,162 @@ stages:
 code-analysis:
   stage: analysis-code
   script:
+     - gitlab-ci-check
+  except:
+    - tags
+#####
+stages:
+  - artifact-docker-build
+artifact-docker-build:
+  stage: artifact-docker-build
+  script:
+     - git-merge-master
+     - s2i . artifact
+     - s2i . docker
+  except:
+    - tags
+    - master
+  artifacts:
+    when: on_success
+    expire_in: 24h
+    paths:
+      - .s2i/
+artifact-docker-build-master:
+  stage: artifact-docker-build
+  script:
+     - s2i . artifact
+     - s2i . docker
+  only:
+    - master
+    - hotfix/*
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
+#####
+stages:
+  - unit-test
+unit-test:
+  stage: unit-test
+  script:
      - echo "TODO"
   except:
     - tags
+#####
+stages:
+  - deploy-env
+deploy-to-dev:
+  stage: deploy-env
+  script:
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_DEV:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_DEV:-${K8S_NS_SUFFIX:-"-dev"}}
+     - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_DEV:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_DEV:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_DEV:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_DEV:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_DEV:-${INGRESS_CLASS_PUBLIC}}
+     - s2i . deploy
+     - deploy-dev-post
+  only:
+    - /^rc.*$/
+    - /^bugfix.*$/
+    - /^feature.*$/
+    - /^dev.*$/
+  except:
+    - master
+    - /^hotfix.*$/
+deploy-to-test:
+  stage: deploy-env
+  script:
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_TEST:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_TEST:-${K8S_NS_SUFFIX:-"-test"}}
+     - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_TEST:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_TEST:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_TEST:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_TEST:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_TEST:-${INGRESS_CLASS_PUBLIC}}
+     - s2i . deploy
+     - deploy-test-post
+  only:
+    - /^rc.*$/
+    - /^bugfix.*$/
+    - /^feature.*$/
+    - /^dev.*$/
+  except:
+    - master
+    - /^hotfix.*$/
+rollback-test-from-uat:
+  stage: deploy-env
+  script:
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_TEST:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_TEST:-${K8S_NS_SUFFIX:-"-test"}}
+     - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_TEST:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_TEST:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_TEST:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_TEST:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_TEST:-${INGRESS_CLASS_PUBLIC}}
+     - echo TODO
+  only:
+    - /^rc.*$/
+    - /^bugfix.*$/
+    - /^feature.*$/
+    - /^dev.*$/
+  except:
+    - master
+    - /^hotfix.*$/
+
+deploy-to-uat:
+  stage: deploy-env
+  when: manual
+  script:
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_UAT:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_UAT:-${K8S_NS_SUFFIX:-"-uat"}}
+     - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_UAT:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_UAT:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_UAT:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_UAT:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_UAT:-${INGRESS_CLASS_PUBLIC}}
+     - s2i . deploy
+     - deploy-uat-post
+  only:
+    - master
+    - /^hotfix.*$/
+rollback-uat-from-prd:
+  stage: deploy-env
+  when: manual
+  script:
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_UAT:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_UAT:-${K8S_NS_SUFFIX:-"-uat"}}
+     - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_UAT:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_UAT:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_UAT:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_UAT:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_UAT:-${INGRESS_CLASS_PUBLIC}}
+     - s2i . deploy
+     - deploy-uat-post
+  only:
+    - master
+    - /^hotfix.*$/
+mirror-to-prd:
+  stage: deploy-env
+  when: manual
+  script:
+     - export K8S_KUBECONFIG=${K8S_KUBECONFIG_PRD:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
+     - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_PRD:-${K8S_NS_SUFFIX:-"-prd"}}
+     - export K8S_NS="" # nil will auto naming namespace
+     - export K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL_PRD:-${K8S_DOMAIN_INTERNAL}}
+     - export K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC_PRD:-${K8S_DOMAIN_PUBLIC}}
+     - export INGRESS_INTERNAL_ENABLED=${INGRESS_INTERNAL_ENABLED_PRD:-${INGRESS_INTERNAL_ENABLED}}
+     - export INGRESS_CLASS_INTERNAL=${INGRESS_CLASS_INTERNAL_PRD:-${INGRESS_CLASS_INTERNAL}}
+     - export INGRESS_CLASS_PUBLIC=${INGRESS_CLASS_PUBLIC_PRD:-${INGRESS_CLASS_PUBLIC}}
+     - s2i . deploy
+     - deploy-prd-post
+  only:
+    - master
