@@ -7,8 +7,6 @@ stages:
 #  - artifact-release
 #  - src-release
 #####
-stages:
-  - code-check
 code-check:
   stage: code-check
   script:
@@ -16,8 +14,6 @@ code-check:
   except:
     - tags
 #####
-stages:
-  - artifact-docker-build
 artifact-docker-build:
   stage: artifact-docker-build
   script:
