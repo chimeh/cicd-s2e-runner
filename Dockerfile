@@ -9,13 +9,16 @@ ARG GO_VERSION=1.13.7
 
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
- && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.aliyun.com/centos/$releasever|' /etc/yum.repos.d/*.repo
+ && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
 
 # add {src,artifact build/container} toolchain
 #gitlab runner
 RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
  && yum install -y --nogpgcheck gitlab-runner \
- && curl -L http://mirrors.aliyun.com/repo/epel-7.repo > /etc/yum.repos.d/epel.repo \
+ && yum install -y epel-release \
+ && sed -e 's|^metalink=|#metalink=|g' \
+         -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.ustc.edu.cn/epel/|g' \
+         -i.bak /etc/yum.repos.d/epel.repo \
  && yum install -y ansible \
  && yum install -y sudo \
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
