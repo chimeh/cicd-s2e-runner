@@ -66,6 +66,7 @@ deploy-to-dev:
     - /^hotfix.*$/
 deploy-to-test:
   stage: deploy-env
+  when: manual
   script:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_TEST:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
      - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_TEST:-${K8S_NS_SUFFIX:-"-test"}}
@@ -87,6 +88,7 @@ deploy-to-test:
     - /^hotfix.*$/
 rollback-test-from-uat:
   stage: deploy-env
+  when: manual
   script:
      - export K8S_KUBECONFIG=${K8S_KUBECONFIG_TEST:-${K8S_KUBECONFIG:-"/root/.kube/config"}}
      - export K8S_NS_SUFFIX=${K8S_NS_SUFFIX_TEST:-${K8S_NS_SUFFIX:-"-test"}}
