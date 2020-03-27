@@ -1,8 +1,0 @@
-stages:
-  - analysis-code
-code-analysis:
-  stage: analysis-code
-  script:
-     - echo "TODO"
-  except:
-    - tags

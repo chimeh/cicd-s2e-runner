@@ -1,0 +1,29 @@
+#!/bin/bash
+#email: jimin.huang@nx-engine.com
+#email: jimminh@163.com
+set +e
+#first word in .gitlab-ci.yml as S2I_VERSION
+FIRST_LINE=$(head -n 1 .gitlab-ci.yml)
+YML_S2I_VERSION=$(echo ${FIRST_LINE} | awk '{print $1}'| tr -d '#')
+
+
+echo YML_S2I_VERSION=${YML_S2I_VERSION}
+echo RUNNER_S2I_VERSION=${RUNNER_S2I_VERSION}
+
+
+case ${YML_S2I_VERSION} in
+    "s2i:1")
+        echo "please upgrade your .gitlab-ci.yml into s2i:2"
+        ;;
+    "s2i:2")
+        echo "check OK "
+        ;;
+    *)
+        echo "请更新你的 .gitlab-ci.yaml 文件到s2i:2 版本"
+        echo "复制粘贴以下内容"
+        echo "\n\n\n\n"
+        cat /s2e/gitlab/s2i/v2/.gitlab-ci.yml
+
+        ;;
+esac
+

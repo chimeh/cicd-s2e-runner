@@ -9,13 +9,16 @@ ARG GO_VERSION=1.13.7
 
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
- && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.aliyun.com/centos/$releasever|' /etc/yum.repos.d/*.repo
+ && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
 
 # add {src,artifact build/container} toolchain
 #gitlab runner
 RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
  && yum install -y --nogpgcheck gitlab-runner \
- && curl -L http://mirrors.aliyun.com/repo/epel-7.repo > /etc/yum.repos.d/epel.repo \
+ && yum install -y epel-release \
+ && sed -e 's|^metalink=|#metalink=|g' \
+         -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.ustc.edu.cn/epel/|g' \
+         -i.bak /etc/yum.repos.d/epel.repo \
  && yum install -y ansible \
  && yum install -y sudo \
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
@@ -29,7 +32,7 @@ RUN yum install -y vim bash  bash-completion wget unzip curl ca-certificates tzd
 RUN yum install -y java-1.8.0-openjdk-devel
 # maven
 RUN mkdir -p /root/ts \
- && wget  -P /root/ts http://mirrors.ustc.edu.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+ && wget  -P /root/ts https://mirror.azure.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
  && tar -xvf /root/ts/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt \
  && mkdir -p /root/.m2 \
  && cp /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml /root/.m2/settings.xml \
@@ -42,7 +45,7 @@ RUN mkdir -p /root/ts \
 # python3
 RUN yum install -y python3-devel python3-pip python3-setuptools  yamllint
 # golang
-RUN wget -P /root/ts http://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd64.tar.gz \
+RUN wget -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz \
  && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
@@ -107,6 +110,7 @@ RUN yum install -y wqy-microhei-fonts \
 
 ENV PATH="/s2e/tools:/s2e:/opt/andriod/tools/bin:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV LANG=en_US.UTF-8
+ENV RUNNER_S2I_VERSION=2
 RUN echo "PATH=${PATH}" >> /etc/profile.d/env.sh
 EXPOSE 8888
 ENTRYPOINT ["/docker/docker-entrypoint.sh"]
