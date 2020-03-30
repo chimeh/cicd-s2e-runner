@@ -7,15 +7,15 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 export LANG=en_US.UTF-8
 set +e
 mkdir -p .s2i/
-cp ${SCRIPT_DIR}/doc-templates/mr-checklist.md .s2i/
-echo ${CI_PAGES_URL} >> .s2i/mr-checklist.append.md
-cat  .s2i/mr-checklist.append.md >> .s2i/mr-checklist.md
+cp ${SCRIPT_DIR}/templates/gitlab/merge-request-template.md .s2i/
+echo ${CI_PAGES_URL} >> .s2i/merge-request-template.md
+cat  .s2i/merge-request-template.md >> .s2i/merge-request-template.md
 
 gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
  --source-branch ${CI_COMMIT_BRANCH} \
  --target-branch master \
  --title "MR: ${CI_COMMIT_TITLE}" \
- --description @${SCRIPT_DIR}/doc-templates/mr-checklist.md \
+ --description @.s2i/merge-request-template.md \
  --labels ${GITLAB_USER_LOGIN} \
  --assignee-id ${GITLAB_USER_ID} \
 

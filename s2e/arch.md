@@ -135,3 +135,5 @@ k8s-app-mirror, k8s-ns-import 等集成到一个，使用python语言
 
 实现方式，redis 中存放 权限，并且部署进UAT、PRD的次数数据可以放redis，
 并做统计，在prometheus 展示
+
+集成公有云 的存储，把必要的artifact 上载到公有云存储
