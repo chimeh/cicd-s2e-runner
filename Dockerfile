@@ -108,8 +108,7 @@ COPY docker /docker
 # https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/710705369/Docker+Image+for+CLI
 ARG ACLI=atlassian-cli-9.1.1
 ADD https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110  /opt/${ACLI}.zip
-RUN apk add --no-cache bash nano curl \
- && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
+RUN  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
  && unzip /opt/${ACLI}.zip -d /opt \
  && rm /opt/${ACLI}.zip \
 
