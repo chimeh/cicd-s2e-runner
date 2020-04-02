@@ -137,3 +137,6 @@ k8s-app-mirror, k8s-ns-import 等集成到一个，使用python语言
 并做统计，在prometheus 展示
 
 集成公有云 的存储，把必要的artifact 上载到公有云存储
+
+client-server 模式，
+将s2ectl和s2ectld, 把各种配置写到配置中心
