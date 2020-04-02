@@ -171,7 +171,7 @@ function do_src_get_reponame()
     else
         SRC_VERSION=1.0.0
     fi
-    if -n [[ ${CI_COMMIT_SHORT_SHA} ]];then
+    if [[ -n ${CI_COMMIT_SHORT_SHA} ]];then
       SRC_GIT_COMMIT_ID=${CI_COMMIT_SHORT_SHA}
     else
       SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
