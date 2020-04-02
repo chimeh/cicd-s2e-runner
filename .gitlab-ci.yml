@@ -68,6 +68,9 @@ deploy-to-dev:
     - /^bugfix.*$/
     - /^feature.*$/
     - /^dev.*$/
+    - /^story.*$/
+    - /^task.*$/
+    - /^bug.*$/
   except:
     - master
     - /^hotfix.*$/
@@ -95,6 +98,8 @@ deploy-to-test:
     - /^bugfix.*$/
     - /^feature.*$/
     - /^dev.*$/
+    - /^story.*$/
+    - /^task.*$/
     - master
   except:
     - master
@@ -126,6 +131,9 @@ rollback-test-from-uat:
     - /^bugfix.*$/
     - /^feature.*$/
     - /^dev.*$/
+    - /^story.*$/
+    - /^task.*$/
+    - master
   except:
     - master
     - /^hotfix.*$/
