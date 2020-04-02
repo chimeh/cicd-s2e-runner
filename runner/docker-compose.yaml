@@ -28,8 +28,10 @@ services:
     - ./secrets/.kube:/root/.kube
     - ./secrets/android/local.properties:/etc/android/local.properties
     - ./secrets/android/nxengine.jks:/etc/android/nxengine.jks
-###########################
-    - ./tools:/s2e/tools
+###########################tools
+    - ./tools:/s2e/custom/tools
+###########################template
+    - ./templates:/s2e/custom/templates
 
 
 
