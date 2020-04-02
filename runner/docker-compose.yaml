@@ -20,14 +20,18 @@ services:
     - maven-cache:/root/.m2/repository
     - gitlab-runner-cache:/home/gitlab-runner
 ##########################secrets
+    - ./secrets/android:/etc/android
+    - ./secrets/cloud-aliyun:/root/.aliyun
+    - ./secrets/cloud-huawei:/root/.huawei
+    - ./secrets/cloud-tencent:/root/.tccli
+    - ./secrets/docker:/root/.docker
+    - ./secrets/email/mail.rc:/etc/mail.rc
+    - ./secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
     - ./secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
     - ./secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
-    - ./secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
+    - ./secrets/jira:/root/jira
+    - ./secrets/k8s/.kube:/root/.kube
     - ./secrets/maven/settings.xml:/root/.m2/settings.xml
-    - ./secrets/docker/config.json:/root/.docker/config.json
-    - ./secrets/.kube:/root/.kube
-    - ./secrets/android/local.properties:/etc/android/local.properties
-    - ./secrets/android/nxengine.jks:/etc/android/nxengine.jks
     - ./secrets/s2ectl:/root/.s2ectl
 ###########################tools
     - ./tools:/s2e/custom/tools
