@@ -28,7 +28,10 @@ if [[ -z ${TPLTOP} ]];then
 TPLTOP=${WORKDIR}
 fi
 
-DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+DEFAULT_NS="${S2E_ORG}${S2E_NS}"
+if [[ -z ${DEFAULT_NS} ]];then
+    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+fi
 if [[ -z ${DEFAULT_NS} ]];then
     DEFAULT_NS="default"
 fi
@@ -39,7 +42,7 @@ fi
 if [[ $# -gt 6 ]];then
     DOMAIN_PUBLIC=$7
 fi
-    SRC_K8S_NS="${DEFAULT_NS}${SRC_K8S_NS_SUFFIX}"
+
 if [[ -z ${DOMAIN_INTERNAL} ]];then
     DOMAIN_INTERNAL=okd.cd
 fi

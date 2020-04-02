@@ -37,8 +37,10 @@ if [[ $# -gt 1 ]];then
 else
     ACTION_STAGE="ACTION_ALL"
 fi
-
-DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+DEFAULT_NS="${S2E_ORG}${S2E_NS}"
+if [[ -z ${DEFAULT_NS} ]];then
+    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+fi
 if [[ -z ${DEFAULT_NS} ]];then
     DEFAULT_NS="default"
 fi
@@ -422,7 +424,7 @@ function do_deploy_k8s()
         K8S_AUTOCD=0
     fi
     if [[ -z ${K8S_NS} ]];then
-        K8S_NS="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')${K8S_NS_SUFFIX}"
+        K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
     fi
     if [[ -z ${K8S_DOMAIN_INTERNAL} ]];then
         K8S_DOMAIN_INTERNAL="bu5-idc.k8s.cd"
