@@ -1,0 +1,6 @@
+#!/bin/bash
+#author: jimin.huang
+#email: jimin.huang@nx-engine.com
+set -e
+# mark the commit that deploy into env using tag
+echo "$0"
