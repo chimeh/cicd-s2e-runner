@@ -92,12 +92,16 @@ RUN mkdir -p /root/ts \
 RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
 
 # let fetch ci/cd template via http://localhost
-COPY nginx/default.conf /etc/nginx/default.d/
-COPY default-secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
-COPY default-secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh
-COPY default-secrets/maven/settings.xml /root/.m2/settings.xml
-COPY default-secrets/docker/config.json /root/.docker/config.json
-COPY default-secrets/k8s/               /root/.kube
+COPY nginx/default.conf                       /etc/nginx/default.d/
+COPY runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
+COPY runner/secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh
+COPY runner/secrets/maven/settings.xml        /root/.m2/settings.xml
+COPY runner/secrets/docker/config.json        /root/.docker/config.json
+COPY runner/secrets/k8s/                      /root/.kube
+COPY runner/secrets/email/mail.rc             /etc/mail.rc
+COPY runner/secrets/jira/acli.properties      /root/acli.properties
+ADD runner/secrets/rancher/cli.json           /root/.rancher/cli.json
+ADD runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
 
 # cicd logic
 COPY s2e    /s2e
@@ -110,7 +114,8 @@ ARG ACLI=atlassian-cli-9.1.1
 ADD https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110  /opt/${ACLI}.zip
 RUN  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
  && unzip /opt/${ACLI}.zip -d /opt \
- && rm /opt/${ACLI}.zip
+ && rm /opt/${ACLI}.zip \
+ && ln -sf  /root/acli.properties /opt/${ACLI}/acli.properties
 
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
