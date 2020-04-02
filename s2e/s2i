@@ -301,6 +301,9 @@ function do_docker_get_imgurl_by_dockerfile()
     if [[ -z ${DOCKER_NS} ]];then
     DOCKER_NS=${DEFAULT_NS}
     fi
+    if [[ -z ${DOCKER_NS} ]];then
+    DOCKER_NS="default"
+    fi
     do_src_get_reponame
     
     if [[ "${DOCKFILE_DIR}" -eq "${SRC_DIR}" ]];then
@@ -423,8 +426,9 @@ function do_deploy_k8s()
     if [[ -z ${K8S_AUTOCD} ]];then
         K8S_AUTOCD=0
     fi
+    K8S_NS=${DEFAULT_NS}
     if [[ -z ${K8S_NS} ]];then
-        K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
+        K8S_NS=default${K8S_NS_SUFFIX}
     fi
     if [[ -z ${K8S_DOMAIN_INTERNAL} ]];then
         K8S_DOMAIN_INTERNAL="bu5-idc.k8s.cd"

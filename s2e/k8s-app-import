@@ -98,7 +98,7 @@ echo "COMMONCHARTVERSION=${COMMONCHARTVERSION}"
 echo "THIS_SCRIPT=${THIS_SCRIPT}"
 echo "SCRIPT_DIR=${SCRIPT_DIR}"
 echo "WORKDIR=${WORKDIR}"
-echo "TRYTOP=${TRYTOP}"
+echo "TPLTOP=${TPLTOP}"
 echo "DOMAIN_INTERNAL=${DOMAIN_INTERNAL}"
 echo "DOMAIN_PUBLIC=${DOMAIN_PUBLIC}"
 echo "KUBECONFIG=${KUBECONFIG}"
@@ -142,7 +142,7 @@ for i in ${SVCNAME};do \
     name=$i
     echo "gen ${name} charts"
     img=${IMG}
-    /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${APPNAME}/charts/$name
+    /bin/cp -rf  ${TPLTOP}/generic/xxx-generic-chart ${APPNAME}/charts/$name
     if [[ -n ${K8S_NS} ]];then
        echo "get env.txt from ${K8S_NS} "
        touch ${APPNAME}/charts/${name}/env.txt.old
