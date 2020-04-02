@@ -309,7 +309,7 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     do_src_get_reponame
     
-    if [[ "${DOCKFILE_DIR}" -eq "${SRC_DIR}" ]];then
+    if [[ "${DOCKFILE_DIR}" == "${SRC_DIR}" ]];then
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-e-${SRC_VERSION}-${BUILD_COUNTER}
     else
         DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
