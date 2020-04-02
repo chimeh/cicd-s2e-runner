@@ -118,7 +118,7 @@ RUN tar -xvf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /
  && pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ coscmd tccli
 
 # mail cli
-RUN yum install -y wqy-microhei-fonts mailx  \
+RUN yum install -y wqy-microhei-fonts mailx expect \
  && yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \
