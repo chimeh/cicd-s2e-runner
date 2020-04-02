@@ -429,7 +429,7 @@ function do_deploy_k8s()
     if [[ -z ${K8S_AUTOCD} ]];then
         K8S_AUTOCD=0
     fi
-    K8S_NS=${DEFAULT_NS}
+    K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
     if [[ -z ${K8S_NS} ]];then
         K8S_NS=default${K8S_NS_SUFFIX}
     fi
