@@ -120,7 +120,7 @@ RUN tar -xvf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /
 
 ARG RANCHER_VER=v2.3.1
 ADD https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64-${RANCHER_VER}.tar.gz  /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
-RUN tar  /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
+RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
  && rm /opt/${ACLI}.zip
 
 # mail cli
