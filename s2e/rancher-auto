@@ -1,0 +1,64 @@
+#!/bin/bash
+#author: ming.zu
+#email: ming.zu@nx-engine.com
+set -e
+
+echo "$0"
+
+################rancher cli, cicd
+function do_rancher_auto()
+{
+    PROJECT_NAME=${K8S_NS}
+    K8S_NS=${K8S_NS}
+    USER=${GITLAB_USER_LOGIN}
+
+    #create project if not exist
+    rancher project ls |grep "$PROJECT_NAME"
+    rv=$?
+    if [[ ${rv} -ne 0 ]];then
+        rancher project create "${PROJECT_NAME}";
+    else
+        echo "${PROJECT_NAME} exist"
+    fi
+
+    project_id=$(rancher project ls |grep -i ${PROJECT_NAME} |awk '{print $1}')
+    #add user to project
+    rancher project list-members  --project-id "${project_id}" |grep -i "${USER}"
+    rv=$?
+    if [[ ${rv} -ne 0 ]];then
+        rancher project add-member-role --project-id  "${project_id}"  "${USER}" project-member
+    fi
+    #create namespace if not exist
+    rancher namespaces ls  --all-namespaces |grep "${K8S_NS}"
+    rv=$?
+    if [[ ${rv} -ne 0 ]];then
+        rancher namespaces create "${K8S_NS}"
+    fi
+    #add namespace to projects
+    rancher namespaces ls  --all-namespaces |grep "${K8S_NS}" |grep "${project_id}"
+    rv=$?
+    if [[ ${rv} -ne 0 ]];then
+        rancher namespaces move "${K8S_NS}" "${project_id}"
+    fi
+}
+
+################same as s2i
+DEFAULT_NS="${S2E_ORG}${S2E_NS}"
+if [[ -z ${DEFAULT_NS} ]];then
+    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+fi
+if [[ -z ${DEFAULT_NS} ]];then
+    DEFAULT_NS="default"
+fi
+K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
+if [[ -z ${K8S_NS} ]];then
+    K8S_NS=default${K8S_NS_SUFFIX}
+fi
+
+set +e
+rancher cluster
+rv=$?
+if [[ ${rv} -ne 0 ]];then
+    do_rancher_auto
+fi
+set -e

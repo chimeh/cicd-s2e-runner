@@ -18,9 +18,8 @@ else
 fi
 
 mkdir -p .s2i/
-cp ${TPL_FILE} .s2i/
+cat  ${TPL_FILE} >> .s2i/merge-request-template.md
 echo ${CI_PAGES_URL} >> .s2i/merge-request-template.md
-cat  .s2i/merge-request-template.md >> .s2i/merge-request-template.md
 
 gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
  --source-branch ${CI_COMMIT_BRANCH} \
