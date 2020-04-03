@@ -28,7 +28,10 @@ if [[ -z ${TPLTOP} ]];then
 TPLTOP=${WORKDIR}
 fi
 
-DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+DEFAULT_NS="${S2E_ORG}${S2E_NS}"
+if [[ -z ${DEFAULT_NS} ]];then
+    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+fi
 if [[ -z ${DEFAULT_NS} ]];then
     DEFAULT_NS="default"
 fi
@@ -39,7 +42,7 @@ fi
 if [[ $# -gt 6 ]];then
     DOMAIN_PUBLIC=$7
 fi
-    SRC_K8S_NS="${DEFAULT_NS}${SRC_K8S_NS_SUFFIX}"
+
 if [[ -z ${DOMAIN_INTERNAL} ]];then
     DOMAIN_INTERNAL=okd.cd
 fi
@@ -95,7 +98,7 @@ echo "COMMONCHARTVERSION=${COMMONCHARTVERSION}"
 echo "THIS_SCRIPT=${THIS_SCRIPT}"
 echo "SCRIPT_DIR=${SCRIPT_DIR}"
 echo "WORKDIR=${WORKDIR}"
-echo "TRYTOP=${TRYTOP}"
+echo "TPLTOP=${TPLTOP}"
 echo "DOMAIN_INTERNAL=${DOMAIN_INTERNAL}"
 echo "DOMAIN_PUBLIC=${DOMAIN_PUBLIC}"
 echo "KUBECONFIG=${KUBECONFIG}"
@@ -139,7 +142,7 @@ for i in ${SVCNAME};do \
     name=$i
     echo "gen ${name} charts"
     img=${IMG}
-    /bin/cp -rf  ${TRYTOP}/generic/xxx-generic-chart ${APPNAME}/charts/$name
+    /bin/cp -rf  ${TPLTOP}/generic/xxx-generic-chart ${APPNAME}/charts/$name
     if [[ -n ${K8S_NS} ]];then
        echo "get env.txt from ${K8S_NS} "
        touch ${APPNAME}/charts/${name}/env.txt.old

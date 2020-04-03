@@ -80,35 +80,63 @@ RUN mkdir -p /root/ts  \
     && unzip  -qq sdk-tools-linux-4333796.zip -d /opt/android \
     && echo 'Y'|/opt/android/tools/bin/sdkmanager  "build-tools;29.0.3" > sdkmanager.log\
     && echo 'Y'|/opt/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29" >> sdkmanager.log
-#
 
+# gradle
 RUN mkdir -p /root/ts \
     &&  wget  -P /root/ts  https://downloads.gradle-dn.com/distributions/gradle-6.2.2-all.zip \
     && cd /root/ts \
     && mkdir -p /opt/gradle \
     && unzip  -qq gradle-6.2.2-all.zip -d /opt/gradle
 
+# gitlab cli
 RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
 
 # let fetch ci/cd template via http://localhost
-COPY nginx/default.conf /etc/nginx/default.d/
-COPY default-secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
-COPY default-secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh
-COPY default-secrets/maven/settings.xml /root/.m2/settings.xml
-COPY default-secrets/docker/config.json /root/.docker/config.json
-COPY default-secrets/k8s/               /root/.kube
+COPY nginx/default.conf                       /etc/nginx/default.d/
+COPY runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
+COPY runner/secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh
+COPY runner/secrets/maven/settings.xml        /root/.m2/settings.xml
+COPY runner/secrets/docker/config.json        /root/.docker/config.json
+COPY runner/secrets/k8s/                      /root/.kube
+COPY runner/secrets/email/mail.rc             /etc/mail.rc
+ADD runner/secrets/jira/acli.properties      /root/jira/acli.properties
+ADD runner/secrets/rancher/cli.json           /root/.rancher/cli.json
+ADD runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
 
+# cicd logic
 COPY s2e    /s2e
 COPY docker /docker
 
-RUN yum install -y wqy-microhei-fonts \
+# jira ... atlassian cli
+# atlassian cli https://marketplace.atlassian.com/search?query=bob%20swift%20cli
+# https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/710705369/Docker+Image+for+CLI
+ARG ACLI=atlassian-cli-9.1.1
+ADD https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110  /opt/${ACLI}.zip
+RUN  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
+ && unzip /opt/${ACLI}.zip -d /opt \
+ && rm /opt/${ACLI}.zip \
+ && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties
+
+# cloud cli aliyun, tencent cloud
+ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
+RUN tar -xvf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /opt/aliyun-cli-linux-latest-amd64.tgz \
+ && pip3 install --index-url https://mirrors.cloud.tencent.com/pypi/simple  coscmd tccli
+
+
+ARG RANCHER_VER=v2.3.1
+ADD https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64-${RANCHER_VER}.tar.gz  /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
+RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
+ && rm /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
+
+# mail cli
+RUN yum install -y wqy-microhei-fonts mailx expect \
  && yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \
  && rm -rf /root/ts \
  && chmod -R +x /docker/docker-entrypoint.sh /s2e/
 
-ENV PATH="/s2e/tools:/s2e:/opt/andriod/tools/bin:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV PATH="/s2e/custom/tools:/s2e:/opt/andriod/tools/bin:/opt/${ACLI}:/opt/rancher-${RANCHER_VER}:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux-x64/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV LANG=en_US.UTF-8
 ENV RUNNER_S2I_VERSION=2
 RUN echo "PATH=${PATH}" >> /etc/profile.d/env.sh

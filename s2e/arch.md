@@ -135,3 +135,24 @@ k8s-app-mirror, k8s-ns-import 等集成到一个，使用python语言
 
 实现方式，redis 中存放 权限，并且部署进UAT、PRD的次数数据可以放redis，
 并做统计，在prometheus 展示
+
+集成公有云 的存储，把必要的artifact 上载到公有云存储
+
+client-server 模式，
+将s2ectl和s2ectld, 把各种配置写到配置中心
+
+
+与JIRA 集成
+PROJECT 的提交如何知道在实现哪个需求
+第一优先级先检查分支名带IssueID
+然后 commit log 里带IssueID
+
+STORY 
+    commit
+    addLabels
+    . 关联的源码：src@cicd-java-refer
+    . 部署状态 label : deployed-dev deployed-test deployed-uat deployed-prod
+    . code-review 状态：code-review-by-xxx
+    . codereview-by-xxx
+    . 源码检查状态：
+    . 需要

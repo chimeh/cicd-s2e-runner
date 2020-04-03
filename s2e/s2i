@@ -37,8 +37,10 @@ if [[ $# -gt 1 ]];then
 else
     ACTION_STAGE="ACTION_ALL"
 fi
-
-DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+DEFAULT_NS="${S2E_ORG}${S2E_NS}"
+if [[ -z ${DEFAULT_NS} ]];then
+    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+fi
 if [[ -z ${DEFAULT_NS} ]];then
     DEFAULT_NS="default"
 fi
@@ -169,8 +171,11 @@ function do_src_get_reponame()
     else
         SRC_VERSION=1.0.0
     fi
-    SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
-    
+    if [[ -n ${CI_COMMIT_SHORT_SHA} ]];then
+      SRC_GIT_COMMIT_ID=${CI_COMMIT_SHORT_SHA}
+    else
+      SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
+    fi
     echo "SRC_TOP=${SRC_TOP}"
     echo "SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
     echo "SRC_VERSION=${SRC_VERSION}"
@@ -299,9 +304,12 @@ function do_docker_get_imgurl_by_dockerfile()
     if [[ -z ${DOCKER_NS} ]];then
     DOCKER_NS=${DEFAULT_NS}
     fi
+    if [[ -z ${DOCKER_NS} ]];then
+    DOCKER_NS="default"
+    fi
     do_src_get_reponame
     
-    if [[ "${DOCKFILE_DIR}" -eq "${SRC_DIR}" ]];then
+    if [[ "${DOCKFILE_DIR}" == "${SRC_DIR}" ]];then
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-e-${SRC_VERSION}-${BUILD_COUNTER}
     else
         DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
@@ -421,8 +429,9 @@ function do_deploy_k8s()
     if [[ -z ${K8S_AUTOCD} ]];then
         K8S_AUTOCD=0
     fi
+    K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
     if [[ -z ${K8S_NS} ]];then
-        K8S_NS="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')${K8S_NS_SUFFIX}"
+        K8S_NS=default${K8S_NS_SUFFIX}
     fi
     if [[ -z ${K8S_DOMAIN_INTERNAL} ]];then
         K8S_DOMAIN_INTERNAL="bu5-idc.k8s.cd"
