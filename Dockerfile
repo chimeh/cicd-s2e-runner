@@ -120,7 +120,7 @@ RUN  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | 
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
 RUN tar -xvf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /opt/aliyun-cli-linux-latest-amd64.tgz \
- && pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ coscmd tccli
+ && pip3 install --index-url https://mirrors.cloud.tencent.com/pypi/simple  coscmd tccli
 
 
 ARG RANCHER_VER=v2.3.1
