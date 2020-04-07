@@ -100,7 +100,7 @@ COPY runner/secrets/docker/config.json        /root/.docker/config.json
 COPY runner/secrets/k8s/                      /root/.kube
 COPY runner/secrets/email/mail.rc             /etc/mail.rc
 ADD runner/secrets/jira/acli.properties      /root/jira/acli.properties
-ADD runner/secrets/rancher/cli.json           /root/.rancher/cli.json
+ADD runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
 ADD runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
 ADD runner/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
 ADD runner/secrets/filebeat/elastic.repo      /etc/yum.repos.d/elastic.repo

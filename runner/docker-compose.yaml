@@ -33,6 +33,7 @@ services:
     - ./secrets/jira:/root/jira
     - ./secrets/k8s/.kube:/root/.kube
     - ./secrets/maven/settings.xml:/root/.m2/settings.xml
+    - ./secrets/rancher/cli2.json:/root/.rancher/cli2.json
     - ./secrets/s2ectl:/root/.s2ectl
 ###########################tools
     - ./tools:/s2e/custom/tools
