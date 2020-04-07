@@ -37,4 +37,7 @@ esac
 set +e
 s2iversion_check
 source ${SCRIPT_DIR}/jira-util-lib
+if [[ -f ${SCRIPT_DIR}/metric-util-lib ]];then
+  source ${SCRIPT_DIR}/metric-util-lib
+fi
 set -e

@@ -58,7 +58,7 @@ fi
 set +e
 rancher cluster
 rv=$?
-if [[ ${rv} -ne 0 ]];then
+if [[ ${rv} -eq 0 ]];then
     do_rancher_auto
 fi
 set -e

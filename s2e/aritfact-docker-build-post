@@ -1,0 +1,12 @@
+#!/bin/bash
+#author: jimin.huang
+#email: jimin.huang@nx-engine.com
+set -e
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
+set +e
+if [[ -f ${SCRIPT_DIR}/metric-util-lib ]];then
+  source ${SCRIPT_DIR}/metric-util-lib
+fi
+set -e
