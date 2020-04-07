@@ -7,6 +7,6 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 set +e
 if [[ -f ${SCRIPT_DIR}/metric-util-lib ]];then
-  source ${SCRIPT_DIR}/metric-util-lib
+  ${SCRIPT_DIR}/metric-util-lib
 fi
 set -e

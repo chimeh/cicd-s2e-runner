@@ -22,6 +22,7 @@ artifact-docker-build:
     - git-merge-master
     - s2i . artifact
     - s2i . docker
+    - artifact-docker-build-post
   except:
     - tags
     - master
@@ -36,6 +37,7 @@ artifact-docker-build-master:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - s2i . artifact
     - s2i . docker
+    - artifact-docker-build-post
   only:
     - master
     - hotfix/*
