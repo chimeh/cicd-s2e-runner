@@ -103,7 +103,7 @@ ADD runner/secrets/jira/acli.properties      /root/jira/acli.properties
 ADD runner/secrets/rancher/cli.json           /root/.rancher/cli.json
 ADD runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
 ADD runner/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
-ADD runner/secrets/filebeat/elastic.repo      /etc/yum.repo.d/elastic.repo
+ADD runner/secrets/filebeat/elastic.repo      /etc/yum.repos.d/elastic.repo
 
 # cicd logic
 COPY s2e    /s2e
