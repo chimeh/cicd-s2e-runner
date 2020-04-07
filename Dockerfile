@@ -102,6 +102,8 @@ COPY runner/secrets/email/mail.rc             /etc/mail.rc
 ADD runner/secrets/jira/acli.properties      /root/jira/acli.properties
 ADD runner/secrets/rancher/cli.json           /root/.rancher/cli.json
 ADD runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
+ADD runner/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
+ADD runner/secrets/filebeat/elastic.repo      /etc/yum.repo.d/elastic.repo
 
 # cicd logic
 COPY s2e    /s2e
@@ -128,13 +130,14 @@ ADD https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64-${RANCH
 RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
  && rm /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
 
-# mail cli
-RUN yum install -y wqy-microhei-fonts mailx expect \
+# mail cli, filebeat
+RUN yum install -y wqy-microhei-fonts mailx expect filebeat \
  && yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \
  && rm -rf /root/ts \
  && chmod -R +x /docker/docker-entrypoint.sh /s2e/
+
 
 ENV PATH="/s2e/custom/tools:/s2e:/opt/andriod/tools/bin:/opt/${ACLI}:/opt/rancher-${RANCHER_VER}:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux-x64/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV LANG=en_US.UTF-8

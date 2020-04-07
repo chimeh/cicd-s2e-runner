@@ -2,7 +2,8 @@
 #email: jimin.huang@nx-engine.com
 #email: jimminh@163.com
 set +e
-#first word in .gitlab-ci.yml as S2I_VERSION
+function s2iversion_check() {
+ #first word in .gitlab-ci.yml as S2I_VERSION
 FIRST_LINE=$(head -n 1 .gitlab-ci.yml)
 YML_S2I_VERSION=$(echo ${FIRST_LINE} | awk '{print $1}'| tr -d '#')
 
@@ -26,4 +27,10 @@ case ${YML_S2I_VERSION} in
 
         ;;
 esac
+}
 
+
+set +e
+s2iversion_check
+source ${SCRIPT_DIR}/jira-util-lib
+set -e

@@ -1,0 +1,20 @@
+#!/bin/bash
+#author: jimin.huang
+#email: jimin.huang@nx-engine.com
+set -e
+echo "$0"
+
+
+# save job env to file, let featbeats proccess
+function gitlab-job-metric-savefile() {
+  CI_JOB_EXIT_RV=\$?
+  if [[ -n ${GITLAB_JOB_METRIC_DIR} ]];then
+    GITLAB_JOB_METRIC_DIR=/var/log/gitlab-job-metric/${date +%Y%m}
+    mkdir -p ${GITLAB_JOB_METRIC_DIR}
+  fi
+  METRIC_DIR=${GITLAB_JOB_METRIC_DIR}/${CI_PROJECT_ID}/${CI_PIPELINE_ID}/${CI_JOB_ID}
+  mkdir -p ${METRIC_DIR}
+  export CI_JOB_EXIT_RV
+  env |egrep -v LS_COLORS >/${METRIC_DIR}/env.txt
+}
+trap "gitlab-job-metric-savefile" INT TERM EXIT

@@ -1,0 +1,49 @@
+#!/bin/bash
+#author: jimin.huang
+#email: jimin.huang@nx-engine.com
+set -e
+echo "$0"
+
+function src_jira_issueid_check() {
+  echo "分支名或者提交LOG，二者之一必须包含JIRA_ISSUE_ID"
+
+  echo "尝试从分支名搜索 JIRA_ISSUE_ID KEY,对应 ${JIRA_SERVER_URL}/${JIRA_PROJECT_ID}/ "
+  perl -e "\$BRANCH_NAME=qq($CI_COMMIT_BRANCH); @JIRA_KEY = \$BRANCH_NAME  =~ m/([A-Z]+-\d+)/g;print STDOUT qq(@JIRA_KEY)"
+  JIRA_ISSUE_ID=$(perl -e "\$BRANCH_NAME=qq($CI_COMMIT_BRANCH); @JIRA_KEY = \$BRANCH_NAME  =~ m/([A-Z]+-\d+)/g;print STDOUT qq(@JIRA_KEY)" | awk '{print $1}')
+  RV=$?
+  if [[ $RV -ne 0 ]];then
+    echo "尝试从COMMIT MSG 第一行 搜索JIRA_ISSUE_ID"
+    perl -e "\$BRANCH_NAME=qq($CI_COMMIT_TITLE); @JIRA_KEY = \$BRANCH_NAME  =~ m/([A-Z]+-\d+)/g;print STDOUT qq(@JIRA_KEY)"
+    JIRA_ISSUE_ID=$(perl -e "\$BRANCH_NAME=qq($CI_COMMIT_TITLE); @JIRA_KEY = \$BRANCH_NAME  =~ m/([A-Z]+-\d+)/g;print STDOUT qq(@JIRA_KEY)" | awk '{print $1}')
+  fi
+  if [[ -n ${JIRA_ISSUE_ID} ]];then
+    echo "成功 JIRA_ISSUE_ID=${JIRA_ISSUE_ID}"
+  else
+    echo "失败 JIRA_ISSUE_ID=${JIRA_ISSUE_ID}"
+    echo "${JIRA_SERVER_URL}/${JIRA_PROJECT_ID}/${KEY}"
+  fi
+  echo "${JIRA_SERVER_URL}/${JIRA_PROJECT_ID}/${JIRA_ISSUE_ID}"
+}
+
+
+# 这个issue 改动了哪些代码
+function log_srcname_to_jira_issue() {
+  echo ""
+}
+
+# 这个issue 是否经过codereview
+function log_codereviewer_to_jira_issue() {
+  echo ""
+}
+# 这个issue 是否已部署到test
+function log_deployed_test_to_jira_issue() {
+  echo ""
+}
+# 这个issue 是否已部署到uat
+function log_deployed_uat_to_jira_issue() {
+  echo ""
+}
+# 这个issue 是否已部署到prd
+function log_deployed_prd_to_jira_issue() {
+  echo ""
+}

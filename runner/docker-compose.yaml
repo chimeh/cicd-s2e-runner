@@ -26,6 +26,7 @@ services:
     - ./secrets/cloud-tencent:/root/.tccli
     - ./secrets/docker:/root/.docker
     - ./secrets/email/mail.rc:/etc/mail.rc
+    - ./secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
     - ./secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
     - ./secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
     - ./secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
