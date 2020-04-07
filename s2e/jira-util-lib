@@ -3,6 +3,8 @@
 #email: jimin.huang@nx-engine.com
 set -e
 echo "$0"
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 function src_jira_issueid_check() {
   echo "分支名或者提交LOG，二者之一必须包含JIRA_ISSUE_ID"

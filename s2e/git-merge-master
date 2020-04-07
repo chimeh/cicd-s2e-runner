@@ -2,6 +2,8 @@
 #email: jimin.huang@nx-engine.com
 #email: jimminh@163.com
 set -e
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 git config --worktree user.email ${GITLAB_USER_EMAIL}
 git config --worktree user.name ${GITLAB_USER_LOGIN}
 git merge  --no-ff --no-edit --strategy=recursive --strategy-option=ignore-space-at-eol $(head -n 1 .git/refs/remotes/origin/master)

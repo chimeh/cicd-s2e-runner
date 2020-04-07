@@ -156,3 +156,7 @@ STORY
     . codereview-by-xxx
     . 源码检查状态：
     . 需要
+ 
+metric 功能
+
+每个job 的env 存储到磁盘，由filebeat，es 分析

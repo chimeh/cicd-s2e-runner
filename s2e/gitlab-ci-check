@@ -1,7 +1,11 @@
 #!/bin/bash
 #email: jimin.huang@nx-engine.com
 #email: jimminh@163.com
+set -e
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 set +e
+
 function s2iversion_check() {
  #first word in .gitlab-ci.yml as S2I_VERSION
 FIRST_LINE=$(head -n 1 .gitlab-ci.yml)
