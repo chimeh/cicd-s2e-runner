@@ -63,17 +63,9 @@ deploy-to-dev:
     - export INGRESS_CLASS_PUBLIC=${DEV_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
     - deploy-dev-post
-  only:
-    - /^rc.*$/
-    - /^bugfix.*$/
-    - /^feature.*$/
-    - /^dev.*$/
-    - /^story.*$/
-    - /^task.*$/
-    - /^bug.*$/
   except:
+    - tags
     - master
-    - /^hotfix.*$/
   dependencies: []
 deploy-to-test:
   stage: deploy-env
@@ -93,17 +85,9 @@ deploy-to-test:
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
     - deploy-test-post
-  only:
-    - /^rc.*$/
-    - /^bugfix.*$/
-    - /^feature.*$/
-    - /^dev.*$/
-    - /^story.*$/
-    - /^task.*$/
-    - master
   except:
+    - tags
     - master
-    - /^hotfix.*$/
   dependencies: []
 rollback-test-from-uat:
   stage: deploy-env
