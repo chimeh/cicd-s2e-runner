@@ -20,8 +20,5 @@ export INGRESS_CLASS_INTERNAL=nginx
 export INGRESS_CLASS_PUBLIC=nginx
 
 
-export TEST_NOTICE_USER_EMAIL=shufang.gui@nx-engine.com
-export UAT_NOTICE_USER_EMAIL=shufang.gui@nx-engine.com
-export PROD_NOTICE_USER_EMAIL=jimin.huang@nx-engine.com
 
-echo "10.99.16.41 rancher.ops" >> /etc/hosts
+grep -qxF '10.99.16.41 rancher.ops' /etc/hosts || echo '10.99.16.41 rancher.ops' >> /etc/hosts
