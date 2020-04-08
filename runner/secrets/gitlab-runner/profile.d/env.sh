@@ -1,5 +1,3 @@
-export PATH=/s2e/tools:${PATH}
-
 export NEXUS_REPO=https://maven.aliyun.com/repository/public
 export NEXUS_RELEASE=https://maven.aliyun.com/repository/releases
 export NEXUS_SNAPSHOT=https://maven.aliyun.com/repository/snapshots

@@ -276,6 +276,9 @@ function do_artifact_build()
             echo "not support source, or detect fail"
             ;;
     esac
+    if [[ -f ${SRC_DIR}/build.sh ]];then
+      bash ${SRC_DIR}/build.sh
+    fi
 }
 
 function do_docker_get_imgurl_by_dockerfile()

@@ -5,7 +5,7 @@ ARG HELM3_VERSION=v3.0.2
 ARG GIT_VERSION=2.24.1
 ARG NODE_VERSION=v10.16.2
 ARG MAVEN_VERSION=3.6.3
-ARG GO_VERSION=1.13.7
+ARG GO_VERSION=1.14.1
 
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
@@ -131,8 +131,10 @@ RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
  && rm /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
 
 # mail cli, filebeat
-RUN yum install -y wqy-microhei-fonts mailx expect filebeat \
- && yum -y update \
+RUN yum install -y wqy-microhei-fonts mailx expect initscripts
+#RUN yum install elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2
+RUN yum install filebeat-7.6.2
+RUN yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \
  && rm -rf /root/ts \
