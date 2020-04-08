@@ -112,15 +112,8 @@ rollback-test-from-uat:
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
     - rollback-test-post
-  only:
-    - /^rc.*$/
-    - /^bugfix.*$/
-    - /^feature.*$/
-    - /^dev.*$/
-    - /^story.*$/
-    - /^task.*$/
-    - master
   except:
+    - tags
     - master
     - /^hotfix.*$/
   dependencies: []

@@ -133,7 +133,7 @@ RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
 # mail cli, filebeat
 RUN yum install -y wqy-microhei-fonts mailx expect initscripts
 #RUN yum install elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2
-RUN yum install filebeat-7.6.2
+RUN yum install -y filebeat-7.6.2
 RUN yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \
