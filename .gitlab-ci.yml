@@ -12,6 +12,8 @@ code-check:
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - gitlab-ci-check
+  after_script:
+    - echo "ok"
   except:
     - tags
 #####
@@ -22,6 +24,7 @@ artifact-docker-build:
     - git-merge-master
     - s2i . artifact
     - s2i . docker
+  after_script:
     - artifact-docker-build-post
   except:
     - tags
@@ -37,6 +40,7 @@ artifact-docker-build-master:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - s2i . artifact
     - s2i . docker
+  after_script:
     - artifact-docker-build-post
   only:
     - master
@@ -64,6 +68,7 @@ deploy-to-dev:
     - export INGRESS_CLASS_INTERNAL=${DEV_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${DEV_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+  after_script:
     - deploy-dev-post
   except:
     - tags
@@ -86,6 +91,7 @@ deploy-to-test:
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+  after_script:
     - deploy-test-post
   except:
     - tags
@@ -111,6 +117,7 @@ rollback-test-from-uat:
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+  after_script:
     - rollback-test-post
   except:
     - tags
@@ -134,6 +141,7 @@ deploy-to-uat:
     - export INGRESS_CLASS_INTERNAL=${UAT_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+  after_script:
     - deploy-uat-post
   only:
     - master
@@ -159,6 +167,7 @@ rollback-uat-from-prd:
     - export INGRESS_CLASS_INTERNAL=${UAT_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+  after_script:
     - rollback-uat-post
   only:
     - master
@@ -184,6 +193,7 @@ mirror-to-prd:
     - export INGRESS_CLASS_INTERNAL=${PRD_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${PRD_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+  after_script:
     - deploy-prd-post
   only:
     - master

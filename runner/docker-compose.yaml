@@ -5,7 +5,8 @@ volumes:
   maven-cache: {}
   gitlab-runner-cache: {}
   root-cache: {}
-
+  filebeat-cache: {}
+  gitlab-metric-log-cache: {}
 
 services:
   gitlab-runner:
@@ -17,8 +18,10 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - root-cache:/root
+    - filebeat-varcache:/var/lib/filebeat
     - maven-cache:/root/.m2/repository
     - gitlab-runner-cache:/home/gitlab-runner
+    - gitlab-metric-log-cache:/var/log/gitlab-job-metric
 ##########################secrets
     - ./secrets/android:/etc/android
     - ./secrets/cloud-aliyun:/root/.aliyun
