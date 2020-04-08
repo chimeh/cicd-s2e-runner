@@ -12,4 +12,6 @@ gitlab project-tag create --project-id ${CI_PROJECT_ID} --ref ${CI_COMMIT_SHA} -
 
 set +e
 source ${SCRIPT_DIR}/jira-util-lib
+source ${SCRIPT_DIR}/rancher-auto
+${SCRIPT_DIR}/metric-util-lib
 set -e
