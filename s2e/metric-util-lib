@@ -19,4 +19,4 @@ function gitlab-job-metric-savefile() {
   #使用两个##将环境变量连接成一行
   export |egrep -v LS_COLORS | perl -ne 'chomp;s/^declare -x //g;print "$_##"' >> /${METRIC_DIR}/env.txt
 }
-trap "gitlab-job-metric-savefile" INT TERM EXIT
+gitlab-job-metric-savefile
