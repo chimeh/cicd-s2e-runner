@@ -126,7 +126,7 @@ RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
      &&  wget  -P /root/ts  http://mirror.azure.cn/redis/releases/redis-5.0.8.tar.gz \
      && cd /root/ts \
      && tar -xf redis-5.0.8.tar.gz \
-     && cd redis-5.0.8.tar.gz
+     && cd redis-5.0.8.tar.gz \
      && make install && rm -rf /root/ts
 
 # let fetch ci/cd template via http://localhost
