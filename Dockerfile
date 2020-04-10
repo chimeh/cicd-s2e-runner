@@ -99,15 +99,15 @@ COPY s2erunner/runner/secrets/maven/settings.xml        /root/.m2/settings.xml
 COPY s2erunner/runner/secrets/docker/config.json        /root/.docker/config.json
 COPY s2erunner/runner/secrets/k8s/                      /root/.kube
 COPY s2erunner/runner/secrets/email/mail.rc             /etc/mail.rc
-ADD s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properties
-ADD s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
-ADD s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
+COPY s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properties
+COPY s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
+COPY s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
 
-ADD s2erunner/metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
-ADD s2erunner/metricd/secrets/filebeat/filebeat.yml                 /etc/filebeat/filebeat.yml
-ADD s2erunner/metricd/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
-ADD s2erunner/metricd/secrets/kibana/kibana.yml                     /etc/kibana/kibana.yml
-ADD s2erunner/metricd/logstash                                      /etc/logstash
+COPY s2erunner/metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
+COPY s2erunner/metricd/secrets/filebeat/filebeat.yml                 /etc/filebeat/filebeat.yml
+COPY s2erunner/metricd/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
+COPY s2erunner/metricd/secrets/kibana/kibana.yml                     /etc/kibana/kibana.yml
+COPY s2erunner/metricd/logstash                                      /etc/logstash
 
 # cicd logic
 COPY s2e    /s2e
