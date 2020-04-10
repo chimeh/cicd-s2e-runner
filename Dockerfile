@@ -100,7 +100,7 @@ RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade 
 #metricd server
 COPY s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
 RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
-                    && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
+ && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
 # jira ... atlassian cli
 # atlassian cli https://marketplace.atlassian.com/search?query=bob%20swift%20cli
 # https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/710705369/Docker+Image+for+CLI
@@ -127,7 +127,7 @@ RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
      &&  wget  -P /root/ts  http://mirror.azure.cn/redis/releases/redis-5.0.8.tar.gz \
      && cd /root/ts \
      && tar -xf redis-5.0.8.tar.gz \
-     && cd redis-5.0.8.tar.gz \
+     && cd redis-5.0.8 \
      && make install && rm -rf /root/ts
 
 # let fetch ci/cd template via http://localhost
