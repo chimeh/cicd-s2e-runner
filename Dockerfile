@@ -105,11 +105,12 @@ RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.
 # atlassian cli https://marketplace.atlassian.com/search?query=bob%20swift%20cli
 # https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/710705369/Docker+Image+for+CLI
 ARG ACLI=atlassian-cli-9.1.1
-ADD https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110  /opt/${ACLI}.zip
-RUN  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
+RUN mkdir -p /root/ts \
+ &&  wget  -O /opt/${ACLI}.zip  https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110 \
  && unzip /opt/${ACLI}.zip -d /opt \
  && rm /opt/${ACLI}.zip \
- && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties
+ && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties \
+ && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
 
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
@@ -133,7 +134,7 @@ RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf                       /etc/nginx/default.d/
 COPY s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
-COPY s2erunner/runner/secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh
+COPY s2erunner/runner/secrets/profile.d/env.sh /etc/profile.d/env.sh
 COPY s2erunner/runner/secrets/maven/settings.xml        /root/.m2/settings.xml
 COPY s2erunner/runner/secrets/docker/config.json        /root/.docker/config.json
 COPY s2erunner/runner/secrets/k8s/                      /root/.kube
