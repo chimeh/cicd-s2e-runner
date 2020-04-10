@@ -25,5 +25,4 @@ fi
 
 /etc/init.d/kibana start
 /etc/init.d/elasticsearch start
-/usr/share/logstash/bin/logstash --path.settings /etc/logstash
-exec nginx -g'daemon off;'
+exec /usr/share/logstash/bin/logstash --path.settings /etc/logstash
