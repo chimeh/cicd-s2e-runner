@@ -15,7 +15,7 @@ function gitlab-job-metric-savefile() {
   METRIC_DIR=${GITLAB_JOB_METRIC_DIR}/${CI_PROJECT_ID}/${CI_PIPELINE_ID}/${CI_JOB_ID}
   mkdir -p ${METRIC_DIR}
   export CI_JOB_EXIT_RV
-  export CI_JOB_TIMESTAMP_END=$(date)
+  export CI_JOB_TIMESTAMP_END=$(date  --rfc-3339=seconds)
   #使用两个##将环境变量连接成一行
   export |egrep -v LS_COLORS | perl -ne 'chomp;s/^declare -x //g;print "$_##"' >> /${METRIC_DIR}/env.txt
   echo "" >> /${METRIC_DIR}/env.txt
