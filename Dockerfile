@@ -106,7 +106,7 @@ RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.
 # https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/710705369/Docker+Image+for+CLI
 ARG ACLI=atlassian-cli-9.1.1
 RUN mkdir -p /root/ts \
- &&  wget  -O /opt/${ACLI}.zip  https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110 \
+ &&  wget  -q -O /opt/${ACLI}.zip  https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110 \
  && unzip /opt/${ACLI}.zip -d /opt \
  && rm /opt/${ACLI}.zip \
  && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties \
