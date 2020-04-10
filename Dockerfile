@@ -16,7 +16,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
 #RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
 # && yum install -y --nogpgcheck gitlab-runner
 COPY s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
-RUN yum install -y --nogpgcheck epel-release \
+RUN yum install -y --nogpgcheck gitlab-runner epel-release \
  && sed -e 's|^metalink=|#metalink=|g' \
          -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.ustc.edu.cn/epel/|g' \
          -i.bak /etc/yum.repos.d/epel.repo \
