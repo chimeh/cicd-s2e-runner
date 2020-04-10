@@ -5,7 +5,8 @@ volumes:
   runner-maven-cache: {}
   runner-gitlab-runner-cache: {}
   runner-root-cache: {}
-  gitlab-metric-log-cache: {}
+  runner-filebeat-cache: {}
+  runner-gitlab-metric-log-cache: {}
   metricd-root-cache: {}
   metricd-elasticsearch-cache: {}
   metricd-filebeat-cache: {}
@@ -23,7 +24,7 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - runner-root-cache:/root
-    - runner-filebeat-varcache:/var/lib/filebeat
+    - runner-filebeat-cache:/var/lib/filebeat
     - runner-maven-cache:/root/.m2/repository
     - runner-gitlab-runner-cache:/home/gitlab-runner
     - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:rw
@@ -48,8 +49,6 @@ services:
 ###########################template
     - ./runner/templates:/s2e/custom/templates
   s2emetricd:
-    sysctls:
-      - vm.max_map_count=262144
     restart: always
     #    build: .
     image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:feature-centos-0b5759a-cicd-gitlab-runner-s2e-1.0.0-g56631
@@ -65,7 +64,7 @@ services:
       - metricd-elasticsearch-cache:/var/lib/elasticsearch
       - metricd-logstash-cache:/var/lib/logstash
       - metricd-kibana-cache:/var/lib/kibana
-      - gitlab-metric-log-cache:/var/log/gitlab-job-metric:ro
+      - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:ro
       ##########################secrets
       - ./metricd/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
       - ./metricd/secrets/elasticsearch/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml
