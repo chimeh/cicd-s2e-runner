@@ -142,10 +142,10 @@ COPY s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properti
 COPY s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
 COPY s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
 
-COPY s2erunner/metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
-COPY s2erunner/metricd/secrets/filebeat/filebeat.yml                 /etc/filebeat/filebeat.yml
-COPY s2erunner/metricd/secrets/kibana/kibana.yml                     /etc/kibana/kibana.yml
-COPY s2erunner/metricd/secrets/logstash                                      /etc/logstash
+COPY s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
+COPY s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
+COPY s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
+COPY s2emetricd/secrets/logstash                             /etc/logstash
 
 # cicd logic
 COPY s2e    /s2e
