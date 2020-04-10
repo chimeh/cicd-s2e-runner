@@ -104,10 +104,10 @@ ADD s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.jso
 ADD s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
 
 ADD s2erunner/metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
-ADD s2erunner/runner/secrets/filebeat/filebeat.yml                 /etc/filebeat/filebeat.yml
-ADD s2erunner/runner/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
-ADD s2erunner/runner/secrets/kibana/kibana.yml                     /etc/kibana/kibana.yml
-ADD s2erunner/runner/logstash                                      /etc/logstash
+ADD s2erunner/metricd/secrets/filebeat/filebeat.yml                 /etc/filebeat/filebeat.yml
+ADD s2erunner/metricd/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
+ADD s2erunner/metricd/secrets/kibana/kibana.yml                     /etc/kibana/kibana.yml
+ADD s2erunner/metricd/logstash                                      /etc/logstash
 
 # cicd logic
 COPY s2e    /s2e
