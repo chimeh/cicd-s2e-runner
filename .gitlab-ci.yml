@@ -230,7 +230,7 @@ artifact-release:
     - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
     - echo ${IMG}
     - cp -f $(which s2ectl) s2erunner/runner/tools
-    - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" s2erunner/docker-compose.yaml
+    - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" s2erunner/docker-compose.yaml s2emetricd/docker-compose.yaml
   except:
     - tags
     - master
