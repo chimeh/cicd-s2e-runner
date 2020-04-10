@@ -107,7 +107,7 @@ COPY s2erunner/metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elastic
 COPY s2erunner/metricd/secrets/filebeat/filebeat.yml                 /etc/filebeat/filebeat.yml
 COPY s2erunner/metricd/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
 COPY s2erunner/metricd/secrets/kibana/kibana.yml                     /etc/kibana/kibana.yml
-COPY s2erunner/metricd/logstash                                      /etc/logstash
+COPY s2erunner/metricd/secrets/logstash                                      /etc/logstash
 
 # cicd logic
 COPY s2e    /s2e
