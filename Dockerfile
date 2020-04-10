@@ -91,6 +91,30 @@ RUN mkdir -p /root/ts \
 # gitlab cli
 RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
 
+#metricd server
+COPY s2erunner/metricd/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
+RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
+                    && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
+# jira ... atlassian cli
+# atlassian cli https://marketplace.atlassian.com/search?query=bob%20swift%20cli
+# https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/710705369/Docker+Image+for+CLI
+ARG ACLI=atlassian-cli-9.1.1
+ADD https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110  /opt/${ACLI}.zip
+RUN  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
+ && unzip /opt/${ACLI}.zip -d /opt \
+ && rm /opt/${ACLI}.zip \
+ && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties
+
+# cloud cli aliyun, tencent cloud
+ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
+RUN tar -xvf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /opt/aliyun-cli-linux-latest-amd64.tgz \
+ && pip3 install --index-url https://mirrors.cloud.tencent.com/pypi/simple  coscmd tccli
+
+#rancher cli
+ARG RANCHER_VER=v2.3.1
+ADD https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64-${RANCHER_VER}.tar.gz  /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
+RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
+ && rm /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf                       /etc/nginx/default.d/
 COPY s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
@@ -105,7 +129,6 @@ COPY s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.ya
 
 COPY s2erunner/metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
 COPY s2erunner/metricd/secrets/filebeat/filebeat.yml                 /etc/filebeat/filebeat.yml
-COPY s2erunner/metricd/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
 COPY s2erunner/metricd/secrets/kibana/kibana.yml                     /etc/kibana/kibana.yml
 COPY s2erunner/metricd/secrets/logstash                                      /etc/logstash
 
@@ -113,32 +136,10 @@ COPY s2erunner/metricd/secrets/logstash                                      /et
 COPY s2e    /s2e
 COPY docker /docker
 
-# jira ... atlassian cli
-# atlassian cli https://marketplace.atlassian.com/search?query=bob%20swift%20cli
-# https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/710705369/Docker+Image+for+CLI
-ARG ACLI=atlassian-cli-9.1.1
-ADD https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110  /opt/${ACLI}.zip
-RUN  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
- && unzip /opt/${ACLI}.zip -d /opt \
- && rm /opt/${ACLI}.zip \
- && ln -sf  /root/.acli/acli.properties /opt/${ACLI}/acli.properties
 
-# cloud cli aliyun, tencent cloud
-ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
-RUN tar -xvf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /opt/aliyun-cli-linux-latest-amd64.tgz \
- && pip3 install --index-url https://mirrors.cloud.tencent.com/pypi/simple  coscmd tccli
-
-
-ARG RANCHER_VER=v2.3.1
-ADD https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64-${RANCHER_VER}.tar.gz  /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
-RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
- && rm /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
-
-# mail cli, filebeat
+# mail cli
 RUN yum install -y wqy-microhei-fonts mailx expect initscripts
-#RUN yum install elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2
-RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
-                    && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
+
 RUN yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \
