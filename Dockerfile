@@ -98,7 +98,7 @@ RUN mkdir -p /root/ts \
 RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
 
 #metricd server
-COPY s2erunner/metricd/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
+COPY s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
 RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
                     && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
 # jira ... atlassian cli
