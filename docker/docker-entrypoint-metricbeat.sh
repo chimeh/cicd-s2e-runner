@@ -23,7 +23,8 @@ else
     echo "/etc/profile.d/env.sh not found!"
 fi
 
-/etc/init.d/kibana start
-/etc/init.d/elasticsearch start
-/usr/share/logstash/bin/logstash --path.settings /etc/logstash
+/etc/init.d/filebeat start
+#/etc/init.d/kibana start
+#/etc/init.d/elasticsearch start
+#/usr/share/logstash/bin/logstash --path.settings /etc/logstash
 exec nginx -g'daemon off;'

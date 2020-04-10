@@ -7,11 +7,7 @@ volumes:
   runner-root-cache: {}
   runner-filebeat-cache: {}
   runner-gitlab-metric-log-cache: {}
-  metricd-root-cache: {}
-  metricd-elasticsearch-cache: {}
-  metricd-filebeat-cache: {}
-  metricd-logstash-cache: {}
-  metricd-kibana-cache: {}
+  metricbeat-filebeat-cache: {}
 
 services:
   runner:
@@ -48,28 +44,19 @@ services:
     - ./runner/tools:/s2e/custom/tools
 ###########################template
     - ./runner/templates:/s2e/custom/templates
-  s2emetricd:
+  metricbeat:
     restart: always
     #    build: .
     image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:feature-centos-0b5759a-cicd-gitlab-runner-s2e-1.0.0-g56631
     #privileged: true
-    entrypoint: "/docker/docker-entrypoint-metricd.sh"
-    #
-    ports:
-      - "9200:9200"
-      - "5601:5601"
+    entrypoint: "/docker/docker-entrypoint-metricbeat.sh"
+    env_file:
+      - ./metricbeat/secrets/environment-global
     volumes:
-      - metricd-root-cache:/root
-      - metricd-filebeat-cache:/var/lib/filebeat
-      - metricd-elasticsearch-cache:/var/lib/elasticsearch
-      - metricd-logstash-cache:/var/lib/logstash
-      - metricd-kibana-cache:/var/lib/kibana
+      - metricbeat-filebeat-cache:/var/lib/filebeat
       - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:ro
       ##########################secrets
-      - ./metricd/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
-      - ./metricd/secrets/elasticsearch/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml
-      - ./metricd/secrets/kibana/kibana.yml:/etc/kibana/kibana.yml
-      - ./metricd/secrets/logstash:/etc/logstash
+      - ./metricbeat/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
 
 
 

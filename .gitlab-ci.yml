@@ -240,3 +240,4 @@ artifact-release:
     expire_in: 24h
     paths:
       - s2erunner/
+      - s2emetricd/

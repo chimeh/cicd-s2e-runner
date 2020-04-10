@@ -36,17 +36,20 @@ RUN mkdir -p /root/ts \
  && tar -xvf /root/ts/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt \
  && mkdir -p /root/.m2 \
  && cp /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml /root/.m2/settings.xml \
- && ln -sf /root/.m2/settings.xml /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml
+ && ln -sf /root/.m2/settings.xml /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml \
+ && rm -rf /root/ts
 # npm https://github.com/nodesource/distributions
 RUN mkdir -p /root/ts \
  && wget  -P /root/ts https://npm.taobao.org/mirrors/node/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz\
- && tar -xvf /root/ts/node-${NODE_VERSION}-linux-x64.tar.gz -C /opt 
+ && tar -xvf /root/ts/node-${NODE_VERSION}-linux-x64.tar.gz -C /opt \
+ && rm -rf /root/ts
 
 # python3
 RUN yum install -y python3-devel python3-pip python3-setuptools  yamllint
 # golang
 RUN wget -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz \
- && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt
+ && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt \
+ && rm -rf /root/ts
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
  && yum-config-manager --add-repo  https://download.docker.com/linux/centos/docker-ce.repo \
@@ -56,7 +59,8 @@ RUN mkdir -p /root/ts \
  && yum install -y  openssl-devel zlib-devel curl-devel expat-devel gettext-devel \
  && wget  -P /root/ts "http://mirrors.ustc.edu.cn/kernel.org/software/scm/git/git-${GIT_VERSION}.tar.gz" \
  && tar -xvzf /root/ts/git-${GIT_VERSION}.tar.gz -C /root/ts \
- && make -j2 prefix=/usr/local install -C /root/ts/git-${GIT_VERSION}
+ && make -j2 prefix=/usr/local install -C /root/ts/git-${GIT_VERSION} \
+ && rm -rf /root/ts
 
 # add offical deploy tools, k8s relate
 RUN mkdir -pv /root/.m2 /root/.docker /root/.kube /s2e
@@ -79,14 +83,15 @@ RUN mkdir -p /root/ts  \
     && mkdir -p /opt/android \
     && unzip  -qq sdk-tools-linux-4333796.zip -d /opt/android \
     && echo 'Y'|/opt/android/tools/bin/sdkmanager  "build-tools;29.0.3" > sdkmanager.log\
-    && echo 'Y'|/opt/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29" >> sdkmanager.log
-
+    && echo 'Y'|/opt/android/tools/bin/sdkmanager "platform-tools" "platforms;android-29" >> sdkmanager.log \
+    && rm -rf /root/ts
 # gradle
 RUN mkdir -p /root/ts \
     &&  wget  -P /root/ts  https://downloads.gradle-dn.com/distributions/gradle-6.2.2-all.zip \
     && cd /root/ts \
     && mkdir -p /opt/gradle \
-    && unzip  -qq gradle-6.2.2-all.zip -d /opt/gradle
+    && unzip  -qq gradle-6.2.2-all.zip -d /opt/gradle \
+    && rm -rf /root/ts
 
 # gitlab cli
 RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
@@ -115,6 +120,15 @@ ARG RANCHER_VER=v2.3.1
 ADD https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64-${RANCHER_VER}.tar.gz  /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
 RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
  && rm /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
+
+ # redis
+ RUN mkdir -p /root/ts \
+     &&  wget  -P /root/ts  http://mirror.azure.cn/redis/releases/redis-5.0.8.tar.gz \
+     && cd /root/ts \
+     && tar -xf redis-5.0.8.tar.gz \
+     && cd redis-5.0.8.tar.gz
+     && make install && rm -rf /root/ts
+
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf                       /etc/nginx/default.d/
 COPY s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
