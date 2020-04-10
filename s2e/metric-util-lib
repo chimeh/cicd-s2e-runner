@@ -18,5 +18,6 @@ function gitlab-job-metric-savefile() {
   export CI_JOB_TIMESTAMP_END=$(date)
   #使用两个##将环境变量连接成一行
   export |egrep -v LS_COLORS | perl -ne 'chomp;s/^declare -x //g;print "$_##"' >> /${METRIC_DIR}/env.txt
+  echo "" >> /${METRIC_DIR}/env.txt
 }
 gitlab-job-metric-savefile

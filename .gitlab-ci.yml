@@ -229,8 +229,8 @@ artifact-release:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
     - echo ${IMG}
-    - cp -f $(which s2ectl) /usr/local/bin/
-    - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" runner/docker-compose.yaml
+    - cp -f $(which s2ectl) s2erunner/runner/tools
+    - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" s2erunner/docker-compose.yaml
   except:
     - tags
     - master
@@ -239,4 +239,4 @@ artifact-release:
     name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
     expire_in: 24h
     paths:
-      - runner/
+      - s2erunner/

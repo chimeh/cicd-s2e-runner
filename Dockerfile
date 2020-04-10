@@ -93,17 +93,21 @@ RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade 
 
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf                       /etc/nginx/default.d/
-COPY runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
-COPY runner/secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh
-COPY runner/secrets/maven/settings.xml        /root/.m2/settings.xml
-COPY runner/secrets/docker/config.json        /root/.docker/config.json
-COPY runner/secrets/k8s/                      /root/.kube
-COPY runner/secrets/email/mail.rc             /etc/mail.rc
-ADD runner/secrets/jira/acli.properties      /root/jira/acli.properties
-ADD runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
-ADD runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
-ADD runner/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
-ADD runner/secrets/filebeat/elastic.repo      /etc/yum.repos.d/elastic.repo
+COPY s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
+COPY s2erunner/runner/secrets/gitlab-runner/profile.d/env.sh /etc/profile.d/env.sh
+COPY s2erunner/runner/secrets/maven/settings.xml        /root/.m2/settings.xml
+COPY s2erunner/runner/secrets/docker/config.json        /root/.docker/config.json
+COPY s2erunner/runner/secrets/k8s/                      /root/.kube
+COPY s2erunner/runner/secrets/email/mail.rc             /etc/mail.rc
+ADD s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properties
+ADD s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
+ADD s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
+
+ADD s2erunner/metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
+ADD s2erunner/runner/secrets/filebeat/filebeat.yml                 /etc/filebeat/filebeat.yml
+ADD s2erunner/runner/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
+ADD s2erunner/runner/secrets/kibana/kibana.yml                     /etc/kibana/kibana.yml
+ADD s2erunner/runner/logstash                                      /etc/logstash
 
 # cicd logic
 COPY s2e    /s2e
@@ -133,7 +137,8 @@ RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
 # mail cli, filebeat
 RUN yum install -y wqy-microhei-fonts mailx expect initscripts
 #RUN yum install elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2
-RUN yum install -y filebeat-7.6.2
+RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
+                    && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
 RUN yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \

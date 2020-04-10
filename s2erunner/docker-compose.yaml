@@ -1,0 +1,76 @@
+version: '3'
+
+
+volumes:
+  runner-maven-cache: {}
+  runner-gitlab-runner-cache: {}
+  runner-root-cache: {}
+  gitlab-metric-log-cache: {}
+  metricd-root-cache: {}
+  metricd-elasticsearch-cache: {}
+  metricd-filebeat-cache: {}
+  metricd-logstash-cache: {}
+  metricd-kibana-cache: {}
+
+services:
+  runner:
+    restart: always
+#    build: .
+    image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:feature-centos-0b5759a-cicd-gitlab-runner-s2e-1.0.0-g56631
+    privileged: true
+    #entrypoint: 
+    #command: ["run", "--user=root", "--working-directory=/home/gitlab-runner"]
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - runner-root-cache:/root
+    - runner-filebeat-varcache:/var/lib/filebeat
+    - runner-maven-cache:/root/.m2/repository
+    - runner-gitlab-runner-cache:/home/gitlab-runner
+    - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:rw
+##########################secrets
+    - ./runner/secrets/android:/etc/android
+    - ./runner/secrets/cloud-aliyun:/root/.aliyun
+    - ./runner/secrets/cloud-huawei:/root/.huawei
+    - ./runner/secrets/cloud-tencent:/root/.tccli
+    - ./runner/secrets/docker:/root/.docker
+    - ./runner/secrets/email/mail.rc:/etc/mail.rc
+    - ./runner/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
+    - ./runner/secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
+    - ./runner/secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
+    - ./runner/secrets/gitlab-runner/profile.d/env.sh:/etc/profile.d/env.sh
+    - ./runner/secrets/jira:/root/jira
+    - ./runner/secrets/k8s/.kube:/root/.kube
+    - ./runner/secrets/maven/settings.xml:/root/.m2/settings.xml
+    - ./runner/secrets/rancher/cli2.json:/root/.rancher/cli2.json
+    - ./runner/secrets/s2ectl:/root/.s2ectl
+###########################tools
+    - ./runner/tools:/s2e/custom/tools
+###########################template
+    - ./runner/templates:/s2e/custom/templates
+  s2emetricd:
+    sysctls:
+      - vm.max_map_count=262144
+    restart: always
+    #    build: .
+    image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:feature-centos-0b5759a-cicd-gitlab-runner-s2e-1.0.0-g56631
+    #privileged: true
+    entrypoint: "/docker/docker-entrypoint-metricd.sh"
+    #
+    ports:
+      - "9200:9200"
+      - "5601:5601"
+    volumes:
+      - metricd-root-cache:/root
+      - metricd-filebeat-cache:/var/lib/filebeat
+      - metricd-elasticsearch-cache:/var/lib/elasticsearch
+      - metricd-logstash-cache:/var/lib/logstash
+      - metricd-kibana-cache:/var/lib/kibana
+      - gitlab-metric-log-cache:/var/log/gitlab-job-metric:ro
+      ##########################secrets
+      - ./metricd/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
+      - ./metricd/secrets/elasticsearch/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml
+      - ./metricd/secrets/kibana/kibana.yml:/etc/kibana/kibana.yml
+      - ./metricd/secrets/logstash:/etc/logstash
+
+
+
