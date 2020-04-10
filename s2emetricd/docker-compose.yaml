@@ -11,7 +11,7 @@ services:
   metricd:
     restart: always
     #    build: .
-    image: harbor.nx-engine.com/paas/cicd-gitlab-runner-s2e:feature-centos-0b5759a-cicd-gitlab-runner-s2e-1.0.0-g56631
+    image: harbor.nx-engine.com/bu5/cicd-gitlab-runner-s2e:feature-centos-f12b9b57-1.0.0-g59686-cicd-gitlab-runner-s2e
     #privileged: true
     entrypoint: "/docker/docker-entrypoint-metricd.sh"
     #
@@ -27,6 +27,3 @@ services:
       - ./secrets/elasticsearch/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml
       - ./secrets/kibana/kibana.yml:/etc/kibana/kibana.yml
       - ./secrets/logstash:/etc/logstash
-
-
-

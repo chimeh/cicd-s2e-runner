@@ -18,7 +18,7 @@ function gitlab-job-metric-savefile() {
     set -o allexport; source s2ectl.env;set +o allexport
   fi
   export CI_JOB_EXIT_RV
-  export ${S2E_CALLED_TIME}
+  export S2E_CALLED_TIME
   export CI_JOB_TIMESTAMP_START_UNIX=${S2E_CALLED_TIME}
   export CI_JOB_TIMESTAMP_START=$(date --rfc-3339=second --date="@${CI_JOB_TIMESTAMP_START_UNIX}")
   export CI_JOB_TIMESTAMP_END_UNIX=$(date +%s)
