@@ -23,7 +23,7 @@ function gitlab-job-metric-savefile() {
   export CI_JOB_TIMESTAMP_START=$(date --rfc-3339=second --date="@${CI_JOB_TIMESTAMP_START_UNIX}")
   export CI_JOB_TIMESTAMP_END_UNIX=$(date +%s)
   export CI_JOB_TIMESTAMP_END=$(date  --rfc-3339=seconds --date="@${CI_JOB_TIMESTAMP_END_UNIX}")
-  export CI_JOB_DURATION=$((${CI_JOB_TIMESTAMP_END} - ${CI_JOB_TIMESTAMP_START_UNIX}))
+  export CI_JOB_DURATION=$((${CI_JOB_TIMESTAMP_END_UNIX} - ${CI_JOB_TIMESTAMP_START_UNIX}))
   #使用两个##将环境变量连接成一行
   export |egrep -v LS_COLORS | perl -ne 'chomp;s/^declare -x //g;print "$_##"' >> /${METRIC_DIR}/env.txt
   echo "" >> /${METRIC_DIR}/env.txt
