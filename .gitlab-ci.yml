@@ -12,8 +12,10 @@ code-check:
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - gitlab-ci-check
+    - all-job-post
   after_script:
-    - echo "ok"
+    - gitlab-ci-check-post
+  allow_failure: true
   except:
     - tags
 #####
@@ -24,6 +26,7 @@ artifact-docker-build:
     - git-merge-master
     - s2i . artifact
     - s2i . docker
+    - all-job-post
   after_script:
     - artifact-docker-build-post
   except:
@@ -40,6 +43,7 @@ artifact-docker-build-master:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - s2i . artifact
     - s2i . docker
+    - all-job-post
   after_script:
     - artifact-docker-build-post
   only:
@@ -68,6 +72,7 @@ deploy-to-dev:
     - export INGRESS_CLASS_INTERNAL=${DEV_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${DEV_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+    - all-job-post
   after_script:
     - deploy-dev-post
   except:
@@ -91,6 +96,7 @@ deploy-to-test:
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+    - all-job-post
   after_script:
     - deploy-test-post
   except:
@@ -117,6 +123,7 @@ rollback-test-from-uat:
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - all-job-post
   after_script:
     - rollback-test-post
   except:
@@ -141,6 +148,7 @@ deploy-to-uat:
     - export INGRESS_CLASS_INTERNAL=${UAT_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+    - all-job-post
   after_script:
     - deploy-uat-post
   only:
@@ -167,6 +175,7 @@ rollback-uat-from-prd:
     - export INGRESS_CLASS_INTERNAL=${UAT_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - all-job-post
   after_script:
     - rollback-uat-post
   only:
@@ -193,18 +202,21 @@ mirror-to-prd:
     - export INGRESS_CLASS_INTERNAL=${PRD_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${PRD_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - all-job-post
   after_script:
     - deploy-prd-post
   only:
     - master
   dependencies: []
 #####
-src-mr-create:
+gitlab-mr-create:
   stage: src-release
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - gitlab-mr-create
+  after_script:
+    - gitlab-mr-create-post
   except:
     - master
     - /^hotfix.*$/
@@ -215,6 +227,7 @@ gitlab-auto-merge:
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - gitlab-auto-merge
+    - all-job-post
   only:
     - /^hotfix.*$/
   except:
@@ -231,6 +244,7 @@ artifact-release:
     - echo ${IMG}
     - cp -f $(which s2ectl) s2erunner/runner/tools
     - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" s2erunner/docker-compose.yaml s2emetricd/docker-compose.yaml
+    - all-job-post
   except:
     - tags
     - master

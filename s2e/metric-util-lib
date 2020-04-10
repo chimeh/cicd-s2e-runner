@@ -7,7 +7,6 @@ echo "$0"
 
 # save job env to file, let featbeats proccess
 function gitlab-job-metric-savefile() {
-  CI_JOB_EXIT_RV=\$?
   if [[ -z ${GITLAB_JOB_METRIC_DIR} ]];then
     GITLAB_JOB_METRIC_DIR=/var/log/gitlab-job-metric/$(date +%Y%m)
     mkdir -p ${GITLAB_JOB_METRIC_DIR}
@@ -16,6 +15,12 @@ function gitlab-job-metric-savefile() {
   mkdir -p ${METRIC_DIR}
   if [[ -f s2ectl.env ]];then
     set -o allexport; source s2ectl.env;set +o allexport
+  fi
+#    通过是否存在该文件，判断该Job是否成功
+  if [[ -f s2ectl.env.ok.${CI_JOB_NAME} ]];then
+    export CI_JOB_FAIL=0
+  else
+    export CI_JOB_FAIL=1
   fi
   export CI_JOB_EXIT_RV
   export S2E_CALLED_TIME
