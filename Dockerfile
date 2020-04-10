@@ -117,7 +117,7 @@ ADD https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/v
 RUN  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
  && unzip /opt/${ACLI}.zip -d /opt \
  && rm /opt/${ACLI}.zip \
- && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties
+ && ln -sf  /root/.acli/acli.properties /opt/${ACLI}/acli.properties
 
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
