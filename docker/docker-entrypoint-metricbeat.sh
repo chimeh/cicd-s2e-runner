@@ -10,7 +10,7 @@ else
   echo "warn: no tzdata"
 fi
 
-export 	JAVA_TOOL_OPTIONS=" -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
+#export 	JAVA_TOOL_OPTIONS=" -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
 
 mkdir -p /etc/profile.d/
 if [ -f /etc/profile.d/env.sh ]; then

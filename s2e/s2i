@@ -472,7 +472,7 @@ function do_deploy_k8s()
         kubectl --kubeconfig ${K8S_KUBECONFIG} create  namespace ${K8S_NS}
     fi
     echo "detect Dockerfile"
-    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 2 -iname Dockerfile | sort"
+    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
     eval ${DETECT_DOCKERFILE}
     DOCKERFILE_COUNT=`eval ${DETECT_DOCKERFILE}|wc -l`
     if [[ ${DOCKERFILE_COUNT} -eq 0 ]];then
