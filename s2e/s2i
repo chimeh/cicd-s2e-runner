@@ -59,9 +59,9 @@ function do_src_get_srctype_by_topdir()
     # try to guest java or nodejs, ...
     echo "try to detect java/nodejs source"
     DETECT_JAVA="find ${GAVE_SRC_TOP} -maxdepth 1 -iname pom.xml"
-    DETECT_NODEJS="find ${GAVE_SRC_TOP} -maxdepth 2 -iname package.json"
-    DETECT_DEFAULT_TOP="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .TOP"
-    DETECT_DEFAULT_GIT="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .git"
+    DETECT_NODEJS="find ${GAVE_SRC_TOP} -maxdepth 1 -iname package.json"
+    DETECT_DEFAULT_TOP="find ${GAVE_SRC_TOP}   -maxdepth 1 -iname .TOP"
+    DETECT_DEFAULT_GIT="find ${GAVE_SRC_TOP}   -maxdepth 1 -iname .git"
     eval ${DETECT_JAVA}
     eval ${DETECT_NODEJS}
     if [[ -n $(eval ${DETECT_JAVA}) ]];then
@@ -105,9 +105,9 @@ function do_src_get_srctype_by_subdir()
     fi  
     echo "try to detect java or nodejs source"
     DETECT_JAVA="find ${THIS_SRCDIR} -maxdepth 1 -iname pom.xml"
-    DETECT_NODEJS="find ${THIS_SRCDIR} -maxdepth 2 -iname package.json"
-    DETECT_DEFAULT_TOP="find ${THIS_SRCDIR}   -maxdepth 2 -iname .TOP"
-    DETECT_DEFAULT_GIT="find ${THIS_SRCDIR}   -maxdepth 2 -iname .git"
+    DETECT_NODEJS="find ${THIS_SRCDIR} -maxdepth 1 -iname package.json"
+    DETECT_DEFAULT_TOP="find ${THIS_SRCDIR}   -maxdepth 1 -iname .TOP"
+    DETECT_DEFAULT_GIT="find ${THIS_SRCDIR}   -maxdepth 1 -iname .git"
     eval ${DETECT_JAVA}
     eval ${DETECT_NODEJS}
     if [[ -n $(eval ${DETECT_JAVA}) ]];then
@@ -353,7 +353,7 @@ function do_docker_build()
     fi
     
     echo "detect Dockerfile"
-    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 2 -iname Dockerfile | sort"
+    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
     eval ${DETECT_DOCKERFILE}
     eval ${DETECT_DOCKERFILE} | while read d;do
         if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
