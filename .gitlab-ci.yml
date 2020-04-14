@@ -101,7 +101,6 @@ deploy-to-test:
     - deploy-test-post
   except:
     - tags
-    - master
   dependencies: []
 rollback-test-from-uat:
   stage: deploy-env
