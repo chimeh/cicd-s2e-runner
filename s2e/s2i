@@ -35,15 +35,26 @@ else
     ACTION_STAGE="ACTION_ALL"
 fi
 if [[ -z ${CI_PROJECT_PATH} ]];then
-CI_PROJECT_PATH=${SRC_TOP}
+CUR_DIR=$(pwd)
+CI_PROJECT_PATH=$(xdir=${CUR_DIR};cd ${CUR_DIR}; while /usr/bin/test ! -d .git ; do \
+        xdir=`cd ../;pwd`;                       \
+        if [ "$xdir" = "/" ] ; then             \
+           echo  1>&2; \
+           break;                              \
+        fi ;                                    \
+        cd $xdir;                               \
+        done ;                                  \
+        pwd;)
 fi
 DEFAULT_NS="${S2E_ORG}${S2E_NS}"
-if [[ -z ${DEFAULT_NS} ]];then
-    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+if [[ "" == ${DEFAULT_NS} ]];then
+    DEFAULT_NS="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')"
 fi
-if [[ -z ${DEFAULT_NS} ]];then
+if [[ "" == ${DEFAULT_NS} ]];then
     DEFAULT_NS="default"
 fi
+echo "CI_PROJECT_PATH=${CI_PROJECT_PATH}"
+echo "DEFAULT_NS=${DEFAULT_NS}"
 
 function do_gen_s2e_meta()
 {
@@ -124,7 +135,7 @@ function do_src_get_reponame()
     else
         echo "manual CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)   
-        SRC_REPO_NAME=$(basename $(realpath ${SRC_TOP}))
+        SRC_REPO_NAME=$(basename $(realpath ${CI_PROJECT_PATH}))
         BUILD_COUNTER="c1"
     fi
     if [[ -f ${SRC_TOP}/VERSION ]]; then
@@ -264,25 +275,29 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     DOCKFILE_DIR=$(dirname ${DOCKER_THIS_DOCKERFILE})
 
-    DOCKER_THIS_NS=$(perl -e "@DOCKERNS = split(/\s+/, \$ENV{DOCKER_NS});\$NS=\$DOCKERNS[$MY_SLOT];\$NS =~ s/[\p{Pi}\p{Pf}'\"]//g;print STDOUT \$NS")
+#    DOCKER_THIS_NS=$(perl -e "@DOCKERNS = split(/\s+/, \$ENV{DOCKER_NS});\$NS=\$DOCKERNS[$MY_SLOT];\$NS =~ s/[\p{Pi}\p{Pf}'\"]//g;print STDOUT \$NS")
+#    DOCKER_THIS_NS=${DEFAULT_NS}
     K8S_THIS_NS=$(perl -e "@K8SNS = split(/\s+/, \$ENV{K8S_NS});print STDOUT \$K8SNS[$MY_SLOT];")
 
-    if [[ -z ${DOCKER_REPO} ]];then
+    if [[ "" == "${DOCKER_REPO}" ]];then
         DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
     fi
-    if [[ -z ${DOCKER_NS} ]];then
+    if [[ "" == "${DOCKER_NS}" ]];then
     DOCKER_NS=${DEFAULT_NS}
     fi
-    if [[ -z ${DOCKER_NS} ]];then
+    if [[ "" == "${DOCKER_NS}" ]];then
     DOCKER_NS="default"
+    fi
+    if [[ "" == "${DOCKER_THIS_NS}" ]];then
+    DOCKER_THIS_NS=${DOCKER_NS}
     fi
     do_src_get_reponame
     
     if [[ "${DOCKFILE_DIR}" == "${SRC_DIR}" ]];then
-        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-e-${SRC_VERSION}-${BUILD_COUNTER}
+        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}
     else
         DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
-        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}
+        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}@${DOCKER_SUBDIR_NAME}
     fi
     DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
     DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKER_THIS_DOCKERFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
@@ -347,7 +362,6 @@ function do_docker_build()
         echo "DOCKER_BUILD=${DOCKER_BUILD}"
         echo "DOCKER_REPO=${DOCKER_REPO}"
         echo "DOCKER_NS=${DOCKER_NS}"
-        echo "DOCKER_SUBDIR_NAME=${DOCKER_SUBDIR_NAME}"
         echo "DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
         echo "DOCKER_URL=${DOCKER_URL}"
         echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
