@@ -39,8 +39,9 @@ CUR_DIR=$(pwd)
 CI_PROJECT_PATH=$(xdir=${CUR_DIR};cd ${CUR_DIR}; while /usr/bin/test ! -d .git ; do \
         xdir=`cd ../;pwd`;                       \
         if [ "$xdir" = "/" ] ; then             \
-           echo  1>&2; \
-           break;                              \
+           echo  1>&2;                          \
+           cd ${CUR_DIR}                        \
+           break;                               \
         fi ;                                    \
         cd $xdir;                               \
         done ;                                  \
@@ -55,14 +56,6 @@ if [[ "" == ${DEFAULT_NS} ]];then
 fi
 echo "CI_PROJECT_PATH=${CI_PROJECT_PATH}"
 echo "DEFAULT_NS=${DEFAULT_NS}"
-
-function do_gen_s2e_meta()
-{
-cat >> PWD/s2i.meta.json <<EOF
-
-EOF
-
-}
 
 function do_src_get_srctype_by_topdir()
 {
@@ -235,7 +228,7 @@ function do_artifact_build()
     echo "NEXUS_REPO=${NEXUS_REPO}"
     echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
     echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
-    
+
     do_src_get_srctype_by_topdir
     case ${SRC_TYPE} in
         nodejs)
@@ -291,10 +284,10 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     do_src_get_reponame
     
+    DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
     if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}
     else
-        DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}
     fi
     DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
@@ -382,7 +375,9 @@ function do_docker_build()
             docker rmi ${DOCKER_URL}
             docker rmi ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
             slot=$((${slot} + 1))
-            echo ${DOCKER_URL} >> .s2i/s2i.${SRC_REPO_NAME}.${CI_COMMIT_SHA}.${DOCKER_SVC_PORTS}.img.txt
+
+            mkdir -p ${CI_PROJECT_PATH}/.s2i
+            echo ${DOCKER_URL} >> .s2i/img.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.txt
         done
         
 
