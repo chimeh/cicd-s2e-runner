@@ -377,7 +377,7 @@ function do_docker_build()
             slot=$((${slot} + 1))
 
             mkdir -p ${CI_PROJECT_PATH}/.s2i
-            echo ${DOCKER_URL} >> .s2i/img.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.txt
+            echo ${DOCKER_URL} >> .s2i/img.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.html
         done
         
 
