@@ -235,6 +235,7 @@ function do_artifact_build()
     echo "NEXUS_REPO=${NEXUS_REPO}"
     echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
     echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
+    
     do_src_get_srctype_by_topdir
     case ${SRC_TYPE} in
         nodejs)
@@ -253,9 +254,6 @@ function do_artifact_build()
             echo "not support source, or detect fail"
             ;;
     esac
-    if [[ -f ${SRC_DIR}/build.sh ]];then
-      bash ${SRC_DIR}/build.sh
-    fi
 }
 
 function do_docker_get_imgurl_by_dockerfile()
@@ -293,7 +291,7 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     do_src_get_reponame
     
-    if [[ "${DOCKFILE_DIR}" == "${SRC_DIR}" ]];then
+    if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}
     else
         DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
