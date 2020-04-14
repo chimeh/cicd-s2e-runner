@@ -297,7 +297,7 @@ function do_docker_get_imgurl_by_dockerfile()
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}
     else
         DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
-        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}@${DOCKER_SUBDIR_NAME}
+        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}
     fi
     DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
     DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKER_THIS_DOCKERFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
