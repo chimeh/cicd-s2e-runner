@@ -11,7 +11,16 @@ code-check:
   stage: code-check
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - gitlab-ci-check
+    - echo "##${subdir}"
+    - fi
+    - done
     - all-job-post
   after_script:
     - gitlab-ci-check-post
@@ -23,12 +32,22 @@ artifact-docker-build:
   stage: artifact-docker-build
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - git-merge-master
-    - s2i . artifact
-    - s2i . docker
+    - s2i . artifact #${subdir}
+    - s2i . docker #${subdir}
+    - echo "##${subdir}"
+    - fi
+    - done
     - all-job-post
   after_script:
     - artifact-docker-build-post
+
   except:
     - tags
     - master
@@ -41,8 +60,20 @@ artifact-docker-build-master:
   stage: artifact-docker-build
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . artifact
-    - s2i . docker
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
+    - s2i . artifact #${subdir}
+    - s2i . docker #${subdir}
+    - if [[ -f ${SRC_TOP}/build.sh ]];then bash ${SRC_TOP}/build.sh;fi
+    - echo "##${subdir}"
+    - else
+    - echo "本次提交${subdir}无变更"
+    - fi
+    - done
     - all-job-post
   after_script:
     - artifact-docker-build-post
@@ -60,6 +91,12 @@ deploy-to-dev:
   stage: deploy-env
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export K8S_KUBECONFIG=${DEV_K8S_KUBECONFIG}
@@ -72,6 +109,11 @@ deploy-to-dev:
     - export INGRESS_CLASS_INTERNAL=${DEV_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${DEV_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+    - echo "##${subdir}"
+    - else
+    - echo "本次提交${subdir}无变更"
+    - fi
+    - done
     - all-job-post
   after_script:
     - deploy-dev-post
@@ -84,6 +126,12 @@ deploy-to-test:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export K8S_KUBECONFIG=${TEST_K8S_KUBECONFIG}
@@ -96,6 +144,11 @@ deploy-to-test:
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+    - echo "##${subdir}"
+    - else
+    - echo "本次提交${subdir}无变更"
+    - fi
+    - done
     - all-job-post
   after_script:
     - deploy-test-post
@@ -107,6 +160,12 @@ rollback-test-from-uat:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
@@ -122,6 +181,11 @@ rollback-test-from-uat:
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - echo "##${subdir}"
+    - else
+    - echo "本次提交${subdir}无变更"
+    - fi
+    - done
     - all-job-post
   after_script:
     - rollback-test-post
@@ -135,6 +199,12 @@ deploy-to-uat:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
@@ -147,6 +217,11 @@ deploy-to-uat:
     - export INGRESS_CLASS_INTERNAL=${UAT_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
+    - echo "##${subdir}"
+    - else
+    - echo "本次提交${subdir}无变更"
+    - fi
+    - done
     - all-job-post
   after_script:
     - deploy-uat-post
@@ -159,6 +234,12 @@ rollback-uat-from-prd:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${PRD_K8S_KUBECONFIG}
@@ -173,7 +254,12 @@ rollback-uat-from-prd:
     - export INGRESS_PUBLIC_ENABLED=${UAT_INGRESS_INTERNAL_ENABLED}
     - export INGRESS_CLASS_INTERNAL=${UAT_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
+    - echo "##${subdir}"
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - else
+    - echo "本次提交${subdir}无变更"
+    - fi
+    - done
     - all-job-post
   after_script:
     - rollback-uat-post
@@ -186,6 +272,12 @@ mirror-to-prd:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
@@ -201,6 +293,11 @@ mirror-to-prd:
     - export INGRESS_CLASS_INTERNAL=${PRD_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${PRD_INGRESS_CLASS_PUBLIC}
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - echo "##${subdir}"
+    - else
+    - echo "本次提交${subdir}无变更"
+    - fi
+    - done
     - all-job-post
   after_script:
     - deploy-prd-post
@@ -239,11 +336,24 @@ artifact-release:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
+    - for subdir in $(ls -d */) .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
+    - echo "##${subdir}"
     - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
     - echo ${IMG}
     - cp -f $(which s2ectl) s2erunner/runner/tools
     - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" s2erunner/docker-compose.yaml s2emetricd/docker-compose.yaml
+    - echo "##${subdir}"
+    - else
+    - echo "本次提交${subdir}无变更"
+    - fi
+    - done
     - all-job-post
+  after_script:
+    - echo "done"
   except:
     - tags
     - master
