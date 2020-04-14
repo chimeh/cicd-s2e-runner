@@ -14,9 +14,9 @@ code-check:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - gitlab-ci-check
     - echo "##${subdir}"
     - fi
@@ -35,9 +35,9 @@ artifact-docker-build:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - git-merge-master
     - s2i . artifact #${subdir}
     - s2i . docker #${subdir}
@@ -63,15 +63,15 @@ artifact-docker-build-master:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - s2i . artifact #${subdir}
     - s2i . docker #${subdir}
     - if [[ -f ${SRC_TOP}/build.sh ]];then bash ${SRC_TOP}/build.sh;fi
     - echo "##${subdir}"
     - else
-    - echo "本次提交${subdir}无变更"
+    - echo ""
     - fi
     - done
     - all-job-post
@@ -94,9 +94,9 @@ deploy-to-dev:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export K8S_KUBECONFIG=${DEV_K8S_KUBECONFIG}
@@ -111,7 +111,7 @@ deploy-to-dev:
     - s2i . deploy
     - echo "##${subdir}"
     - else
-    - echo "本次提交${subdir}无变更"
+    - echo ""
     - fi
     - done
     - all-job-post
@@ -129,9 +129,9 @@ deploy-to-test:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export K8S_KUBECONFIG=${TEST_K8S_KUBECONFIG}
@@ -146,7 +146,7 @@ deploy-to-test:
     - s2i . deploy
     - echo "##${subdir}"
     - else
-    - echo "本次提交${subdir}无变更"
+    - echo ""
     - fi
     - done
     - all-job-post
@@ -163,9 +163,9 @@ rollback-test-from-uat:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
@@ -183,7 +183,7 @@ rollback-test-from-uat:
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
     - echo "##${subdir}"
     - else
-    - echo "本次提交${subdir}无变更"
+    - echo ""
     - fi
     - done
     - all-job-post
@@ -202,9 +202,9 @@ deploy-to-uat:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
@@ -219,7 +219,7 @@ deploy-to-uat:
     - s2i . deploy
     - echo "##${subdir}"
     - else
-    - echo "本次提交${subdir}无变更"
+    - echo ""
     - fi
     - done
     - all-job-post
@@ -237,9 +237,9 @@ rollback-uat-from-prd:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${PRD_K8S_KUBECONFIG}
@@ -257,7 +257,7 @@ rollback-uat-from-prd:
     - echo "##${subdir}"
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
     - else
-    - echo "本次提交${subdir}无变更"
+    - echo ""
     - fi
     - done
     - all-job-post
@@ -275,9 +275,9 @@ mirror-to-prd:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
@@ -295,7 +295,7 @@ mirror-to-prd:
     - k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
     - echo "##${subdir}"
     - else
-    - echo "本次提交${subdir}无变更"
+    - echo ""
     - fi
     - done
     - all-job-post
@@ -339,16 +339,16 @@ artifact-release:
     - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
     - SUBDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
     - if [[ "${SUBDIR_COMMIT_SHA}" == "${TOPDIR_COMMIT_SHA}" ]];then
-    - echo "##${subdir}"
     - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
     - echo ${IMG}
     - cp -f $(which s2ectl) s2erunner/runner/tools
     - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" s2erunner/docker-compose.yaml s2emetricd/docker-compose.yaml
     - echo "##${subdir}"
     - else
-    - echo "本次提交${subdir}无变更"
+    - echo ""
     - fi
     - done
     - all-job-post
