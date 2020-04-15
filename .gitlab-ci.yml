@@ -21,10 +21,10 @@ code-check:
     - echo "##${subdir}"
     - fi
     - done
-    - all-job-post
+    - post-gitlab-ci-check
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - gitlab-ci-check-post
+    - post-all-job
   allow_failure: true
   except:
     - tags
@@ -45,10 +45,10 @@ artifact-docker-build:
     - echo "##${subdir}"
     - fi
     - done
-    - all-job-post
+    - post-artifact-docker-build
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - artifact-docker-build-post
+    - post-all-job
 
   except:
     - tags
@@ -76,10 +76,10 @@ artifact-docker-build-master:
     - echo ""
     - fi
     - done
-    - all-job-post
+    - post-artifact-docker-build-master
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - artifact-docker-build-post
+    - post-all-job
   only:
     - master
     - hotfix/*
@@ -117,10 +117,10 @@ deploy-to-dev:
     - echo ""
     - fi
     - done
-    - all-job-post
+    - post-deploy-dev
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - deploy-dev-post
+    - post-all-job
   except:
     - tags
     - master
@@ -153,10 +153,10 @@ deploy-to-test:
     - echo ""
     - fi
     - done
-    - all-job-post
+    - post-deploy-test
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - deploy-test-post
+    - post-all-job
   except:
     - tags
   dependencies: []
@@ -189,10 +189,10 @@ rollback-test-from-uat:
     - echo ""
     - fi
     - done
-    - all-job-post
+    - post-rollback-test
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - rollback-test-post
+    - post-all-job
   except:
     - tags
     - master
@@ -226,10 +226,10 @@ deploy-to-uat:
     - echo ""
     - fi
     - done
-    - all-job-post
+    - post-deploy-uat
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - deploy-uat-post
+    - post-all-job
   only:
     - master
     - /^hotfix.*$/
@@ -263,10 +263,10 @@ rollback-uat-from-prd:
     - echo ""
     - fi
     - done
-    - all-job-post
+    - post-rollback-uat
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - rollback-uat-post
+    - post-all-job
   only:
     - master
     - /^hotfix.*$/
@@ -300,10 +300,10 @@ mirror-to-prd:
     - echo ""
     - fi
     - done
-    - all-job-post
+    - post-deploy-prd
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - deploy-prd-post
+    - post-all-job
   only:
     - master
   dependencies: []
@@ -314,9 +314,10 @@ gitlab-mr-create:
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - gitlab-mr-create
+    - post-gitlab-mr-create
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - gitlab-mr-create-post
+    - post-all-job
   except:
     - master
     - /^hotfix.*$/
@@ -327,7 +328,9 @@ gitlab-auto-merge:
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - gitlab-auto-merge
-    - all-job-post
+    - post-gitlab-auto-merge
+  after_script:
+    - post-all-job
   only:
     - /^hotfix.*$/
   except:
@@ -355,10 +358,10 @@ artifact-release:
     - echo ""
     - fi
     - done
-    - all-job-post
+    - post-artifact-release
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - echo "done"
+    - post-all-job
   except:
     - tags
   artifacts:
