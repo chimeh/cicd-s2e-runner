@@ -2,42 +2,68 @@
 #email: jimin.huang@nx-engine.com
 #email: jimminh@163.com
 set -e
-THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+THIS_SCRIPT=$(realpath $(
+  cd "$(dirname "${BASH_SOURCE:-$0}")"
+  pwd
+)/$(basename ${BASH_SOURCE:-$0}))
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 set +e
 
 function s2iversion_check() {
- #first word in .gitlab-ci.yml as S2I_VERSION
-FIRST_LINE=$(head -n 1 .gitlab-ci.yml)
-YML_S2I_VERSION=$(echo ${FIRST_LINE} | awk '{print $1}'| tr -d '#')
+  #first word in .gitlab-ci.yml as S2I_VERSION
+  FIRST_LINE=$(head -n 1 .gitlab-ci.yml)
+  YML_S2I_VERSION=$(echo ${FIRST_LINE} | awk '{print $1}' | tr -d '#')
 
+  echo YML_S2I_VERSION=${YML_S2I_VERSION}
+  echo RUNNER_S2I_VERSION=${RUNNER_S2I_VERSION}
 
-echo YML_S2I_VERSION=${YML_S2I_VERSION}
-echo RUNNER_S2I_VERSION=${RUNNER_S2I_VERSION}
+  case ${YML_S2I_VERSION} in
+  "s2i:1")
+    echo "please upgrade your .gitlab-ci.yml into s2i:2"
+    ;;
+  "s2i:2")
+    echo "check OK "
+    ;;
+  *)
+    echo "璇锋洿鏂颁綘鐨� .gitlab-ci.yaml 鏂囦欢鍒皊2i:2 鐗堟湰"
+    echo "澶嶅埗绮樿创浠ヤ笅鍐呭"
+    echo "\n\n\n\n"
+    cat /s2e/gitlab/s2i/v2/.gitlab-ci.yml
 
-
-case ${YML_S2I_VERSION} in
-    "s2i:1")
-        echo "please upgrade your .gitlab-ci.yml into s2i:2"
-        ;;
-    "s2i:2")
-        echo "check OK "
-        ;;
-    *)
-        echo "请更新你的 .gitlab-ci.yaml 文件到s2i:2 版本"
-        echo "复制粘贴以下内容"
-        echo "\n\n\n\n"
-        cat /s2e/gitlab/s2i/v2/.gitlab-ci.yml
-
-        ;;
-esac
+    ;;
+  esac
 }
 
+#if cmdtool refer by .gitlab-ci.yml not exist, create on it;
+TOOLS="post-all-job
+post-artifact-docker-build
+post-artifact-docker-build-master
+post-artifact-release
+post-deploy-dev
+post-deploy-prd
+post-deploy-test
+post-deploy-uat
+post-gitlab-auto-merge
+post-gitlab-ci-check
+post-gitlab-mr-create
+post-rollback-test
+post-rollback-uat"
+for t in ${TOOLS}; do
+  which -a $t >/dev/null  2>&1
+  RV=$?
+  if [[ ${RV} -ne 0 ]];then
+    mkdir -p /usr/local/bin
+    touch /usr/local/bin/$t
+    echo '#!/bin/bash' > /usr/local/bin/$t
+    echo 'echo ${0}' > /usr/local/bin/$t
+    chmod +x /usr/local/bin/$t
+  fi
+done
 
 set +e
 s2iversion_check
 source ${SCRIPT_DIR}/jira-util-lib
-if [[ -f ${SCRIPT_DIR}/metric-util-lib ]];then
+if [[ -f ${SCRIPT_DIR}/metric-util-lib ]]; then
   source ${SCRIPT_DIR}/metric-util-lib
 fi
 set -e
