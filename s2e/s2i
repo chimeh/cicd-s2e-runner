@@ -12,7 +12,7 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 USAGE="
   usage:
-  s2i, a cicd tool, from src to artifact, to docker img, deploy into environment
+  s2i, a cicd tool, from src to artifact, to docker img, deploy into kubernetes
   $(basename $(realpath $0)) /path/to/srctop [ analysis|artifact|docker|deploy ]
   
   $(basename $(realpath $0)) /path/to/srctop analysis

@@ -6,8 +6,19 @@
 echo "###########################################"
 set -e
 USAGE="
-    usage: $0  SRC_KUBE DST_KUBE [SRC_NS] [DST_NS] SVC1 SVC2 ...
-    usage: $0 dev.config test.config [ice-dev] [ice-test] [file-service nginx ...] "
+  $0: oneof cicd toolset, integrate gitlab with kubernetes, mirror one app from SRC_NS to another namespace
+  export SRC_K8S_KUBECONFIG=/root/.kube/config
+  export SRC_K8S_NS=xxx-from
+  export K8S_NS=xxx-to
+  export K8S_DOMAIN_INTERNAL=nxengine.cn
+  export K8S_DOMAIN_PUBLIC=bu5-dev.tx
+  export INGRESS_INTERNAL_ENABLED=1
+  export INGRESS_PUBLIC_ENABLED=1
+  export INGRESS_CLASS_INTERNAL=nginx
+  export INGRESS_CLASS_PUBLIC=nginx
+  $(basename $(realpath $0))
+  usage: $0  SRC_KUBE DST_KUBE [SRC_NS] [DST_NS] SVC1 SVC2 ...
+  usage: $0 /root/.kube/from.config /root/.kube/to.config [ice-dev] [ice-test] [file-service nginx ...] "
 echo "${USAGE}"
 echo "###########################################"
 
@@ -27,13 +38,6 @@ TPLTOP=$(xdir=${SCRIPT_DIR};cd ${SCRIPT_DIR}; while /usr/bin/test ! -e .TOP ; do
 WORKDIR=$(realpath $(pwd))
 if [[ -z ${TPLTOP} ]];then
 TPLTOP=${WORKDIR}
-fi
-DEFAULT_NS="${S2E_ORG}${S2E_NS}"
-if [[ -z ${DEFAULT_NS} ]];then
-    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
-fi
-if [[ -z ${DEFAULT_NS} ]];then
-    DEFAULT_NS="default"
 fi
 
 if [[ -z ${DOMAIN_INTERNAL} ]];then
@@ -84,14 +88,12 @@ SRC_KUBE=$(realpath "$1")
 DST_KUBE=$(realpath "$2")
 
 if [[ -z ${SRC_K8S_NS} ]];then
-    SRC_K8S_NS="${DEFAULT_NS}${SRC_K8S_NS_SUFFIX}"
+    SRC_K8S_NS="default"
 fi
-if [[ -z ${DST_K8S_NS} ]];then
-    DST_K8S_NS="${DEFAULT_NS}${DST_K8S_NS_SUFFIX}"
-fi
+
 DST_K8S_NS=${K8S_NS}
 if [[ -z ${DST_K8S_NS} ]];then
-    DST_K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
+    DST_K8S_NS="default-to"
 fi
 shift 2
 SVCNAME="${0}"
@@ -102,7 +104,6 @@ SVCNAME="${0}"
 
 echo "SRC_K8S_KUBECONFIG=${SRC_K8S_KUBECONFIG}"
 echo "SRC_K8S_NS=${SRC_K8S_NS}"
-echo "SRC_K8S_NS_SUFFIX=${SRC_K8S_NS_SUFFIX}"
 echo ""
 echo "K8S_KUBECONFIG=${K8S_KUBECONFIG}"
 echo "K8S_NS_SUFFIX=${K8S_NS_SUFFIX}"

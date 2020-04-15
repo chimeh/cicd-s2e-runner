@@ -3,7 +3,10 @@
 #email: jimin.huang@nx-engine.com
 set -e
 echo "$0"
-
+USAGE="
+  $0, oneof cicd toolset, integrate gitlab with elk, collect gitlab-ci metric ;
+  "
+#echo "${USAGE}"
 
 # save job env to file, let featbeats proccess
 function gitlab-job-metric-savefile() {
