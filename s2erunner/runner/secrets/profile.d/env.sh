@@ -6,7 +6,6 @@ export ENABLE_SONAR=0
 export DOCKER_REPO=docker.io
 export DOCKER_NS=bettercode
 
-export K8S_AUTOCD=0
 export K8S_NS=default
 export K8S_DOMAIN_INTERNAL=bu5-dev.cd
 export K8S_DOMAIN_PUBLIC=bu5-dev.nxengine.com

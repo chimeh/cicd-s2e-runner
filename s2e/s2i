@@ -414,7 +414,7 @@ function do_deploy_k8s()
         TRYTOP=${WORKDIR}
     fi
     if [[ -z ${K8S_AUTOCD} ]];then
-        K8S_AUTOCD=0
+        K8S_AUTOCD=1
     fi
     if [[ -z ${K8S_NS} ]];then
         K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
