@@ -2,63 +2,98 @@
 #author: ming.zu
 #email: ming.zu@nx-engine.com
 set -e
+USAGE="
+  usage:
+  $0, oneof cicd toolset, integrate rancher with gitlab, mgr rancher project, user;
+  export K8S_NS=default
+  export GITLAB_USER_LOGIN=nxengine.cn
+  $(basename $(realpath $0))
 
-echo "$0"
+"
+echo "${USAGE}"
+set +e
+function do_member_update() {
+  set +e
+  rancher namespaces ls --all-namespaces | grep "${K8S_NS}"
+  set -e
+  if [[ ${rv} -eq 0 ]]; then
 
-################rancher cli, cicd
-function do_rancher_auto()
-{
-    PROJECT_NAME=${K8S_NS}
-    K8S_NS=${K8S_NS}
-    USER=${GITLAB_USER_LOGIN}
-
-    #create project if not exist
-    rancher project ls |grep "$PROJECT_NAME"
-    rv=$?
-    if [[ ${rv} -ne 0 ]];then
-        rancher project create "${PROJECT_NAME}";
-    else
-        echo "${PROJECT_NAME} exist"
-    fi
-
-    project_id=$(rancher project ls |grep -i ${PROJECT_NAME} |awk '{print $1}')
+    project_id=$(rancher project ls | grep -i ${PROJECT_NAME} | awk '{print $1}')
     #add user to project
-    rancher project list-members  --project-id "${project_id}" |grep -i "${USER}"
+    set +e
+    rancher project list-members --project-id "${project_id}" | grep -i "${USER}"
     rv=$?
-    if [[ ${rv} -ne 0 ]];then
-        rancher project add-member-role --project-id  "${project_id}"  "${USER}" project-member
-    fi
-    #create namespace if not exist
-    rancher namespaces ls  --all-namespaces |grep "${K8S_NS}"
-    rv=$?
-    if [[ ${rv} -ne 0 ]];then
-        rancher namespaces create "${K8S_NS}"
+    set -e
+    if [[ ${rv} -ne 0 ]]; then
+      rancher project add-member-role --project-id "${project_id}" "${USER}" project-member
     fi
     #add namespace to projects
-    rancher namespaces ls  --all-namespaces |grep "${K8S_NS}" |grep "${project_id}"
+    set +e
+    rancher namespaces ls --all-namespaces | grep "${K8S_NS}" | grep "${project_id}"
     rv=$?
-    if [[ ${rv} -ne 0 ]];then
-        rancher namespaces move "${K8S_NS}" "${project_id}"
+    set -e
+    if [[ ${rv} -ne 0 ]]; then
+      rancher namespaces move "${K8S_NS}" "${project_id}"
     fi
+  fi
+}
+################rancher cli, cicd
+function do_rancher_auto() {
+  PROJECT_NAME=${K8S_NS}
+  K8S_NS=${K8S_NS}
+  USER=${GITLAB_USER_LOGIN}
+
+  RANCHER_CLUSTER_PROJEST_LIST=$(echo "" | rancher context switch | egrep System | awk '{print $3}' | egrep -v local)
+
+  for c in ${RANCHER_CLUSTER_PROJEST_LIST}; do
+    set +e
+    echo "switch $c"
+    rancher context switch "${c}"
+    echo "try switch ${PROJECT_NAME}"
+    rancher project ls | grep -i ${PROJECT_NAME}
+    rv=$?
+    set -e
+    if [[ ${rv} -eq 0 ]]; then
+      #project exist, check namespace
+      set +e
+      rancher namespaces ls --all-namespaces | grep "${K8S_NS}"
+      rv=$?
+      set -e
+      if [[ ${rv} -eq 0 ]]; then
+        # namespace exit, and project exit
+        do_member_update
+      else
+        #namespace not exit on cluster, and project exit
+        rancher namespaces  create "${K8S_NS}"
+        rancher project create "${PROJECT_NAME}"
+        echo ""
+      fi
+      do_member_update
+    else
+      #project not exist, check namespace
+      set +e
+      rancher namespaces ls --all-namespaces | grep "${K8S_NS}"
+      rv=$?
+      set -e
+      if [[ ${rv} -eq 0 ]]; then
+        # namespace exit on cluster, but project not exit, create it
+        rancher project create "${PROJECT_NAME}"
+        do_member_update
+      else
+        #namespace not exit on cluster, and project not exit
+        #continue
+        echo ""
+      fi
+    fi
+  done
 }
 
 ################same as s2i
-DEFAULT_NS="${S2E_ORG}${S2E_NS}"
-if [[ -z ${DEFAULT_NS} ]];then
-    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
-fi
-if [[ -z ${DEFAULT_NS} ]];then
-    DEFAULT_NS="default"
-fi
-K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
-if [[ -z ${K8S_NS} ]];then
-    K8S_NS=default${K8S_NS_SUFFIX}
-fi
 
 set +e
 rancher cluster
 rv=$?
-if [[ ${rv} -ne 0 ]];then
-    do_rancher_auto
+if [[ ${rv} -eq 0 ]]; then
+  do_rancher_auto
 fi
 set -e

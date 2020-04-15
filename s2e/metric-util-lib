@@ -1,0 +1,39 @@
+#!/bin/bash
+#author: jimin.huang
+#email: jimin.huang@nx-engine.com
+set -e
+echo "$0"
+USAGE="
+  $0, oneof cicd toolset, integrate gitlab with elk, collect gitlab-ci metric ;
+  "
+#echo "${USAGE}"
+
+# save job env to file, let featbeats proccess
+function gitlab-job-metric-savefile() {
+  if [[ -z ${GITLAB_JOB_METRIC_DIR} ]];then
+    GITLAB_JOB_METRIC_DIR=/var/log/gitlab-job-metric/$(date +%Y%m)
+    mkdir -p ${GITLAB_JOB_METRIC_DIR}
+  fi
+  METRIC_DIR=${GITLAB_JOB_METRIC_DIR}/${CI_PROJECT_ID}/${CI_PIPELINE_ID}/${CI_JOB_ID}
+  mkdir -p ${METRIC_DIR}
+  if [[ -f s2ectl.env ]];then
+    set -o allexport; source s2ectl.env;set +o allexport
+  fi
+#    通过是否存在该文件，判断该Job是否成功
+  if [[ -f s2ectl.env.ok.${CI_JOB_NAME} ]];then
+    export CI_JOB_FAIL=0
+  else
+    export CI_JOB_FAIL=1
+  fi
+  export CI_JOB_EXIT_RV
+  export S2E_CALLED_TIME
+  export CI_JOB_TIMESTAMP_START_UNIX=${S2E_CALLED_TIME}
+  export CI_JOB_TIMESTAMP_START=$(date --rfc-3339=second --date="@${CI_JOB_TIMESTAMP_START_UNIX}")
+  export CI_JOB_TIMESTAMP_END_UNIX=$(date +%s)
+  export CI_JOB_TIMESTAMP_END=$(date  --rfc-3339=second --date="@${CI_JOB_TIMESTAMP_END_UNIX}")
+  export CI_JOB_DURATION=$((${CI_JOB_TIMESTAMP_END_UNIX} - ${CI_JOB_TIMESTAMP_START_UNIX}))
+  #使用两个##将环境变量连接成一行
+  export |egrep -v LS_COLORS | perl -ne 'chomp;s/^declare -x //g;print "$_##"' >> /${METRIC_DIR}/env.txt
+  echo "" >> /${METRIC_DIR}/env.txt
+}
+gitlab-job-metric-savefile

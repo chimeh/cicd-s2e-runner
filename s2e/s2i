@@ -12,12 +12,23 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 USAGE="
   usage:
-  s2i, a cicd tool, from src to artifact, to docker img, deploy into environment
+  s2i, a cicd tool, from src to artifact, to docker img, deploy into kubernetes
   $(basename $(realpath $0)) /path/to/srctop [ analysis|artifact|docker|deploy ]
   
   $(basename $(realpath $0)) /path/to/srctop analysis
   $(basename $(realpath $0)) /path/to/srctop artifact
+  export DOCKER_REPO=harbor.nx-engine.com
+  export DOCKER_NS=bu5
   $(basename $(realpath $0)) /path/to/srctop docker
+  export K8S_KUBECONFIG=/root/.kube/config
+  export K8S_NS_SUFFIX=-dev
+  export K8S_NS=default
+  export K8S_DOMAIN_INTERNAL=nxengine.cn
+  export K8S_DOMAIN_PUBLIC=bu5-dev.tx
+  export INGRESS_INTERNAL_ENABLED=1
+  export INGRESS_PUBLIC_ENABLED=1
+  export INGRESS_CLASS_INTERNAL=nginx
+  export INGRESS_CLASS_PUBLIC=nginx
   $(basename $(realpath $0)) /path/to/srctop deploy
 
 "
@@ -25,11 +36,8 @@ echo "${USAGE}"
 mkdir -p .s2i/
 if [[ $# -lt 1 ]];then
     echo "${USAGE}"
-    echo "use PWD as SRC_TOP"
-    GAVE_SRC_TOP=${CI_PROJECT_DIR:-${PWD}}
 else
-    GAVE_SRC_TOP=$(realpath $1)
-    SRC_TOP=$(realpath ${GAVE_SRC_TOP})
+    SRC_TOP=$(realpath $1)
 fi
 
 if [[ $# -gt 1 ]];then
@@ -37,31 +45,38 @@ if [[ $# -gt 1 ]];then
 else
     ACTION_STAGE="ACTION_ALL"
 fi
-DEFAULT_NS="${S2E_ORG}${S2E_NS}"
-if [[ -z ${DEFAULT_NS} ]];then
-    DEFAULT_NS=$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')
+if [[ -z ${CI_PROJECT_PATH} ]];then
+CUR_DIR=$(pwd)
+CI_PROJECT_PATH=$(xdir=${CUR_DIR};cd ${CUR_DIR}; while /usr/bin/test ! -d .git ; do \
+        xdir=`cd ../;pwd`;                       \
+        if [ "$xdir" = "/" ] ; then             \
+           echo  1>&2;                          \
+           cd ${CUR_DIR}                        \
+           break;                               \
+        fi ;                                    \
+        cd $xdir;                               \
+        done ;                                  \
+        pwd;)
 fi
-if [[ -z ${DEFAULT_NS} ]];then
+DEFAULT_NS="${S2E_ORG}${S2E_NS}"
+if [[ "" == ${DEFAULT_NS} ]];then
+    DEFAULT_NS="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')"
+fi
+if [[ "" == ${DEFAULT_NS} ]];then
     DEFAULT_NS="default"
 fi
-
-function do_gen_s2e_meta()
-{
-cat >> PWD/s2i.meta.json <<EOF
-
-EOF
-
-}
+echo "CI_PROJECT_PATH=${CI_PROJECT_PATH}"
+echo "DEFAULT_NS=${DEFAULT_NS}"
 
 function do_src_get_srctype_by_topdir()
 {
     echo "$FUNCNAME"
     # try to guest java or nodejs, ...
     echo "try to detect java/nodejs source"
-    DETECT_JAVA="find ${GAVE_SRC_TOP} -maxdepth 1 -iname pom.xml"
-    DETECT_NODEJS="find ${GAVE_SRC_TOP} -maxdepth 2 -iname package.json"
-    DETECT_DEFAULT_TOP="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .TOP"
-    DETECT_DEFAULT_GIT="find ${GAVE_SRC_TOP}   -maxdepth 2 -iname .git"
+    DETECT_JAVA="find ${SRC_TOP} -maxdepth 1 -iname pom.xml"
+    DETECT_NODEJS="find ${SRC_TOP} -maxdepth 1 -iname package.json"
+    DETECT_DEFAULT_TOP="find ${SRC_TOP}   -maxdepth 1 -iname .TOP"
+    DETECT_DEFAULT_GIT="find ${SRC_TOP}   -maxdepth 1 -iname .git"
     eval ${DETECT_JAVA}
     eval ${DETECT_NODEJS}
     if [[ -n $(eval ${DETECT_JAVA}) ]];then
@@ -91,52 +106,13 @@ function do_src_get_srctype_by_topdir()
     fi
     echo "SRC_TYPE=${SRC_TYPE}"
     echo CI_PROJECT_REPOSITORY_LANGUAGES=${CI_PROJECT_REPOSITORY_LANGUAGES}
+    if [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
+        PWD_HAVE_DOT_GIT=1
+    else 
+        PWD_HAVE_DOT_GIT=0
+    fi
     ###################################################################  
 }
-function do_src_get_srctype_by_subdir()
-{
-    echo "$FUNCNAME"
-    THIS_SRCDIR=$(realpath $1)
-    
-    echo "THIS_SRCDIR=${THIS_SRCDIR}"
-    if [[ -z ${THIS_SRCDIR} ]];then
-        echo "please specify your THIS_SRCDIR"
-        exit 1
-    fi  
-    echo "try to detect java or nodejs source"
-    DETECT_JAVA="find ${THIS_SRCDIR} -maxdepth 1 -iname pom.xml"
-    DETECT_NODEJS="find ${THIS_SRCDIR} -maxdepth 2 -iname package.json"
-    DETECT_DEFAULT_TOP="find ${THIS_SRCDIR}   -maxdepth 2 -iname .TOP"
-    DETECT_DEFAULT_GIT="find ${THIS_SRCDIR}   -maxdepth 2 -iname .git"
-    eval ${DETECT_JAVA}
-    eval ${DETECT_NODEJS}
-    if [[ -n $(eval ${DETECT_JAVA}) ]];then
-        pom=`echo $(eval ${DETECT_JAVA}) | head -n 1`
-        SRC_TYPE=java
-        echo "SRC_TYPE=${SRC_TYPE}"
-        #mvn --file ${SRC_TOP} -N  -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec 
-        #SRC_VERSION=`mvn --file ${SRC_TOP} -q -N -Dexec.executable='echo'  -Dexec.args='${project.version}'  org.codehaus.mojo:exec-maven-plugin:1.3.1:exec | tail -n 1`
-    elif [[ -n $(eval ${DETECT_NODEJS}) ]];then
-#        package=`echo $(eval ${DETECT_NODEJS}) | head -n 1`
-#        SRC_TOP=$(realpath $(dirname ${package}))
-        SRC_TYPE=nodejs
-        echo "SRC_TYPE=${SRC_TYPE}"
-        #SRC_VERSION=$(cd ${SRC_TOP};npm run packageVersion |tail -n 1)
-    elif [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
-#        topfile=`echo $(eval ${DETECT_DEFAULT_GIT}) | head -n 1 | awk '{print $1}'`
-#        SRC_TOP=`echo $(realpath $(dirname ${topfile})) | head -n 1`
-        SRC_TYPE=none
-        echo "SRC_TYPE=${SRC_TYPE}"
-        #SRC_VERSION="$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
-    else
-        SRC_TYPE=none
-        echo "SRC_TYPE=${SRC_TYPE}"
-#        SRC_VERSION="v1"
-        echo "Warn can't detect SRC_VERSION !!!!"
-    fi
-    echo "SRC_TYPE=${SRC_TYPE} on subdir ${THIS_SRCDIR}" 
-}
-
 
 function do_src_get_reponame()
 {
@@ -163,7 +139,7 @@ function do_src_get_reponame()
     else
         echo "manual CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)   
-        SRC_REPO_NAME=$(basename $(realpath ${SRC_TOP}))
+        SRC_REPO_NAME=$(basename $(realpath ${CI_PROJECT_PATH}))
         BUILD_COUNTER="c1"
     fi
     if [[ -f ${SRC_TOP}/VERSION ]]; then
@@ -193,10 +169,6 @@ function do_src_analysis_nodejs()
 function do_src_analysis_java()
 {
    echo "$FUNCNAME"
-   if [[ -z ${CI_PROJECT_PATH} ]];then
-    CI_PROJECT_PATH=${SRC_TOP}
-   fi
-   mvn clean package sonar:sonar -Dsonar.projectKey=$(echo ${CI_PROJECT_PATH}| tr / .) -Dsonar.projectName=$(echo ${CI_PROJECT_PATH}| tr / .)
 }
 function do_src_analysis()
 {
@@ -238,12 +210,21 @@ function do_artifact_build_java()
 {
     echo "$FUNCNAME"
     pushd ${SRC_TOP}
-    
+    if [[ ${ENABLE_SONAR} -ne 0 ]];then
+        if [[ ${PWD_HAVE_DOT_GIT} -eq 1 ]];then
+            SONAR_KEY="$(echo ${CI_PROJECT_PATH}| tr / .)"
+        else
+            SONAR_KEY="$(echo ${CI_PROJECT_PATH}-$(basename $PWD)| tr / .)"
+        fi
+        SONAR_OPT="sonar:sonar -Dsonar.projectKey=${SONAR_KEY} -Dsonar.projectName=${SONAR_KEY}"
+    else
+        SONAR_OPT=""
+    fi
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-        mvn clean deploy
+        mvn clean ${SONAR_OPT} package deploy
         exit 0
     else
-        mvn clean package
+        mvn clean ${SONAR_OPT} package
     fi
     popd
 }
@@ -258,6 +239,7 @@ function do_artifact_build()
     echo "NEXUS_REPO=${NEXUS_REPO}"
     echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
     echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
+
     do_src_get_srctype_by_topdir
     case ${SRC_TYPE} in
         nodejs)
@@ -295,24 +277,28 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     DOCKFILE_DIR=$(dirname ${DOCKER_THIS_DOCKERFILE})
 
-    DOCKER_THIS_NS=$(perl -e "@DOCKERNS = split(/\s+/, \$ENV{DOCKER_NS});\$NS=\$DOCKERNS[$MY_SLOT];\$NS =~ s/[\p{Pi}\p{Pf}'\"]//g;print STDOUT \$NS")
+#    DOCKER_THIS_NS=$(perl -e "@DOCKERNS = split(/\s+/, \$ENV{DOCKER_NS});\$NS=\$DOCKERNS[$MY_SLOT];\$NS =~ s/[\p{Pi}\p{Pf}'\"]//g;print STDOUT \$NS")
+#    DOCKER_THIS_NS=${DEFAULT_NS}
     K8S_THIS_NS=$(perl -e "@K8SNS = split(/\s+/, \$ENV{K8S_NS});print STDOUT \$K8SNS[$MY_SLOT];")
 
-    if [[ -z ${DOCKER_REPO} ]];then
+    if [[ "" == "${DOCKER_REPO}" ]];then
         DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
     fi
-    if [[ -z ${DOCKER_NS} ]];then
+    if [[ "" == "${DOCKER_NS}" ]];then
     DOCKER_NS=${DEFAULT_NS}
     fi
-    if [[ -z ${DOCKER_NS} ]];then
+    if [[ "" == "${DOCKER_NS}" ]];then
     DOCKER_NS="default"
+    fi
+    if [[ "" == "${DOCKER_THIS_NS}" ]];then
+    DOCKER_THIS_NS=${DOCKER_NS}
     fi
     do_src_get_reponame
     
-    if [[ "${DOCKFILE_DIR}" == "${SRC_DIR}" ]];then
-        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-e-${SRC_VERSION}-${BUILD_COUNTER}
+    DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
+    if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
+        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}
     else
-        DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}
     fi
     DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
@@ -350,7 +336,7 @@ function do_docker_build()
     fi
     
     echo "detect Dockerfile"
-    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 2 -iname Dockerfile | sort"
+    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
     eval ${DETECT_DOCKERFILE}
     eval ${DETECT_DOCKERFILE} | while read d;do
         if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
@@ -378,7 +364,6 @@ function do_docker_build()
         echo "DOCKER_BUILD=${DOCKER_BUILD}"
         echo "DOCKER_REPO=${DOCKER_REPO}"
         echo "DOCKER_NS=${DOCKER_NS}"
-        echo "DOCKER_SUBDIR_NAME=${DOCKER_SUBDIR_NAME}"
         echo "DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
         echo "DOCKER_URL=${DOCKER_URL}"
         echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
@@ -401,7 +386,9 @@ function do_docker_build()
             docker rmi ${DOCKER_URL}
             docker rmi ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
             slot=$((${slot} + 1))
-            echo ${DOCKER_URL} >> .s2i/s2i.${SRC_REPO_NAME}.${CI_COMMIT_SHA}.${DOCKER_SVC_PORTS}.img.txt
+
+            mkdir -p ${CI_PROJECT_PATH}/.s2i
+            echo ${DOCKER_URL} >> .s2i/img.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.html
         done
         
 
@@ -427,9 +414,11 @@ function do_deploy_k8s()
         TRYTOP=${WORKDIR}
     fi
     if [[ -z ${K8S_AUTOCD} ]];then
-        K8S_AUTOCD=0
+        K8S_AUTOCD=1
     fi
-    K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
+    if [[ -z ${K8S_NS} ]];then
+        K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
+    fi
     if [[ -z ${K8S_NS} ]];then
         K8S_NS=default${K8S_NS_SUFFIX}
     fi
@@ -469,7 +458,7 @@ function do_deploy_k8s()
         kubectl --kubeconfig ${K8S_KUBECONFIG} create  namespace ${K8S_NS}
     fi
     echo "detect Dockerfile"
-    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 2 -iname Dockerfile | sort"
+    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
     eval ${DETECT_DOCKERFILE}
     DOCKERFILE_COUNT=`eval ${DETECT_DOCKERFILE}|wc -l`
     if [[ ${DOCKERFILE_COUNT} -eq 0 ]];then

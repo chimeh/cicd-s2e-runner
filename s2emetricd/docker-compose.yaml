@@ -1,0 +1,29 @@
+version: '3'
+
+
+volumes:
+  metricd-root-cache: {}
+  metricd-elasticsearch-cache: {}
+  metricd-logstash-cache: {}
+  metricd-kibana-cache: {}
+
+services:
+  metricd:
+    restart: always
+    #    build: .
+    image: harbor.nx-engine.com/bu5/cicd-gitlab-runner-s2e:feature-centos-f12b9b57-1.0.0-g59686-cicd-gitlab-runner-s2e
+    #privileged: true
+    entrypoint: "/docker/docker-entrypoint-metricd.sh"
+    #
+    ports:
+      - "9200:9200"
+      - "5601:5601"
+    volumes:
+      - metricd-root-cache:/root
+      - metricd-elasticsearch-cache:/var/lib/elasticsearch
+      - metricd-logstash-cache:/var/lib/logstash
+      - metricd-kibana-cache:/var/lib/kibana
+      ##########################secrets
+      - ./secrets/elasticsearch/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml
+      - ./secrets/kibana/kibana.yml:/etc/kibana/kibana.yml
+      - ./secrets/logstash:/etc/logstash
