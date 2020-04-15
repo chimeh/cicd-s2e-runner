@@ -17,7 +17,18 @@ USAGE="
   
   $(basename $(realpath $0)) /path/to/srctop analysis
   $(basename $(realpath $0)) /path/to/srctop artifact
+  export DOCKER_REPO=harbor.nx-engine.com
+  export DOCKER_NS=bu5
   $(basename $(realpath $0)) /path/to/srctop docker
+  export K8S_KUBECONFIG=/root/.kube/config
+  export K8S_NS_SUFFIX=-dev
+  export K8S_NS=default
+  export K8S_DOMAIN_INTERNAL=nxengine.cn
+  export K8S_DOMAIN_PUBLIC=bu5-dev.tx
+  export INGRESS_INTERNAL_ENABLED=1
+  export INGRESS_PUBLIC_ENABLED=1
+  export INGRESS_CLASS_INTERNAL=nginx
+  export INGRESS_CLASS_PUBLIC=nginx
   $(basename $(realpath $0)) /path/to/srctop deploy
 
 "
@@ -405,7 +416,9 @@ function do_deploy_k8s()
     if [[ -z ${K8S_AUTOCD} ]];then
         K8S_AUTOCD=0
     fi
-    K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
+    if [[ -z ${K8S_NS} ]];then
+        K8S_NS=${DEFAULT_NS}${K8S_NS_SUFFIX}
+    fi
     if [[ -z ${K8S_NS} ]];then
         K8S_NS=default${K8S_NS_SUFFIX}
     fi

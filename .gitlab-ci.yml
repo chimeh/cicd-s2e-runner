@@ -23,6 +23,7 @@ code-check:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - gitlab-ci-check-post
   allow_failure: true
   except:
@@ -46,6 +47,7 @@ artifact-docker-build:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - artifact-docker-build-post
 
   except:
@@ -76,6 +78,7 @@ artifact-docker-build-master:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - artifact-docker-build-post
   only:
     - master
@@ -101,7 +104,7 @@ deploy-to-dev:
     - export S2E_NS
     - export K8S_KUBECONFIG=${DEV_K8S_KUBECONFIG}
     - export K8S_NS_SUFFIX=${DEV_K8S_NS_SUFFIX}
-    - export K8S_NS
+    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
     - export K8S_DOMAIN_INTERNAL=${DEV_K8S_DOMAIN_INTERNAL}
     - export K8S_DOMAIN_PUBLIC=${DEV_K8S_DOMAIN_PUBLIC}
     - export INGRESS_INTERNAL_ENABLED=${DEV_INGRESS_INTERNAL_ENABLED}
@@ -116,6 +119,7 @@ deploy-to-dev:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - deploy-dev-post
   except:
     - tags
@@ -136,7 +140,7 @@ deploy-to-test:
     - export S2E_NS
     - export K8S_KUBECONFIG=${TEST_K8S_KUBECONFIG}
     - export K8S_NS_SUFFIX=${TEST_K8S_NS_SUFFIX}
-    - export K8S_NS
+    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
     - export K8S_DOMAIN_INTERNAL=${TEST_K8S_DOMAIN_INTERNAL}
     - export K8S_DOMAIN_PUBLIC=${TEST_K8S_DOMAIN_PUBLIC}
     - export INGRESS_INTERNAL_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
@@ -151,6 +155,7 @@ deploy-to-test:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - deploy-test-post
   except:
     - tags
@@ -169,11 +174,11 @@ rollback-test-from-uat:
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
-    - export SRC_K8S_NS
+    - export SRC_K8S_NS==${S2E_ORG}${S2E_NS}${UAT_K8S_NS_SUFFIX}
     - export SRC_K8S_NS_SUFFIX=${UAT_K8S_NS_SUFFIX}
     - export K8S_KUBECONFIG=${TEST_K8S_KUBECONFIG}
     - export K8S_NS_SUFFIX=${TEST_K8S_NS_SUFFIX}
-    - export K8S_NS
+    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
     - export K8S_DOMAIN_INTERNAL=${TEST_K8S_DOMAIN_INTERNAL}
     - export K8S_DOMAIN_PUBLIC=${TEST_K8S_DOMAIN_PUBLIC}
     - export INGRESS_INTERNAL_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
@@ -188,6 +193,7 @@ rollback-test-from-uat:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - rollback-test-post
   except:
     - tags
@@ -209,7 +215,7 @@ deploy-to-uat:
     - export S2E_NS
     - export K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
     - export K8S_NS_SUFFIX=${UAT_K8S_NS_SUFFIX}
-    - export K8S_NS
+    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
     - export K8S_DOMAIN_INTERNAL=${UAT_K8S_DOMAIN_INTERNAL}
     - export K8S_DOMAIN_PUBLIC=${UAT_K8S_DOMAIN_PUBLIC}
     - export INGRESS_INTERNAL_ENABLED=${UAT_INGRESS_INTERNAL_ENABLED}
@@ -224,6 +230,7 @@ deploy-to-uat:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - deploy-uat-post
   only:
     - master
@@ -243,11 +250,11 @@ rollback-uat-from-prd:
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${PRD_K8S_KUBECONFIG}
-    - export SRC_K8S_NS
+    - export SRC_K8S_NS=${S2E_ORG}${S2E_NS}${PRD_K8S_NS_SUFFIX}
     - export SRC_K8S_NS_SUFFIX=${PRD_K8S_NS_SUFFIX}
     - export K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
     - export K8S_NS_SUFFIX=${UAT_K8S_NS_SUFFIX}
-    - export K8S_NS
+    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
     - export K8S_DOMAIN_INTERNAL=${UAT_K8S_DOMAIN_INTERNAL}
     - export K8S_DOMAIN_PUBLIC=${UAT_K8S_DOMAIN_PUBLIC}
     - export INGRESS_INTERNAL_ENABLED=${UAT_INGRESS_INTERNAL_ENABLED}
@@ -262,6 +269,7 @@ rollback-uat-from-prd:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - rollback-uat-post
   only:
     - master
@@ -281,11 +289,11 @@ mirror-to-prd:
     - export S2E_ORG
     - export S2E_NS
     - export SRC_K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
-    - export SRC_K8S_NS
+    - export SRC_K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
     - export SRC_K8S_NS_SUFFIX=${UAT_K8S_NS_SUFFIX}
     - export K8S_KUBECONFIG=${PRD_K8S_KUBECONFIG}
     - export K8S_NS_SUFFIX=${PRD_K8S_NS_SUFFIX}
-    - export K8S_NS
+    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
     - export K8S_DOMAIN_INTERNAL=${PRD_K8S_DOMAIN_INTERNAL}
     - export K8S_DOMAIN_PUBLIC=${PRD_K8S_DOMAIN_PUBLIC}
     - export INGRESS_INTERNAL_ENABLED=${PRD_INGRESS_INTERNAL_ENABLED}
@@ -300,6 +308,7 @@ mirror-to-prd:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - deploy-prd-post
   only:
     - master
@@ -312,6 +321,7 @@ gitlab-mr-create:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - gitlab-mr-create
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - gitlab-mr-create-post
   except:
     - master
@@ -353,10 +363,10 @@ artifact-release:
     - done
     - all-job-post
   after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
     - echo "done"
   except:
     - tags
-    - master
   artifacts:
     when: on_success
     name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
