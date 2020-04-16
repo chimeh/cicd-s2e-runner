@@ -368,7 +368,7 @@ artifact-release:
     when: on_success
     name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
     expire_in: 24h
-    expose_as: ${CI_PROJECT_NAME}${CI_JOB_STAGE}
+    expose_as: 'artifact-release job artifacts'
     paths:
       - s2erunner/
       - s2emetricd/
