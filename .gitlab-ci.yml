@@ -4,8 +4,7 @@ stages:
   - code-check
   - artifact-docker-build
   - deploy-env
-  - artifact-release
-  - src-release
+  - release
 #####
 code-check:
   stage: code-check
@@ -268,8 +267,8 @@ mirror-to-prd:
     - master
   dependencies: []
 #####
-gitlab-mr-create:
-  stage: src-release
+src-mr-create:
+  stage: release
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -284,7 +283,7 @@ gitlab-mr-create:
     - tags
   dependencies: []
 gitlab-auto-merge:
-  stage: src-release
+  stage: release
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - gitlab-auto-merge
@@ -299,7 +298,7 @@ gitlab-auto-merge:
 #####
 
 artifact-release:
-  stage: artifact-release
+  stage: release
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -326,3 +325,14 @@ artifact-release:
     paths:
       - s2erunner/
       - s2emetricd/
+src-tag-version:
+  stage: release
+  when: manual
+  script:
+    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - post-src-tag-version
+  after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
+    - post-all-job
+  only:
+    - master
