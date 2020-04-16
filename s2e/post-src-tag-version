@@ -5,9 +5,8 @@ set -e
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
-gitlab project-tag create --project-id ${CI_PROJECT_ID} --ref ${CI_COMMIT_SHA} --tag-name ${RELEASE_NAME}
 TIMESTAMP=$(date +%Y%m%d%H%m)
-echo "try get version on $(PWD)/VERSION file"
+echo "try get version on ${PWD}/VERSION file"
 if [[ -f VERSION ]];then
   VERSION=$(head -n 1 VERSION | perl -ne '$_ =~ /(\d+\.\d+\.\d+[_-\w]*)/;print $1')
 fi
@@ -15,7 +14,7 @@ if [[ "" == "${VERSION}" ]];then
   VERSION=1.0.0
 fi
 
-TAGNAME=$(echo release/${DATETIME}/${VERSION} | tr _ -)
+TAGNAME=$(echo release/${TIMESTAMP}/${VERSION} | tr _ -)
 
 gitlab project-tag create --project-id ${CI_PROJECT_ID} --ref ${CI_COMMIT_SHA} --tag-name ${TAGNAME} \
 --message "Auto Release TAGNAME by ${GITLAB_USER_LOGIN}"
@@ -27,7 +26,7 @@ gitlab project-tag create --project-id ${CI_PROJECT_ID} --ref ${CI_COMMIT_SHA} -
 #gitlab project-release create: error: the following arguments are required: --project-id, --name, --tag-name, --description
 
 gitlab project-release create --project-id ${CI_PROJECT_ID} --name ${TAGNAME} --tag-name ${TAGNAME} \
---ref ${CI_COMMIT_SHA} --message "Auto Release TAGNAME by ${GITLAB_USER_LOGIN}"
+--ref ${CI_COMMIT_SHA} --description "Auto Release ${TAGNAME} ${CI_COMMIT_SHA}  by ${GITLAB_USER_LOGIN}"
 
 touch s2ectl.env.ok.${CI_JOB_NAME}
 # 本shell 执行完，说明改job 执行完成；
