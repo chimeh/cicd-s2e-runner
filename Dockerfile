@@ -131,6 +131,9 @@ RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
      && cd redis-5.0.8 \
      && make install && rm -rf /root/ts
 
+# mail cli, font, 
+RUN yum install -y wqy-microhei-fonts mailx expect initscripts
+
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf                       /etc/nginx/default.d/
 COPY s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
@@ -152,9 +155,6 @@ COPY s2emetricd/secrets/logstash                             /etc/logstash
 COPY s2e    /s2e
 COPY docker /docker
 
-
-# mail cli
-RUN yum install -y wqy-microhei-fonts mailx expect initscripts
 
 RUN yum -y update \
  && yum clean all \
