@@ -389,6 +389,7 @@ function do_docker_build()
 
             mkdir -p ${CI_PROJECT_PATH}/.s2i
             echo ${DOCKER_URL} >> .s2i/img.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.html
+            echo ${DOCKER_URL} >> .s2i/s2i.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
         done
         
 

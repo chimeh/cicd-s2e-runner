@@ -302,16 +302,10 @@ artifact-release:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
-    - echo ${MOD_SUBDIR}
-    - for subdir in ${MOD_SUBDIR} .;do
-    - cd ${CI_PROJECT_DIR}/${subdir}
-    - echo "##${subdir}"
     - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
     - echo ${IMG}
     - cp -f $(which s2ectl) s2erunner/runner/tools
     - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" s2erunner/docker-compose.yaml s2emetricd/docker-compose.yaml
-    - done
     - post-artifact-release
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
