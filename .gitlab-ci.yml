@@ -11,7 +11,7 @@ code-check:
   stage: code-check
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -33,7 +33,7 @@ artifact-docker-build:
   stage: artifact-docker-build
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -62,7 +62,7 @@ artifact-docker-build-master:
   stage: artifact-docker-build
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -94,7 +94,7 @@ deploy-to-dev:
   stage: deploy-env
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -130,7 +130,7 @@ deploy-to-test:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -165,7 +165,7 @@ rollback-test-from-uat:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -203,7 +203,7 @@ deploy-to-uat:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -239,7 +239,7 @@ rollback-uat-from-prd:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -276,7 +276,7 @@ mirror-to-prd:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
@@ -343,7 +343,7 @@ artifact-release:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - TOPDIR_COMMIT_SHA=$(git log -n 1 --format="%H" .)
+    - TOPDIR_COMMIT_SHA=$(git rev-parse  HEAD)
     - for subdir in $(ls -d */) .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
