@@ -267,7 +267,7 @@ mirror-to-prd:
     - master
   dependencies: []
 #####
-gitlab-mr-create:
+src-mr-create:
   stage: release
   when: manual
   script:
@@ -297,7 +297,7 @@ gitlab-auto-merge:
   dependencies: []
 #####
 
-artifact-and-src-release:
+artifact-release:
   stage: release
   when: manual
   script:
