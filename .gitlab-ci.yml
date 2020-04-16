@@ -283,14 +283,14 @@ src-mr-create:
     - tags
   dependencies: []
 pages:
-  stage: release
+  stage: deploy-env
   when: on_success
   script:
     - mkdir -p .s2i/mr _public
-    - echo "MR报表 地址：${CI_PAGES_URL}" > .s2i/mr/index.html
-    - echo "环境   地址：$(rancher server ls)" >> .s2i/mr/index.html
+    - echo "MR报表 地址：${CI_PAGES_URL}" > .s2i/mr${CI_MERGE_REQUEST_ID}/index.html
+    - echo "环境   地址：$(rancher server ls)" >> .s2i/mr${CI_MERGE_REQUEST_ID}/index.html
     - echo "Docker 镜像："
-    - echo $(head -n 1 .s2i/s2i.*img.txt) >> .s2i/mr/index.html
+    - echo $(head -n 1 .s2i/s2i.*img.txt) >> .s2i/mr${CI_MERGE_REQUEST_ID}/index.html
     - /bin/cp -r .s2i _public
     - mv _public public
     - /bin/rm -rf _public
