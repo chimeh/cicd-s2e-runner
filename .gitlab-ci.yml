@@ -291,7 +291,7 @@ pages:
     - echo "Docker 镜像："
     - echo $(head -n 1 .s2i/s2i.*img.txt) >> .s2i/mr${CI_MERGE_REQUEST_ID}/index.html
     - mkdir -p .public
-    - cp -r .s2e .public
+    - cp -r .s2i .public
     - mv .public public
     - /bin/rm -rf public/.public
   artifacts:
