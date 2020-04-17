@@ -285,15 +285,13 @@ src-mr-create:
 pages:
   stage: deploy
   script:
-    - mkdir -p .s2i/mr _public
+    - mkdir -p .s2i/mr
     - echo "MR报表 地址：${CI_PAGES_URL}" > .s2i/mr${CI_MERGE_REQUEST_ID}/index.html
     - echo "环境   地址：$(rancher server ls)" >> .s2i/mr${CI_MERGE_REQUEST_ID}/index.html
     - echo "Docker 镜像："
     - echo $(head -n 1 .s2i/s2i.*img.txt) >> .s2i/mr${CI_MERGE_REQUEST_ID}/index.html
-    - mkdir -p .public
-    - cp -r .s2i .public
-    - mv .public public
-    - /bin/rm -rf public/.public
+    - mkdir -p public
+    - cp -r .s2i public
   artifacts:
     paths:
     - public
