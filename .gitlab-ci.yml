@@ -3,7 +3,7 @@
 stages:
   - code-check
   - artifact-docker-build
-  - deploy-env
+  - deploy
   - release
 #####
 code-check:
@@ -79,7 +79,7 @@ artifact-docker-build-master:
       - .s2i/
 #####
 deploy-to-dev:
-  stage: deploy-env
+  stage: deploy
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
@@ -109,7 +109,7 @@ deploy-to-dev:
     - master
   dependencies: []
 deploy-to-test:
-  stage: deploy-env
+  stage: deploy
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -139,7 +139,7 @@ deploy-to-test:
     - tags
   dependencies: []
 rollback-test-from-uat:
-  stage: deploy-env
+  stage: deploy
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -172,7 +172,7 @@ rollback-test-from-uat:
     - /^hotfix.*$/
   dependencies: []
 deploy-to-uat:
-  stage: deploy-env
+  stage: deploy
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -203,7 +203,7 @@ deploy-to-uat:
     - /^hotfix.*$/
   dependencies: []
 rollback-uat-from-prd:
-  stage: deploy-env
+  stage: deploy
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -236,7 +236,7 @@ rollback-uat-from-prd:
     - /^hotfix.*$/
   dependencies: []
 mirror-to-prd:
-  stage: deploy-env
+  stage: deploy
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -283,7 +283,7 @@ src-mr-create:
     - tags
   dependencies: []
 pages:
-  stage: deploy-env
+  stage: deploy
   when: on_success
   script:
     - mkdir -p .s2i/mr _public
