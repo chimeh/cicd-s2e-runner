@@ -297,9 +297,7 @@ pages:
   artifacts:
     paths:
     - public
-  artifacts:
-    paths:
-      - public
+    expire_in: 120h
   except:
     - master
     - /^hotfix.*$/
