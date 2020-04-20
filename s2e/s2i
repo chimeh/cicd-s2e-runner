@@ -442,6 +442,7 @@ function do_deploy_k8s()
         echo "custom kubeconfig"
         export KUBECONFIG=${K8S_KUBECONFIG}
     else
+        K8S_KUBECONFIG="${HOME}/.kube/config"
         echo "default kubeconfig"
     fi
     echo "K8S_AUTOCD=${K8S_AUTOCD}"
