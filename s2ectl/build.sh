@@ -3,4 +3,4 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 cd ${SCRIPT_DIR}
 
-make test cover bin 
+make quickdev

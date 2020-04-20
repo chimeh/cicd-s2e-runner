@@ -152,10 +152,11 @@ COPY s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.
 COPY s2emetricd/secrets/logstash                             /etc/logstash
 
 # cicd logic
+COPY s2ectl /s2ectl
 COPY s2e    /s2e
 COPY docker /docker
 
-
+RUN cd /s2ectl;bash build.sh
 RUN yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \
