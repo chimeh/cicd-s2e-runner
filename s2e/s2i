@@ -502,8 +502,19 @@ function do_deploy_k8s()
         fi
     done
 }
+function s2i_metric()
+{
+  set +e
+  which metric_util_lib
+  rv=$?
+  if [[ ${rv} -eq 0 ]];then
+    set -o allexport; source metric-util-lib;set +o allexport
+  fi
 
+  set -e
+}
 
+trap "s2i_metric" INT QUIT TERM EXIT
 
 # main logic
 echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
@@ -553,4 +564,3 @@ case ${ACTION_STAGE} in
         do_deploy_k8s
         ;;
 esac
-
