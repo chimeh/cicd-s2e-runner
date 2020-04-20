@@ -156,7 +156,9 @@ COPY s2ectl /s2ectl
 COPY s2e    /s2e
 COPY docker /docker
 
-RUN cd /s2ectl;bash build.sh
+RUN export PATH="/opt/go/bin/:${PATH}" \
+ && go env -w GOPROXY="https://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
+ && cd /s2ectl;bash build.sh;
 RUN yum -y update \
  && yum clean all \
  && rm -rf /var/cache/yum \
