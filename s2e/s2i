@@ -383,8 +383,10 @@ function do_docker_build()
             docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
             docker push ${DOCKER_URL}
             docker push ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
+            set +e
             docker rmi ${DOCKER_URL}
             docker rmi ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
+            set -e
             slot=$((${slot} + 1))
 
             mkdir -p ${CI_PROJECT_PATH}/.s2i
@@ -392,8 +394,9 @@ function do_docker_build()
             echo ${DOCKER_URL} >> .s2i/s2i.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
         done
         
-
-       docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
+        set +e
+        docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
+        set -e
         echo -e "\n\n"
     done
 }
