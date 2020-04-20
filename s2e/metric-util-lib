@@ -26,6 +26,9 @@ function gitlab-job-metric-savefile() {
     export CI_JOB_FAIL=1
   fi
   export CI_JOB_EXIT_RV
+  if [[ -z ${S2E_CALLED_TIME} ]];then
+    S2E_CALLED_TIME=$(stat -c%X /proc/"$$")
+  fi
   export S2E_CALLED_TIME
   export CI_JOB_TIMESTAMP_START_UNIX=${S2E_CALLED_TIME}
   export CI_JOB_TIMESTAMP_START=$(date --rfc-3339=second --date="@${CI_JOB_TIMESTAMP_START_UNIX}")

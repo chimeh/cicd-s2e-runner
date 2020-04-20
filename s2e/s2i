@@ -516,6 +516,10 @@ function s2i_metric()
 
 trap "s2i_metric" INT QUIT TERM EXIT
 
+if [[ -z ${S2E_CALLED_TIME} ]];then
+  S2E_CALLED_TIME=$(stat -c%X /proc/"$$")
+fi
+export S2E_CALLED_TIME
 # main logic
 echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
 ###################################################################  
