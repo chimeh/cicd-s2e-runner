@@ -227,10 +227,10 @@ function do_artifact_build_java()
         SONAR_OPT=""
     fi
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-        mvn clean ${SONAR_OPT} package deploy
+        mvn clean package deploy ${SONAR_OPT}
         exit 0
     else
-        mvn clean ${SONAR_OPT} package
+        mvn clean package ${SONAR_OPT}
     fi
     popd
 }

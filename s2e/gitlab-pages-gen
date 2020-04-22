@@ -30,7 +30,7 @@ cat >> ${CI_PROJECT_DIR}/.s2i/cicd-report.html <<EOF
 
 <h3>构建</h3>
 <p>流水线 ${CI_PIPELINE_URL}</p>
-<p>镜像 $(du -a ${CI_PROJECT_DIR}/.s2i |egrep img.txt)</p>
+<p>镜像 $(find .   -maxdepth 1 -iname img.txt |xargs cat)</p>
 
 <h3>测试</h3>
 <p>测试报告地址: 如果为空，请修改.gitlab-ci.yml,把测试报告放到 .s2i目录下</p>
