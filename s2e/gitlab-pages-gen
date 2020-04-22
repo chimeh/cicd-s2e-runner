@@ -1,0 +1,22 @@
+#!/bin/bash
+#email: jimin.huang@nx-engine.com
+#email: jimminh@163.com
+#args TPL_FILE, where your gitlab mr template file is
+set -e
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+export LANG=en_US.UTF-8
+set +e
+mkdir -p .s2i/mr
+mkdir -p public
+echo "SRC 地址：${CI_PROJECT_URL}" > .s2i/src.html
+echo "MR  地址：${CI_PROJECT_URL}/merge_requests" > .s2i/mr.html
+echo "环境   地址：$(rancher server ls)" > .s2i/k8s.html
+echo "sonar  地址： ${SONAR_ADDR: http://sonarqube.nx-code.com}" > .s2i/sonar.html
+echo "Docker 镜像： "
+cat .s2i/s2i.*img.txt > .s2i/docker.html
+cp -r .s2i public
+cd public
+tree -a  -C -L 3 -T "$(CI_PIPELINE_URL:s2i)" -H "." --charset=utf8,gbk -o index.html
+
+
