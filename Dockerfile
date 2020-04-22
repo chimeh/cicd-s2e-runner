@@ -132,7 +132,7 @@ RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
      && make install && rm -rf /root/ts
 
 # mail cli, font, 
-RUN yum install -y wqy-microhei-fonts mailx expect initscripts
+RUN yum install -y wqy-microhei-fonts mailx expect initscripts tree
 
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf                       /etc/nginx/default.d/
