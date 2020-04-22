@@ -10,14 +10,15 @@ set +e
 mkdir -p .s2i/mr
 mkdir -p public
 
-echo "SRC 地址：${CI_PROJECT_URL}" > .s2i/src.html
-echo "MR  地址：${CI_PROJECT_URL}/merge_requests" > .s2i/mr.html
-echo "环境   地址：$(rancher server ls)" > .s2i/k8s.html
-echo "sonar  地址： ${SONAR_ADDR: http://sonarqube.nx-code.com}" > .s2i/sonar.html
-echo "Docker 镜像： " > .s2i/docker.html
-cat .s2i/s2i.*img.txt >> .s2i/docker.html
-echo "Jira 需求地址： " > .s2i/jira.html
-source ${SCRIPT_DIR}/jira-util-lib >> .s2i/jira.html
+echo "SRC    地址：${CI_PROJECT_URL}"                                     > .s2i/src-report.html
+echo "源码分析 地址： ${SONAR_ADDR: http://sonarqube.nx-code.com}"         > .s2i/sonar-report.html
+echo "测试报告地址: 暂不提供，需要请修改.gitlab-ci.yml,把测试报告放到.s2i 下" >> .s2i/sonar-report.html
+echo "环境    地址：$(rancher server ls)"                                  > .s2i/k8s-report.html
+echo "MR     地址：${CI_PROJECT_URL}/merge_requests"                       > .s2i/mr-report.html
+echo "Docker 镜像： "                                                      > .s2i/docker-report.html
+cat .s2i/s2i.*img.txt                                                     >> .s2i/docker-report.html
+echo "Jira 需求地址： "                                                    > .s2i/jira-report.html
+source ${SCRIPT_DIR}/jira-util-lib                                        >> .s2i/jira-report.html
 cp -r .s2i public
 cd public
 tree -a  -C -L 3 -T "$(CI_PIPELINE_URL:s2i)" -H "." --charset=utf8,gbk -o index.html
