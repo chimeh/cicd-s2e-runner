@@ -12,7 +12,7 @@ mkdir -p public
 cat >> ${CI_PROJECT_DIR}/.s2i/cicd-report.html <<EOF
 <html>
 <body>
-<h2>${CI_PROJECT_TITLE} 流水线报告</h2>
+<h2>${CI_PROJECT_NAME} 流水线报告</h2>
 <p>${GITLAB_USER_LOGIN} 于$(date +"%Y/%m/%d %H:%M") 提交 ${CI_COMMIT_SHORT_SHA} 到 ${CI_PROJECT_TITLE} 分支 ${CI_COMMIT_BRANCH}
 提交日志 ${CI_COMMIT_MESSAGE}</p>
 <h3>流水线</h3>
@@ -24,7 +24,7 @@ cat >> ${CI_PROJECT_DIR}/.s2i/cicd-report.html <<EOF
 
 <h3>源码</h3>
 <p>SRC     地址：${CI_PROJECT_URL}</p>
-<p>源码分析报告地址： https://sonarqube.nx-code.com/projects?search=bu5&sort=name</p>
+<p>源码分析报告地址： https://sonarqube.nx-code.com/projects?search=${CI_PROJECT_NAME}&sort=name</p>
 <p>MR     地址： ${CI_PROJECT_URL}/merge_requests</p>
 
 <h3>构建</h3>
