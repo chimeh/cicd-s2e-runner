@@ -45,6 +45,6 @@ EOF
 
 cp -r .s2i public
 cd public
-tree -a  -C -L 3 -T "${CI_PIPELINE_URL:-.s2i}" -H "." --charset=utf8,gbk -o index.html
+tree -a  -C -L 4 -T "${CI_PIPELINE_URL:-.s2i}" -H "." --charset=utf8,gbk -o index.html
 
 
