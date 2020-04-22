@@ -23,9 +23,10 @@ cat >> ${CI_PROJECT_DIR}/.s2i/cicd-report.html <<EOF
 <p> $(${SCRIPT_DIR}/jira-util-lib) </p>
 
 <h3>源码</h3>
-<p>SRC     地址：${CI_PROJECT_URL}</p>
+<p>SRC       地址：${CI_PROJECT_URL}</p>
+<p>CodeReview地址： ${CI_SERVER_URL}/-/ide/project/${CI_PROJECT_PATH}</p>
 <p>源码分析报告地址： https://sonarqube.nx-code.com/projects?search=${CI_PROJECT_NAME}&sort=name</p>
-<p>MR     地址： ${CI_PROJECT_URL}/merge_requests</p>
+<p>MR       地址： ${CI_PROJECT_URL}/merge_requests</p>
 
 <h3>构建</h3>
 <p>流水线 ${CI_PIPELINE_URL}</p>
@@ -37,6 +38,7 @@ cat >> ${CI_PROJECT_DIR}/.s2i/cicd-report.html <<EOF
 <h3>环境、部署</h3>
 <p>K8S地址：$(rancher server ls)</p>
 <p>service地址、ingress地址： 请查看上级目录的service.yaml ingress.yaml</p>
+<p>各环境部署的源码版本：  ${CI_PROJECT_URL}/-/network/master </p>
 </body>
 </html>
 EOF
