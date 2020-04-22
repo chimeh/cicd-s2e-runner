@@ -118,10 +118,9 @@ RUN tar -xvf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /
  && pip3 install --index-url https://mirrors.cloud.tencent.com/pypi/simple  coscmd tccli
 
 #rancher cli
-ARG RANCHER_VER=v2.3.1
-ADD https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64-${RANCHER_VER}.tar.gz  /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
-RUN tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
- && rm /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
+RUN wget -q https://releases.rancher.com/cli2/v2.3.1/rancher-linux-amd64-v2.3.1.tar.gz -O /opt/rancher-linux-amd64-v2.3.1.tar.gz \
+ && tar -xvf /opt/rancher-linux-amd64-v2.3.1.tar.gz -C /opt \
+ && rm /opt/rancher-linux-amd64-v2.3.1.tar.gz
 
  # redis
  RUN mkdir -p /root/ts \

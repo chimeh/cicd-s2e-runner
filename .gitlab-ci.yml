@@ -108,6 +108,12 @@ deploy-to-dev:
     - tags
     - master
   dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
 deploy-to-test:
   stage: deploy
   when: manual
@@ -138,6 +144,12 @@ deploy-to-test:
   except:
     - tags
   dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
 rollback-test-from-uat:
   stage: deploy
   when: manual
@@ -171,6 +183,12 @@ rollback-test-from-uat:
     - master
     - /^hotfix.*$/
   dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
 deploy-to-uat:
   stage: deploy
   when: manual
@@ -202,6 +220,12 @@ deploy-to-uat:
     - master
     - /^hotfix.*$/
   dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
 rollback-uat-from-prd:
   stage: deploy
   when: manual
@@ -235,6 +259,12 @@ rollback-uat-from-prd:
     - master
     - /^hotfix.*$/
   dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
 mirror-to-prd:
   stage: deploy
   when: manual
@@ -266,6 +296,12 @@ mirror-to-prd:
   only:
     - master
   dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
 #####
 src-mr-create:
   stage: release
@@ -281,7 +317,12 @@ src-mr-create:
     - master
     - /^hotfix.*$/
     - tags
-  dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
 pages:
   stage: deploy
   script:
