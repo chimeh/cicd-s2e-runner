@@ -359,7 +359,7 @@ artifact-release:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
     - echo ${IMG}
-    - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" s2erunner/docker-compose.yaml s2emetricd/docker-compose.yaml
+    - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" deployments/s2erunner/docker-compose.yaml deployments/s2emetricd/docker-compose.yaml
     - post-artifact-release
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
@@ -371,8 +371,7 @@ artifact-release:
     name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
     expire_in: 24h
     paths:
-      - s2erunner/
-      - s2emetricd/
+      - deployments
 src-tag-version:
   stage: release
   when: manual

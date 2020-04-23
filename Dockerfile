@@ -15,7 +15,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
 #gitlab runner
 #RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
 # && yum install -y --nogpgcheck gitlab-runner
-COPY s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
+COPY deployments/s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
 RUN yum install -y --nogpgcheck gitlab-runner epel-release \
  && sed -e 's|^metalink=|#metalink=|g' \
          -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.ustc.edu.cn/epel/|g' \
@@ -98,7 +98,7 @@ RUN mkdir -p /root/ts \
 RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
 
 #metricd server
-COPY s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
+COPY deployments/s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
 RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
  && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
 # jira ... atlassian cli
@@ -136,20 +136,20 @@ RUN yum install -y wqy-microhei-fonts mailx expect initscripts tree
 
 # let fetch ci/cd template via http://localhost
 COPY nginx/default.conf                       /etc/nginx/default.d/
-COPY s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
-COPY s2erunner/runner/secrets/profile.d/env.sh /etc/profile.d/env.sh
-COPY s2erunner/runner/secrets/maven/settings.xml        /root/.m2/settings.xml
-COPY s2erunner/runner/secrets/docker/config.json        /root/.docker/config.json
-COPY s2erunner/runner/secrets/k8s/                      /root/.kube
-COPY s2erunner/runner/secrets/email/mail.rc             /etc/mail.rc
-COPY s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properties
-COPY s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
-COPY s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
+COPY deployments/s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
+COPY deployments/s2erunner/runner/secrets/profile.d/env.sh /etc/profile.d/env.sh
+COPY deployments/s2erunner/runner/secrets/maven/settings.xml        /root/.m2/settings.xml
+COPY deployments/s2erunner/runner/secrets/docker/config.json        /root/.docker/config.json
+COPY deployments/s2erunner/runner/secrets/k8s/                      /root/.kube
+COPY deployments/s2erunner/runner/secrets/email/mail.rc             /etc/mail.rc
+COPY deployments/s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properties
+COPY deployments/s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
+COPY deployments/s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
 
-COPY s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
-COPY s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
-COPY s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
-COPY s2emetricd/secrets/logstash                             /etc/logstash
+COPY deployments/s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
+COPY deployments/s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
+COPY deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
+COPY deployments/s2emetricd/secrets/logstash                             /etc/logstash
 
 # cicd logic
 COPY s2ectl /s2ectl
