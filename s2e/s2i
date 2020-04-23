@@ -71,7 +71,7 @@ fi
 echo "SRC_TOP=${SRC_TOP}"
 echo "CI_PROJECT_PATH=${CI_PROJECT_PATH}"
 echo "DEFAULT_NS=${DEFAULT_NS}"
-S2I_REPORT_DIR=$(git rev-parse --show-toplevel)/.s2i/${CI_PROJECT_NAME:-${basename ${SRC_TOP}}}/${CI_JOB_STAGE}
+S2I_REPORT_DIR=$(git rev-parse --show-toplevel)/.s2i/${CI_JOB_STAGE}
 mkdir -p ${S2I_REPORT_DIR}
 
 function do_src_get_srctype_by_topdir()
