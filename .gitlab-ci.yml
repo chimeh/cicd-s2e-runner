@@ -15,12 +15,12 @@ code-check:
     - for subdir in ${MOD_SUBDIR} .;do
     - cd ${CI_PROJECT_DIR}/${subdir}
     - echo "##${subdir}"
-    - s2i . gitlab-ci-check
+    - s2i . exec gitlab-ci-check
     - done
-    - s2i . post-gitlab-ci-check
+    - s2i . exec post-gitlab-ci-check
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   allow_failure: true
   except:
     - tags
@@ -38,10 +38,10 @@ artifact-docker-build:
     - s2i . artifact #${subdir}
     - s2i . docker #${subdir}
     - done
-    - s2i . post-artifact-docker-build
+    - s2i . exec post-artifact-docker-build
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
 
   except:
     - tags
@@ -64,10 +64,10 @@ artifact-docker-build-master:
     - s2i . docker #${subdir}
     - if [[ -f ${SRC_TOP}/build.sh ]];then bash ${SRC_TOP}/build.sh;fi
     - done
-    - s2i . post-artifact-docker-build-master
+    - s2i . exec post-artifact-docker-build-master
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   only:
     - master
     - hotfix/*
@@ -100,10 +100,10 @@ deploy-to-dev:
     - export INGRESS_CLASS_PUBLIC=${DEV_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
     - done
-    - s2i . post-deploy-dev
+    - s2i . exec post-deploy-dev
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   except:
     - tags
     - master
@@ -137,10 +137,10 @@ deploy-to-test:
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
     - done
-    - s2i . post-deploy-test
+    - s2i . exec post-deploy-test
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   except:
     - tags
   dependencies: []
@@ -172,12 +172,12 @@ rollback-test-from-uat:
     - export INGRESS_PUBLIC_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
-    - s2i . k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - s2i . exec k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
     - done
-    - s2i . post-rollback-test
+    - s2i . exec post-rollback-test
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   except:
     - tags
     - master
@@ -212,10 +212,10 @@ deploy-to-uat:
     - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
     - s2i . deploy
     - done
-    - s2i . post-deploy-uat
+    - s2i . exec post-deploy-uat
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   only:
     - master
     - /^hotfix.*$/
@@ -249,12 +249,12 @@ rollback-uat-from-prd:
     - export INGRESS_CLASS_INTERNAL=${UAT_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
     - echo "##${subdir}"
-    - s2i . k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - s2i . exec k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
     - done
-    - s2i . post-rollback-uat
+    - s2i . exec post-rollback-uat
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   only:
     - master
     - /^hotfix.*$/
@@ -289,10 +289,10 @@ mirror-to-prd:
     - export INGRESS_CLASS_PUBLIC=${PRD_INGRESS_CLASS_PUBLIC}
     - s2i k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
     - done
-    - s2i . post-deploy-prd
+    - s2i . exec post-deploy-prd
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   only:
     - master
   dependencies: []
@@ -308,11 +308,11 @@ src-mr-create:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . gitlab-mr-create
-    - s2i . post-gitlab-mr-create
+    - s2i . exec gitlab-mr-create
+    - s2i . exec post-gitlab-mr-create
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   except:
     - master
     - /^hotfix.*$/
@@ -328,7 +328,7 @@ pages:
   script:
     - mkdir -p .s2i
     - mkdir -p public
-    - s2i . gitlab-pages-gen
+    - s2i . exec gitlab-pages-gen
   artifacts:
     paths:
       - public
@@ -341,10 +341,10 @@ gitlab-auto-merge:
   stage: release
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . gitlab-auto-merge
-    - s2i . post-gitlab-auto-merge
+    - s2i . exec gitlab-auto-merge
+    - s2i . exec post-gitlab-auto-merge
   after_script:
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   only:
     - /^hotfix.*$/
   except:
@@ -360,10 +360,10 @@ artifact-release:
     - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
     - echo ${IMG}
     - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" deployments/s2erunner/docker-compose.yaml deployments/s2emetricd/docker-compose.yaml
-    - s2i . post-artifact-release
+    - s2i . exec post-artifact-release
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   except:
     - tags
   artifacts:
@@ -377,9 +377,9 @@ src-tag-version:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . post-src-tag-version
+    - s2i . exec post-src-tag-version
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . post-all-job
+    - s2i . exec post-all-job
   only:
     - master
