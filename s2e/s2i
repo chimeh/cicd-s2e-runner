@@ -74,7 +74,7 @@ fi
 echo "SRC_TOP=${SRC_TOP}"
 echo "CI_PROJECT_PATH=${CI_PROJECT_PATH}"
 echo "DEFAULT_NS=${DEFAULT_NS}"
-S2I_REPORT_DIR=$(git rev-parse --show-toplevel)/.s2i/${CI_JOB_STAGE}
+S2I_REPORT_DIR=$(git rev-parse --show-toplevel)/.s2i
 mkdir -p ${S2I_REPORT_DIR}
 
 cd ${SRC_TOP}
@@ -396,7 +396,7 @@ function do_docker_build()
             slot=$((${slot} + 1))
 
             #report
-            echo ${DOCKER_URL} > ${S2I_REPORT_DIR}/s2i.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
+            echo ${DOCKER_URL} > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.s2i.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
         done
         
         set +e
@@ -504,14 +504,14 @@ function do_deploy_k8s()
                     kubectl set image -n ${MY_K8S_NS} deployments ${SVCNAME} ${SVCNAME}=${DOCKER_URL}
                 else
                     bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
+                fi
                     #report
                     set +e
-                    kubectl get -n ${MY_K8S_NS}  service ${SVCNAME}  -o yaml > ${S2I_REPORT_DIR}/${SVCNAME}.service.yaml
-                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}  -o yaml > ${S2I_REPORT_DIR}/${SVCNAME}.ingress.yaml
-                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}-public  -o yaml > ${S2I_REPORT_DIR}/${SVCNAME}.ingress.public.yaml
-                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}-internal  -o yaml > ${S2I_REPORT_DIR}/${SVCNAME}.ingress.internal.yaml
+                    kubectl get -n ${MY_K8S_NS}  service ${SVCNAME}  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.service.yaml
+                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.ingress.yaml
+                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}-public  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.ingress.public.yaml
+                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}-internal  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.ingress.internal.yaml
                     set -e
-                fi
             done
             slot=$(( $slot + 1 ))
           done

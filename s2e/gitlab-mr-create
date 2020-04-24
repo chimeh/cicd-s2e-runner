@@ -33,7 +33,7 @@ RV=$?
 if [[  ! -f .s2i/request-note.txt ]];then
 echo "Update by @${GITLAB_USER_LOGIN} " > .s2i/request-note.txt
 echo "镜像地址: " >> .s2i/request-note.txt
-cat .s2i.*img.txt >> .s2i/request-note.txt
+cat *img.txt >> .s2i/request-note.txt
 fi
 
 
