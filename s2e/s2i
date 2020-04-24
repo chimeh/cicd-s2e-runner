@@ -12,27 +12,30 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 USAGE="
   usage:
-  s2i, a cicd tool, from src to artifact, to docker img, deploy into kubernetes
+  A cicd tool, from src to artifact, to docker img, deploy into kubernetes:
   $(basename $(realpath $0)) /path/to/srctop [ analysis|artifact|docker|deploy ]
-  
-  $(basename $(realpath $0)) /path/to/srctop analysis
-  $(basename $(realpath $0)) /path/to/srctop artifact
-  export DOCKER_REPO=harbor.nx-engine.com
-  export DOCKER_NS=bu5
-  $(basename $(realpath $0)) /path/to/srctop docker
-  export K8S_KUBECONFIG=/root/.kube/config
-  export K8S_NS_SUFFIX=-dev
-  export K8S_NS=default
-  export K8S_DOMAIN_INTERNAL=nxengine.cn
-  export K8S_DOMAIN_PUBLIC=bu5-dev.tx
-  export INGRESS_INTERNAL_ENABLED=1
-  export INGRESS_PUBLIC_ENABLED=1
-  export INGRESS_CLASS_INTERNAL=nginx
-  export INGRESS_CLASS_PUBLIC=nginx
-  $(basename $(realpath $0)) /path/to/srctop deploy
 
+    $(basename $(realpath $0)) /path/to/srctop analysis
+    $(basename $(realpath $0)) /path/to/srctop artifact
+    export DOCKER_REPO=harbor.nx-engine.com
+    export DOCKER_NS=bu5
+    $(basename $(realpath $0)) /path/to/srctop docker
+    export K8S_KUBECONFIG=/root/.kube/config
+    export K8S_NS_SUFFIX=-dev
+    export K8S_NS=default
+    export K8S_DOMAIN_INTERNAL=nxengine.cn
+    export K8S_DOMAIN_PUBLIC=bu5-dev.tx
+    export INGRESS_INTERNAL_ENABLED=1
+    export INGRESS_PUBLIC_ENABLED=1
+    export INGRESS_CLASS_INTERNAL=nginx
+    export INGRESS_CLASS_PUBLIC=nginx
+    $(basename $(realpath $0)) /path/to/srctop deploy
+  A exec wrapper:
+  $(basename $(realpath $0)) /path/to/rundir exec wrappercmd [...]
+
+    $(basename $(realpath $0)) /root ls #ls on /root
 "
-echo "${USAGE}"
+
 if [[ $# -lt 1 ]];then
     echo "${USAGE}"
     exit 1
@@ -58,12 +61,12 @@ CI_PROJECT_PATH=$(xdir=${CUR_DIR};cd ${CUR_DIR}; while /usr/bin/test ! -d .git ;
            break;                               \
         fi ;                                    \
         cd $xdir;                               \
-        done ;                                  \
-        pwd;)
+        pwd;                                    \
+        done)
 fi
 DEFAULT_NS="${S2E_ORG}${S2E_NS}"
 if [[ "" == ${DEFAULT_NS} ]];then
-    DEFAULT_NS="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')"
+    DEFAULT_NS="$(echo ${CI_PROJECT_PATH} | perl -ne 's@^\/@@;print' | awk -F"/" '{print $1$2}')"
 fi
 if [[ "" == ${DEFAULT_NS} ]];then
     DEFAULT_NS="default"
@@ -74,6 +77,7 @@ echo "DEFAULT_NS=${DEFAULT_NS}"
 S2I_REPORT_DIR=$(git rev-parse --show-toplevel)/.s2i/${CI_JOB_STAGE}
 mkdir -p ${S2I_REPORT_DIR}
 
+cd ${SRC_TOP}
 function do_src_get_srctype_by_topdir()
 {
     echo "$FUNCNAME"
@@ -209,13 +213,10 @@ function do_src_analysis()
 function do_artifact_build_nodejs()
 {
     echo "$FUNCNAME"
-    pushd ${SRC_TOP}
-    popd
 }
 function do_artifact_build_java()
 {
     echo "$FUNCNAME"
-    pushd ${SRC_TOP}
     if [[ ${ENABLE_SONAR} -ne 0 ]];then
         if [[ ${PWD_HAVE_DOT_GIT} -eq 1 ]];then
             SONAR_KEY="$(echo ${CI_PROJECT_PATH}| tr / .)"
@@ -232,7 +233,6 @@ function do_artifact_build_java()
     else
         mvn clean package ${SONAR_OPT}
     fi
-    popd
 }
 function do_artifact_build()
 {
@@ -521,7 +521,7 @@ function do_deploy_k8s()
 function s2i_metric()
 {
   set +e
-  which metric-util-lib
+  which metric-util-lib >/dev/null 2>&1
   rv=$?
   if [[ ${rv} -eq 0 ]];then
     set -o allexport; source metric-util-lib;set +o allexport
@@ -536,6 +536,7 @@ if [[ -z ${S2E_CALLED_TIME} ]];then
   S2E_CALLED_TIME=$(stat -c%X /proc/"$$")
 fi
 export S2E_CALLED_TIME
+export SRC_TOP
 # main logic
 echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
 ###################################################################  
@@ -543,11 +544,12 @@ echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
 
 # check config valid, not valid will regenerate
 set +e
-gitlab current-user get
+gitlab current-user get > /dev/null 2>&1
 RV=$?
 set -e
 
 if [[ ${RV} -ne 0 ]];then
+  if [[ -d /root ]];then
 # gitlab cli config file not exist
 cat > /root/.python-gitlab.cfg <<EOF
 [global]
@@ -562,6 +564,7 @@ api_version = 4
 EOF
 perl -ni -e "s#url.+#url = ${CI_SERVER_URL}#g;print" /root/.python-gitlab.cfg
 perl -ni -e "s#private_token.+#private_token = ${CI_PRIVATE_TOKEN}#g;print" /root/.python-gitlab.cfg
+  fi
 fi
 
 
@@ -582,5 +585,24 @@ case ${ACTION_STAGE} in
         do_artifact_build
         do_docker_build
         do_deploy_k8s
+        ;;
+    help*)
+        echo "${USAGE}"
+        ;;
+    exec)
+        shift 2
+        set +e
+        echo "try exec $@"
+        which $1 >/dev/null 2>&1
+        rv=$?
+        set -e
+        if [[ $rv -ne 0 ]];then
+          echo "Error, $1 cmd not exist in PATH"
+          exit 1
+        else
+          echo "OK, cmd $1 exist: $(which $1)"
+          echo CMD = $@
+          exec $@
+        fi
         ;;
 esac
