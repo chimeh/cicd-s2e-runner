@@ -11,18 +11,11 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
  && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
 
-# add {src,artifact build/container} toolchain
-#gitlab runner
-#RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
-# && yum install -y --nogpgcheck gitlab-runner
-COPY deployments/s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
-RUN yum install -y --nogpgcheck gitlab-runner epel-release \
+RUN yum install -y --nogpgcheck  epel-release \
  && sed -e 's|^metalink=|#metalink=|g' \
          -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.ustc.edu.cn/epel/|g' \
          -i.bak /etc/yum.repos.d/epel.repo \
- && yum install -y ansible \
- && yum install -y sudo \
- && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+ && yum install -y ansible
 
 VOLUME ["/etc/gitlab-runner", "/home/gitlab-runner"]
 ## native C/C++ toolchain
@@ -97,10 +90,6 @@ RUN mkdir -p /root/ts \
 # gitlab cli
 RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
 
-#metricd server
-COPY deployments/s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
-RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
- && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
 # jira ... atlassian cli
 # atlassian cli https://marketplace.atlassian.com/search?query=bob%20swift%20cli
 # https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/710705369/Docker+Image+for+CLI
@@ -156,10 +145,20 @@ COPY s2ectl /s2ectl
 COPY s2e    /s2e
 COPY docker /docker
 
+#metricd server
+COPY deployments/s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
+RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
+ && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
+#gitlab runner
+#RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
+# && yum install -y --nogpgcheck gitlab-runner
+COPY deployments/s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
 RUN export PATH="/opt/go/bin/:${PATH}" \
  && go env -w GOPROXY="https://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
  && cd /s2ectl;bash build.sh;
 RUN yum -y update \
+ && yum install --nogpgcheck -y sudo gitlab-runner\
+ && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
  && yum clean all \
  && rm -rf /var/cache/yum \
  && rm -rf /root/ts \
