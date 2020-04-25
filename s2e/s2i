@@ -396,7 +396,7 @@ function do_docker_build()
             slot=$((${slot} + 1))
 
             #report
-            echo ${DOCKER_URL} > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.s2i.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
+            echo ${DOCKER_URL} > ${S2I_REPORT_DIR}/s2i.${CI_JOB_STAGE}.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
         done
         
         set +e
