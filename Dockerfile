@@ -70,7 +70,7 @@ RUN wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd
     && yum install -y nginx \
     && sed -i 's@/usr/share/nginx/html;@/s2e;@' /etc/nginx/nginx.conf
 
-# andriod
+# android
 RUN mkdir -p /root/ts  \
     &&  wget  -P /root/ts  https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip \
     && cd /root/ts \
@@ -129,14 +129,10 @@ RUN yum install -y wqy-microhei-fonts mailx expect initscripts tree
 COPY deployments/s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
 RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
  && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
-#gitlab runner
+#gitlab runner, github runner
 #RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
-# && yum install -y --nogpgcheck gitlab-runner
 COPY deployments/s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
-RUN export PATH="/opt/go/bin/:${PATH}" \
- && go env -w GOPROXY="https://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
- && cd /s2ectl;bash build.sh;
-
+RUN yum install -y --nogpgcheck gitlab-runner
 RUN GH_RUNNER_VERSION=${GH_RUNNER_VERSION:-$(curl --silent "https://api.github.com/repos/actions/runner/releases/latest" | grep tag_name | sed -E 's/.*"v([^"]+)".*/\1/')} \
     && mkdir -p /home/github-runner \
      && cd /root/github-runner \
@@ -147,7 +143,7 @@ RUN GH_RUNNER_VERSION=${GH_RUNNER_VERSION:-$(curl --silent "https://api.github.c
      && chown -R root: /home/github-runner
 
 RUN yum -y update \
- && yum install --nogpgcheck -y sudo gitlab-runner\
+ && yum install --nogpgcheck -y sudo \
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
  && yum clean all \
  && rm -rf /var/cache/yum \
@@ -164,7 +160,6 @@ COPY deployments/s2erunner/runner/secrets/email/mail.rc             /etc/mail.rc
 COPY deployments/s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properties
 COPY deployments/s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
 COPY deployments/s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
-
 COPY deployments/s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
 COPY deployments/s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
 COPY deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
@@ -172,13 +167,16 @@ COPY deployments/s2emetricd/secrets/logstash                             /etc/lo
 COPY deployments/s2emetricd/secrets/nginx/default.conf                   /etc/nginx/default.d/
 
 # cicd logic script
-COPY s2ectl /s2ectl
 COPY s2e    /s2e
+COPY s2ectl /s2ectl
+RUN export PATH="/opt/go/bin/:${PATH}" \
+ && go env -w GOPROXY="https://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
+ && cd /s2ectl;bash build.sh;
 
 # runner entrypoint
 COPY docker /docker
 
-ENV PATH="/s2e/custom/tools:/s2e:/opt/andriod/tools/bin:/opt/${ACLI}:/opt/rancher-${RANCHER_VER}:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux-x64/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV PATH="/s2e/custom/tools:/s2e:/opt/android/tools/bin:/opt/${ACLI}:/opt/rancher-${RANCHER_VER}:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux-x64/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV LANG=en_US.UTF-8
 ENV RUNNER_S2I_VERSION=2
 RUN echo "PATH=${PATH}" >> /etc/profile.d/env.sh
