@@ -125,6 +125,35 @@ RUN yum install -y git-lfs cmake3 pigz sshpass mercurial
 # mail cli, font, 
 RUN yum install -y wqy-microhei-fonts mailx expect initscripts tree
 
+#metricd server
+COPY deployments/s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
+RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
+ && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
+#gitlab runner
+#RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
+# && yum install -y --nogpgcheck gitlab-runner
+COPY deployments/s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
+RUN export PATH="/opt/go/bin/:${PATH}" \
+ && go env -w GOPROXY="https://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
+ && cd /s2ectl;bash build.sh;
+
+RUN GH_RUNNER_VERSION=${GH_RUNNER_VERSION:-$(curl --silent "https://api.github.com/repos/actions/runner/releases/latest" | grep tag_name | sed -E 's/.*"v([^"]+)".*/\1/')} \
+    && mkdir -p /home/github-runner \
+     && cd /root/github-runner \
+     && curl -L -O https://github.com/actions/runner/releases/download/v${GH_RUNNER_VERSION}/actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+     && tar -zxf actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+     && rm -f actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+     && ./bin/installdependencies.sh \
+     && chown -R root: /home/github-runner
+
+RUN yum -y update \
+ && yum install --nogpgcheck -y sudo gitlab-runner\
+ && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+ && yum clean all \
+ && rm -rf /var/cache/yum \
+ && rm -rf /root/ts \
+ && chmod -R +x /docker/ /s2e/
+
 # let fetch ci/cd template via http://localhost
 COPY deployments/s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
 COPY deployments/s2erunner/runner/secrets/profile.d/env.sh /etc/profile.d/env.sh
@@ -140,32 +169,14 @@ COPY deployments/s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/fi
 COPY deployments/s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
 COPY deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
 COPY deployments/s2emetricd/secrets/logstash                             /etc/logstash
-COPY deployments/s2emetricd/secrets/nginx/default.conf                       /etc/nginx/default.d/
+COPY deployments/s2emetricd/secrets/nginx/default.conf                   /etc/nginx/default.d/
 
-# cicd logic
+# cicd logic script
 COPY s2ectl /s2ectl
 COPY s2e    /s2e
+
+# runner entrypoint
 COPY docker /docker
-
-#metricd server
-COPY deployments/s2erunner/metricbeat/secrets/filebeat/elastic.repo                 /etc/yum.repos.d/elastic.repo
-RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.2 \
- && perl -ni -e 's/sysctl/echo sysctl/g;print' /etc/init.d/elasticsearch
-#gitlab runner
-#RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
-# && yum install -y --nogpgcheck gitlab-runner
-COPY deployments/s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
-RUN export PATH="/opt/go/bin/:${PATH}" \
- && go env -w GOPROXY="https://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
- && cd /s2ectl;bash build.sh;
-RUN yum -y update \
- && yum install --nogpgcheck -y sudo gitlab-runner\
- && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
- && yum clean all \
- && rm -rf /var/cache/yum \
- && rm -rf /root/ts \
- && chmod -R +x /docker/ /s2e/
-
 
 ENV PATH="/s2e/custom/tools:/s2e:/opt/andriod/tools/bin:/opt/${ACLI}:/opt/rancher-${RANCHER_VER}:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux-x64/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV LANG=en_US.UTF-8
