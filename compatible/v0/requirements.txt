@@ -1,5 +1,5 @@
 adal==1.1.0
-ansible==2.6.0
+ansible==2.6.18
 Babel==0.9.6
 backoff==1.0.7
 backports.shutil-get-terminal-size==1.0.0
