@@ -1,0 +1,56 @@
+#!/bin/bash
+IDENT="\t"
+cat > /version.txt <<EOF
+linux:
+$(cat /etc/redhat-release | while read i;do printf "${IDENT}${i}\n";done)
+$(cat /proc/version | while read i;do printf "${IDENT}${i}\n";done)
+gitlab-runner:
+$(gitlab-runner --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+gitlab cli(python-gitlab cli):
+$(gitlab --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+git:
+$(git version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+jdk:
+$(java -version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+maven:
+$(mvn -version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+node:
+$(node --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+npm:
+$(npm --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+go:
+$(go version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+python:
+$(python --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+python3:
+$(python3 --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+perl:
+$(perl --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+gcc:
+$(gcc --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+make:
+$(make --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+gradle:
+$(gradle --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+docker:
+$(docker version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+docker-compose:
+$(docker-compose version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+kubectl:
+$(kubectl version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+helm:
+$(helm version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+helm3:
+$(helm3 version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+rancher:
+$(rancher --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+aliyun:
+$(aliyun version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+tccli:
+$(tccli version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+coscmd:
+$(coscmd --version 2>&1 | while read i;do printf "${IDENT}${i}\n";done)
+
+EOF
+
+cat /version.txt

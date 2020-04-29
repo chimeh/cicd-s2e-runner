@@ -117,9 +117,6 @@ func calcPathEnv(viper *viper.Viper) ([]string, []string) {
 	detaEnvMap["S2E_NS"] = projNs
 	now := time.Now() // current local time
 	sec := now.Unix() // number of seconds since January 1, 1970 UTC; eg, shell `date +%s`
-	//RFC 3339 format
-	const date = new Date();
-	const rfc3339date := now.toISOString();
 	newEnvMap["S2E_CALLED_TIME"] = strconv.FormatInt(sec, 10)
 	detaEnvMap["S2E_CALLED_TIME"] = strconv.FormatInt(sec, 10)
 	log.Printf("org group: %s project group: %s", projOrg, projNs)

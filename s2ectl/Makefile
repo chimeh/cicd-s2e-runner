@@ -5,32 +5,34 @@ WEBSITE_REPO=github.com/hashicorp/terraform-website
 
 default: test
 
+vendor:
+	go mod vendor
 # bin generates the releaseable binaries for Terraform
-bin: fmtcheck generate
+bin: vendor fmtcheck generate
 	@TF_RELEASE=1 bash -c "'$(CURDIR)/scripts/build.sh'"
 
 # dev creates binaries for testing Terraform locally. These are put
 # into ./bin/ as well as $GOPATH/bin
-dev: fmtcheck generate
+dev: vendor fmtcheck generate
 	go install ./...
 
-quickdev: fmtcheck generate
+quickdev: vendor fmtcheck generate
 	go install ./...
 
 # Shorthand for building and installing just one plugin for local testing.
 # Run as (for example): make plugin-dev PLUGIN=provider-aws
-plugin-dev: generate
+plugin-dev: vendor generate
 	go install github.com/hashicorp/terraform/builtin/bins/$(PLUGIN)
 	mv $(GOPATH)/bin/$(PLUGIN) $(GOPATH)/bin/terraform-$(PLUGIN)
 
 # test runs the unit tests
 # we run this one package at a time here because running the entire suite in
 # one command creates memory usage issues when running in Travis-CI.
-test: fmtcheck generate
+test: vendor fmtcheck generate
 	go list -mod=vendor $(TEST) | xargs -t -n4 go test $(TESTARGS) -mod=vendor -timeout=2m -parallel=4
 
 # testacc runs acceptance tests
-testacc: fmtcheck generate
+testacc: vendor fmtcheck generate
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
 		echo "  make testacc TEST=./builtin/providers/test"; \
@@ -42,11 +44,11 @@ testacc: fmtcheck generate
 # and a generated terraform-bundle binary.
 # The TF_ACC here allows network access, but does not require any special
 # credentials.
-e2etest: generate
+e2etest: vendor generate
 	TF_ACC=1 go test -mod=vendor -v ./command/e2etest
 	TF_ACC=1 go test -mod=vendor -v ./tools/terraform-bundle/e2etest
 
-test-compile: fmtcheck generate
+test-compile: vendor fmtcheck generate
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
 		echo "  make test-compile TEST=./builtin/providers/test"; \
@@ -55,10 +57,10 @@ test-compile: fmtcheck generate
 	go test -mod=vendor -c $(TEST) $(TESTARGS)
 
 # testrace runs the race checker
-testrace: fmtcheck generate
+testrace: vendor fmtcheck generate
 	TF_ACC= go test -mod=vendor -race $(TEST) $(TESTARGS)
 
-cover:
+cover: vendor
 	go test $(TEST) -coverprofile=coverage.out
 	go tool cover -html=coverage.out
 	rm coverage.out
@@ -86,13 +88,15 @@ protobuf:
 	bash internal/tfplugin5/generate.sh
 	bash plans/internal/planproto/generate.sh
 
-fmt:
+fmt: vendor
 	gofmt -w $(GOFMT_FILES)
 
-fmtcheck:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+fmtcheck: vendor
+	echo $(GOFMT_FILES)
+	for f in $(GOFMT_FILES);do echo $$f;gofmt -l $$f;done
+	for f in $(GOFMT_FILES);do echo $$f;go vet $$f;done
 
-website:
+website: vendor
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
 	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
@@ -113,7 +117,7 @@ endif
 		--workdir /terraform-website \
 		hashicorp/middleman-hashicorp:${VERSION}
 
-website-test:
+website-test: vendor
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
 	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)

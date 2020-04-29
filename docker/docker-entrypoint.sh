@@ -23,5 +23,10 @@ else
     echo "/etc/profile.d/env.sh not found!"
 fi
 
-nginx
+#nginx
+if [ -f /home/github-runner/bin/runsvc.sh ]; then
+  set +e;
+   . /home/github-runner/bin/runsvc.sh start
+  set -e
+fi
 exec gitlab-runner run  --user=root --working-directory=/home/gitlab-runner

@@ -1,0 +1,50 @@
+#!/bin/bash
+#email: jimin.huang@nx-engine.com
+#email: jimminh@163.com
+#args TPL_FILE, where your gitlab mr template file is
+set -e
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+export LANG=en_US.UTF-8
+set +e
+mkdir -p .s2i/
+mkdir -p public
+cat >> ${CI_PROJECT_DIR}/.s2i/cicd-report.html <<EOF
+<html>
+<body>
+<h2>${CI_PROJECT_NAME} 流水线报告</h2>
+<p>${GITLAB_USER_LOGIN} 于$(date +"%Y/%m/%d %H:%M") 提交 ${CI_COMMIT_SHORT_SHA} 到 ${CI_PROJECT_TITLE} 分支 ${CI_COMMIT_BRANCH}
+提交日志 ${CI_COMMIT_MESSAGE}</p>
+<h3>流水线</h3>
+<p> ${CI_PIPELINE_URL} </p>
+
+<h3>需求</h3>
+<p>Jira 需求地址： 如为空，请在commit log里或者分支名里包含Jira IssueID</p>
+<p> $(${SCRIPT_DIR}/jira-util-lib) </p>
+
+<h3>源码</h3>
+<p>SRC       地址：${CI_PROJECT_URL}</p>
+<p>CodeReview地址： ${CI_SERVER_URL}/-/ide/project/${CI_PROJECT_PATH}</p>
+<p>源码分析报告地址： https://sonarqube.nx-code.com/projects?search=${CI_PROJECT_NAME}&sort=name</p>
+<p>MR       地址： ${CI_PROJECT_URL}/merge_requests</p>
+
+<h3>构建</h3>
+<p>流水线 ${CI_PIPELINE_URL}</p>
+<p>镜像 $(find .   -maxdepth 1 -iname img.txt |xargs cat)</p>
+
+<h3>测试</h3>
+<p>测试报告地址: 如果为空，请修改.gitlab-ci.yml,把测试报告放到 .s2i目录下</p>
+
+<h3>环境、部署</h3>
+<p>K8S地址：$(rancher server ls)</p>
+<p>service地址、ingress地址： 请查看上级目录的service.yaml ingress.yaml</p>
+<p>各环境部署的源码版本：  ${CI_PROJECT_URL}/-/network/master </p>
+</body>
+</html>
+EOF
+
+cp -r .s2i public
+cd public
+tree -a  -C -L 4 -T "${CI_PIPELINE_URL:-.s2i}" -H "." --charset=utf8,gbk -o index.html
+
+

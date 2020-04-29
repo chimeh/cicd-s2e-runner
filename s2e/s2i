@@ -12,30 +12,33 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 USAGE="
   usage:
-  s2i, a cicd tool, from src to artifact, to docker img, deploy into kubernetes
+  A cicd tool, from src to artifact, to docker img, deploy into kubernetes:
   $(basename $(realpath $0)) /path/to/srctop [ analysis|artifact|docker|deploy ]
-  
-  $(basename $(realpath $0)) /path/to/srctop analysis
-  $(basename $(realpath $0)) /path/to/srctop artifact
-  export DOCKER_REPO=harbor.nx-engine.com
-  export DOCKER_NS=bu5
-  $(basename $(realpath $0)) /path/to/srctop docker
-  export K8S_KUBECONFIG=/root/.kube/config
-  export K8S_NS_SUFFIX=-dev
-  export K8S_NS=default
-  export K8S_DOMAIN_INTERNAL=nxengine.cn
-  export K8S_DOMAIN_PUBLIC=bu5-dev.tx
-  export INGRESS_INTERNAL_ENABLED=1
-  export INGRESS_PUBLIC_ENABLED=1
-  export INGRESS_CLASS_INTERNAL=nginx
-  export INGRESS_CLASS_PUBLIC=nginx
-  $(basename $(realpath $0)) /path/to/srctop deploy
 
+    $(basename $(realpath $0)) /path/to/srctop analysis
+    $(basename $(realpath $0)) /path/to/srctop artifact
+    export DOCKER_REPO=harbor.nx-engine.com
+    export DOCKER_NS=bu5
+    $(basename $(realpath $0)) /path/to/srctop docker
+    export K8S_KUBECONFIG=/root/.kube/config
+    export K8S_NS_SUFFIX=-dev
+    export K8S_NS=default
+    export K8S_DOMAIN_INTERNAL=nxengine.cn
+    export K8S_DOMAIN_PUBLIC=bu5-dev.tx
+    export INGRESS_INTERNAL_ENABLED=1
+    export INGRESS_PUBLIC_ENABLED=1
+    export INGRESS_CLASS_INTERNAL=nginx
+    export INGRESS_CLASS_PUBLIC=nginx
+    $(basename $(realpath $0)) /path/to/srctop deploy
+  A exec wrapper:
+  $(basename $(realpath $0)) /path/to/rundir exec wrappercmd [...]
+
+    $(basename $(realpath $0)) /root ls #ls on /root
 "
-echo "${USAGE}"
-mkdir -p .s2i/
+
 if [[ $# -lt 1 ]];then
     echo "${USAGE}"
+    exit 1
 else
     SRC_TOP=$(realpath $1)
 fi
@@ -44,6 +47,9 @@ if [[ $# -gt 1 ]];then
     ACTION_STAGE=$2
 else
     ACTION_STAGE="ACTION_ALL"
+fi
+if [[ -z ${CI_PROJECT_PATH} ]];then
+  CI_PROJECT_PATH="$(git rev-parse --show-toplevel)/"
 fi
 if [[ -z ${CI_PROJECT_PATH} ]];then
 CUR_DIR=$(pwd)
@@ -55,19 +61,23 @@ CI_PROJECT_PATH=$(xdir=${CUR_DIR};cd ${CUR_DIR}; while /usr/bin/test ! -d .git ;
            break;                               \
         fi ;                                    \
         cd $xdir;                               \
-        done ;                                  \
-        pwd;)
+        pwd;                                    \
+        done)
 fi
 DEFAULT_NS="${S2E_ORG}${S2E_NS}"
 if [[ "" == ${DEFAULT_NS} ]];then
-    DEFAULT_NS="$(echo ${CI_PROJECT_PATH} | awk -F"/" '{print $1$2}')"
+    DEFAULT_NS="$(echo ${CI_PROJECT_PATH} | perl -ne 's@^\/@@;print' | awk -F"/" '{print $1$2}')"
 fi
 if [[ "" == ${DEFAULT_NS} ]];then
     DEFAULT_NS="default"
 fi
+echo "SRC_TOP=${SRC_TOP}"
 echo "CI_PROJECT_PATH=${CI_PROJECT_PATH}"
 echo "DEFAULT_NS=${DEFAULT_NS}"
+S2I_REPORT_DIR=$(git rev-parse --show-toplevel)/.s2i
+mkdir -p ${S2I_REPORT_DIR}
 
+cd ${SRC_TOP}
 function do_src_get_srctype_by_topdir()
 {
     echo "$FUNCNAME"
@@ -203,13 +213,10 @@ function do_src_analysis()
 function do_artifact_build_nodejs()
 {
     echo "$FUNCNAME"
-    pushd ${SRC_TOP}
-    popd
 }
 function do_artifact_build_java()
 {
     echo "$FUNCNAME"
-    pushd ${SRC_TOP}
     if [[ ${ENABLE_SONAR} -ne 0 ]];then
         if [[ ${PWD_HAVE_DOT_GIT} -eq 1 ]];then
             SONAR_KEY="$(echo ${CI_PROJECT_PATH}| tr / .)"
@@ -221,12 +228,11 @@ function do_artifact_build_java()
         SONAR_OPT=""
     fi
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-        mvn clean ${SONAR_OPT} package deploy
+        mvn clean package deploy ${SONAR_OPT}
         exit 0
     else
-        mvn clean ${SONAR_OPT} package
+        mvn clean package ${SONAR_OPT}
     fi
-    popd
 }
 function do_artifact_build()
 {
@@ -255,7 +261,7 @@ function do_artifact_build()
             echo "not support yet"
             ;;
         *)
-            echo "not support source, or detect fail"
+            echo "not support source, or detect fail, commit your build script to ${CI_PROJECT_PATH}/build.sh"
             ;;
     esac
 }
@@ -383,17 +389,19 @@ function do_docker_build()
             docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
             docker push ${DOCKER_URL}
             docker push ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
+            set +e
             docker rmi ${DOCKER_URL}
             docker rmi ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
+            set -e
             slot=$((${slot} + 1))
 
-            mkdir -p ${CI_PROJECT_PATH}/.s2i
-            echo ${DOCKER_URL} >> .s2i/img.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.html
-            echo ${DOCKER_URL} >> .s2i/s2i.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
+            #report
+            echo ${DOCKER_URL} > ${S2I_REPORT_DIR}/s2i.${CI_JOB_STAGE}.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
         done
         
-
-       docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
+        set +e
+        docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
+        set -e
         echo -e "\n\n"
     done
 }
@@ -439,6 +447,7 @@ function do_deploy_k8s()
         echo "custom kubeconfig"
         export KUBECONFIG=${K8S_KUBECONFIG}
     else
+        K8S_KUBECONFIG="${HOME}/.kube/config"
         echo "default kubeconfig"
     fi
     echo "K8S_AUTOCD=${K8S_AUTOCD}"
@@ -496,15 +505,38 @@ function do_deploy_k8s()
                 else
                     bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
                 fi
+                    #report
+                    set +e
+                    kubectl get -n ${MY_K8S_NS}  service ${SVCNAME}  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.service.yaml
+                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.ingress.yaml
+                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}-public  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.ingress.public.yaml
+                    kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}-internal  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.ingress.internal.yaml
+                    set -e
             done
             slot=$(( $slot + 1 ))
           done
         fi
     done
 }
+function s2i_metric()
+{
+  set +e
+  which metric-util-lib >/dev/null 2>&1
+  rv=$?
+  if [[ ${rv} -eq 0 ]];then
+    set -o allexport; source metric-util-lib;set +o allexport
+  fi
 
+  set -e
+}
 
+trap "s2i_metric" INT QUIT TERM EXIT
 
+if [[ -z ${S2E_CALLED_TIME} ]];then
+  S2E_CALLED_TIME=$(stat -c%X /proc/"$$")
+fi
+export S2E_CALLED_TIME
+export SRC_TOP
 # main logic
 echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
 ###################################################################  
@@ -512,11 +544,12 @@ echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
 
 # check config valid, not valid will regenerate
 set +e
-gitlab current-user get
+gitlab current-user get > /dev/null 2>&1
 RV=$?
 set -e
 
 if [[ ${RV} -ne 0 ]];then
+  if [[ -d /root ]];then
 # gitlab cli config file not exist
 cat > /root/.python-gitlab.cfg <<EOF
 [global]
@@ -531,6 +564,7 @@ api_version = 4
 EOF
 perl -ni -e "s#url.+#url = ${CI_SERVER_URL}#g;print" /root/.python-gitlab.cfg
 perl -ni -e "s#private_token.+#private_token = ${CI_PRIVATE_TOKEN}#g;print" /root/.python-gitlab.cfg
+  fi
 fi
 
 
@@ -552,5 +586,23 @@ case ${ACTION_STAGE} in
         do_docker_build
         do_deploy_k8s
         ;;
+    help*)
+        echo "${USAGE}"
+        ;;
+    exec)
+        shift 2
+        set +e
+        echo "try exec $@"
+        which $1 >/dev/null 2>&1
+        rv=$?
+        set -e
+        if [[ $rv -ne 0 ]];then
+          echo "Error, $1 cmd not exist in PATH"
+          exit 1
+        else
+          echo "OK, cmd $1 exist: $(which $1)"
+          echo CMD = $@
+          exec $@
+        fi
+        ;;
 esac
-
