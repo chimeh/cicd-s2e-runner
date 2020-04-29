@@ -120,11 +120,12 @@ RUN wget -q https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64
      && cd redis-5.0.8 \
      && make install && rm -rf /root/ts
 
+#
+RUN yum install -y git-lfs cmake3 pigz sshpass mercurial
 # mail cli, font, 
 RUN yum install -y wqy-microhei-fonts mailx expect initscripts tree
 
 # let fetch ci/cd template via http://localhost
-COPY nginx/default.conf                       /etc/nginx/default.d/
 COPY deployments/s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
 COPY deployments/s2erunner/runner/secrets/profile.d/env.sh /etc/profile.d/env.sh
 COPY deployments/s2erunner/runner/secrets/maven/settings.xml        /root/.m2/settings.xml
@@ -139,6 +140,7 @@ COPY deployments/s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/fi
 COPY deployments/s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
 COPY deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
 COPY deployments/s2emetricd/secrets/logstash                             /etc/logstash
+COPY deployments/s2emetricd/secrets/nginx/default.conf                       /etc/nginx/default.d/
 
 # cicd logic
 COPY s2ectl /s2ectl
