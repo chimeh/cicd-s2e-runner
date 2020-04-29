@@ -27,7 +27,7 @@ RUN yum install -y java-1.8.0-openjdk-devel
 # maven
 RUN mkdir -p /root/ts \
  && wget  -P /root/ts https://mirror.azure.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
- && tar -xvf /root/ts/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt \
+ && tar -xf /root/ts/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt \
  && mkdir -p /root/.m2 \
  && cp /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml /root/.m2/settings.xml \
  && ln -sf /root/.m2/settings.xml /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml \
@@ -35,7 +35,7 @@ RUN mkdir -p /root/ts \
 # npm https://github.com/nodesource/distributions
 RUN mkdir -p /root/ts \
  && wget  -P /root/ts https://npm.taobao.org/mirrors/node/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz\
- && tar -xvf /root/ts/node-${NODE_VERSION}-linux-x64.tar.gz -C /opt \
+ && tar -xf /root/ts/node-${NODE_VERSION}-linux-x64.tar.gz -C /opt \
  && rm -rf /root/ts
 
 # python3
@@ -103,13 +103,13 @@ RUN mkdir -p /root/ts \
 
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
-RUN tar -xvf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /opt/aliyun-cli-linux-latest-amd64.tgz \
+RUN tar -xf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /opt/aliyun-cli-linux-latest-amd64.tgz \
  && pip3 install --index-url https://mirrors.cloud.tencent.com/pypi/simple  coscmd tccli
 
 #rancher cli
 ARG RANCHER_VER=v2.3.1
 RUN wget -q https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64-${RANCHER_VER}.tar.gz -O /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz \
- && tar -xvf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
+ && tar -xf /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz -C /opt \
  && rm /opt/rancher-linux-amd64-${RANCHER_VER}.tar.gz
 
  # redis
