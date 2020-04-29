@@ -142,13 +142,6 @@ RUN GH_RUNNER_VERSION=${GH_RUNNER_VERSION:-$(curl --silent "https://api.github.c
      && ./bin/installdependencies.sh \
      && chown -R root: /home/github-runner
 
-RUN yum -y update \
- && yum install --nogpgcheck -y sudo \
- && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
- && yum clean all \
- && rm -rf /var/cache/yum \
- && rm -rf /root/ts \
- && chmod -R +x /docker/ /s2e/
 
 # let fetch ci/cd template via http://localhost
 COPY deployments/s2erunner/runner/secrets/gitlab-runner/config.toml /etc/gitlab-runner/config.toml
@@ -175,6 +168,14 @@ RUN export PATH="/opt/go/bin/:${PATH}" \
 
 # runner entrypoint
 COPY docker /docker
+
+RUN yum -y update \
+ && yum install --nogpgcheck -y sudo \
+ && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+ && yum clean all \
+ && rm -rf /var/cache/yum \
+ && rm -rf /root/ts \
+ && chmod -R +x /docker/ /s2e/
 
 ENV PATH="/s2e/custom/tools:/s2e:/opt/android/tools/bin:/opt/${ACLI}:/opt/rancher-${RANCHER_VER}:/opt/apache-maven-${MAVEN_VERSION}/bin:/opt/node-${NODE_VERSION}-linux-x64/bin:/opt/gradle/gradle-6.2.2/bin:/opt/go/bin:/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV LANG=en_US.UTF-8
