@@ -133,14 +133,14 @@ RUN yum install -y elasticsearch-7.6.2 kibana-7.6.2 logstash-7.6.2 filebeat-7.6.
 #RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash \
 COPY deployments/s2erunner/runner/secrets/gitlab-runner/gitlab-runner.repo /etc/yum.repos.d/gitlab-runner.repo
 RUN yum install -y --nogpgcheck gitlab-runner
-RUN GH_RUNNER_VERSION=${GH_RUNNER_VERSION:-$(curl --silent "https://api.github.com/repos/actions/runner/releases/latest" | grep tag_name | sed -E 's/.*"v([^"]+)".*/\1/')} \
-    && mkdir -p /home/github-runner \
-     && cd /home/github-runner \
-     && curl -L -O https://github.com/actions/runner/releases/download/v${GH_RUNNER_VERSION}/actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
-     && tar -zxf actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
-     && rm -f actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
-     && ./bin/installdependencies.sh \
-     && chown -R root: /home/github-runner
+#RUN GH_RUNNER_VERSION=${GH_RUNNER_VERSION:-$(curl --silent "https://api.github.com/repos/actions/runner/releases/latest" | grep tag_name | sed -E 's/.*"v([^"]+)".*/\1/')} \
+#    && mkdir -p /home/github-runner \
+#     && cd /home/github-runner \
+#     && curl -L -O https://github.com/actions/runner/releases/download/v${GH_RUNNER_VERSION}/actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+#     && tar -zxf actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+#     && rm -f actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+#     && ./bin/installdependencies.sh \
+#     && chown -R root: /home/github-runner
 
 
 # let fetch ci/cd template via http://localhost
