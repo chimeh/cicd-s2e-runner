@@ -2,6 +2,7 @@
 
 stages:
   - artifact-docker-build
+  - deploy-dev-env
   - deploy-test-env
   - manual-test
   - deploy-prod-env
@@ -80,7 +81,7 @@ artifact-docker-build-master:
       - .s2i/
 #####
 deploy-to-dev:
-  stage: deploy-test-env
+  stage: deploy-dev-env
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
@@ -345,7 +346,7 @@ mirror-to-prd:
     paths:
       - .s2i/
 #####
-codereiew-and-deploy-to-test:
+create-test-branch:
   stage: src-auto-version
   when: manual
   script:
@@ -368,7 +369,7 @@ codereiew-and-deploy-to-test:
     paths:
       - .s2i/
 #####
-codereiew-and-deploy-to-uat:
+create-uat-branch:
   stage: src-auto-version
   when: manual
   script:
