@@ -400,10 +400,8 @@ pages:
     paths:
       - public
     expire_in: 120h
-  except:
+  only:
     - master
-    - /^hotfix.*$/
-    - tags
 gitlab-auto-merge:
   stage: src-auto-version
   script:
