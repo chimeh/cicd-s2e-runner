@@ -179,18 +179,18 @@ effect-blue-a-while:
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - s2i . blue-active-minutes
     - done
-    after_script:
-      - set -o allexport; source s2ectl.env;set +o allexport
-      - s2i . exec post-all-job
-    only:
-      - deploy/test
-    dependencies: []
-    artifacts:
-      when: on_success
-      name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
-      expire_in: 24h
-      paths:
-        - .s2i/
+  after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
+    - s2i . exec post-all-job
+  only:
+    - deploy/test
+  dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
 
 rollback-test-from-uat:
   stage: deploy-test-env
