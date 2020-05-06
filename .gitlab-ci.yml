@@ -361,9 +361,6 @@ codereiew-and-deploy-to-test:
     - deploy/uat
     - /^hotfix.*$/
     - tags
-  rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^feature/ && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
-      when: manual
   artifacts:
     when: on_success
     name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
