@@ -505,7 +505,7 @@ function do_deploy_k8s()
                     kubectl set image -n ${MY_K8S_NS} deployments ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} ${SVCNAME}=${DOCKER_URL}
                 else
                     bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
-                    if [[ "${DEPLOYMENT_PODNAME_SUFFIX}" != "" ]]then
+                    if [[ "${DEPLOYMENT_PODNAME_SUFFIX}" != "" ]];then
                       kubectl -n ${MY_K8S_NS} scale --replicas=0 deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
                     fi
                 fi
