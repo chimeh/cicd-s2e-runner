@@ -4,8 +4,8 @@ stages:
   - artifact-docker-build
   - deploy-test-env
   - manual-test
-  - src-auto-version
   - deploy-prod-env
+  - src-auto-version
 #####
 code-check:
   stage: artifact-docker-build
@@ -136,7 +136,7 @@ deploy-to-test:
     - export INGRESS_PUBLIC_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
-- if [[ ${CI_COMMIT_BRANCH} != "master" ]];then
+    - if [[ ${CI_COMMIT_BRANCH} != "master" ]];then
     - s2i . blue-deploy
     - else
     - s2i . blue-deploy
@@ -423,7 +423,7 @@ gitlab-auto-merge:
 #####
 
 artifact-gen:
-  stage: deploy-prod-env
+  stage: src-auto-version
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
