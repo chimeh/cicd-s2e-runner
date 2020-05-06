@@ -1,13 +1,14 @@
 #s2i:2
 
 stages:
-  - code-check
   - artifact-docker-build
-  - deploy
-  - release
+  - deploy-test-env
+  - manual-test
+  - src-auto-version
+  - deploy-prod-env
 #####
 code-check:
-  stage: code-check
+  stage: artifact-docker-build
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
@@ -79,7 +80,7 @@ artifact-docker-build-master:
       - .s2i/
 #####
 deploy-to-dev:
-  stage: deploy
+  stage: deploy-test-env
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
@@ -115,7 +116,7 @@ deploy-to-dev:
     paths:
       - .s2i/
 deploy-to-test:
-  stage: deploy
+  stage: deploy-test-env
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -135,14 +136,18 @@ deploy-to-test:
     - export INGRESS_PUBLIC_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
-    - s2i . deploy
+- if [[ ${CI_COMMIT_BRANCH} != "master" ]];then
+    - s2i . blue-deploy
+    - else
+    - s2i . blue-deploy
+    - fi
     - done
     - s2i . exec post-deploy-test
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
-  except:
-    - tags
+  only:
+    - deploy/test
   dependencies: []
   artifacts:
     when: on_success
@@ -150,8 +155,45 @@ deploy-to-test:
     expire_in: 24h
     paths:
       - .s2i/
+
+effect-blue-a-while:
+  stage: manual-test
+  when: manual
+  script:
+    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
+    - echo ${MOD_SUBDIR}
+    - for subdir in ${MOD_SUBDIR} .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
+    - export S2E_ORG
+    - export S2E_NS
+    - export K8S_KUBECONFIG=${TEST_K8S_KUBECONFIG}
+    - export K8S_NS_SUFFIX=${TEST_K8S_NS_SUFFIX}
+    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
+    - export K8S_DOMAIN_INTERNAL=${TEST_K8S_DOMAIN_INTERNAL}
+    - export K8S_DOMAIN_PUBLIC=${TEST_K8S_DOMAIN_PUBLIC}
+    - export INGRESS_INTERNAL_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
+    - export INGRESS_PUBLIC_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
+    - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
+    - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
+    - s2i . blue-active-minutes
+    - done
+    after_script:
+      - set -o allexport; source s2ectl.env;set +o allexport
+      - s2i . exec post-all-job
+    only:
+      - deploy/test
+    dependencies: []
+    artifacts:
+      when: on_success
+      name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+      expire_in: 24h
+      paths:
+        - .s2i/
+
 rollback-test-from-uat:
-  stage: deploy
+  stage: deploy-test-env
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -190,7 +232,7 @@ rollback-test-from-uat:
     paths:
       - .s2i/
 deploy-to-uat:
-  stage: deploy
+  stage: deploy-prod-env
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -217,8 +259,8 @@ deploy-to-uat:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
   only:
-    - master
-    - /^hotfix.*$/
+    - deploy/uat
+
   dependencies: []
   artifacts:
     when: on_success
@@ -227,7 +269,7 @@ deploy-to-uat:
     paths:
       - .s2i/
 rollback-uat-from-prd:
-  stage: deploy
+  stage: deploy-prod-env
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -266,7 +308,7 @@ rollback-uat-from-prd:
     paths:
       - .s2i/
 mirror-to-prd:
-  stage: deploy
+  stage: deploy-prod-env
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -303,18 +345,46 @@ mirror-to-prd:
     paths:
       - .s2i/
 #####
-src-mr-create:
-  stage: release
+codereiew-and-deploy-to-test:
+  stage: src-auto-version
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . exec gitlab-mr-create
+    - s2i . exec gitlab-mr-create deploy/test
     - s2i . exec post-gitlab-mr-create
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
   except:
     - master
+    - deploy/test
+    - deploy/uat
+    - /^hotfix.*$/
+    - tags
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^feature/ && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+      when: manual
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
+#####
+codereiew-and-deploy-to-uat:
+  stage: src-auto-version
+  when: manual
+  script:
+    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - s2i . exec gitlab-mr-create deploy/uat
+    - s2i . exec post-gitlab-mr-create
+  after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
+    - s2i . exec post-all-job
+  except:
+    - master
+    - deploy/test
+    - deploy/uat
     - /^hotfix.*$/
     - tags
   artifacts:
@@ -324,7 +394,7 @@ src-mr-create:
     paths:
       - .s2i/
 pages:
-  stage: deploy
+  stage: deploy-prod-env
   script:
     - mkdir -p .s2i
     - mkdir -p public
@@ -338,7 +408,7 @@ pages:
     - /^hotfix.*$/
     - tags
 gitlab-auto-merge:
-  stage: release
+  stage: src-auto-version
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - s2i . exec gitlab-auto-merge
@@ -352,13 +422,14 @@ gitlab-auto-merge:
   dependencies: []
 #####
 
-artifact-release:
-  stage: release
+artifact-gen:
+  stage: deploy-prod-env
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - export IMG="$(head -n 1 .s2i/s2i.*img.txt)"
     - echo ${IMG}
+    - docker run --rm --entrypoint /s2e/version-report ${IMG} > .s2i/cli-version.txt
     - perl -ni -e "s@${DOCKER_REPO}.+@${IMG}@g;print" deployments/s2erunner/docker-compose.yaml deployments/s2emetricd/docker-compose.yaml
     - s2i . exec post-artifact-release
   after_script:
@@ -373,7 +444,7 @@ artifact-release:
     paths:
       - deployments
 src-tag-version:
-  stage: release
+  stage: src-auto-version
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport

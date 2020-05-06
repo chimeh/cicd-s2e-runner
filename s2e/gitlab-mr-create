@@ -7,49 +7,87 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 export LANG=en_US.UTF-8
 set +e
-if [[ -n ${GITLAB_MR_TPL} ]];then
-  if [[ -f ${GITLAB_MR_TPL} ]];then
-    TPL_FILE=${GITLAB_MR_TPL}
-  fi
-elif [[ -f ${SCRIPT_DIR}/custom/templates/gitlab/merge-request-template.md ]];then
-  TPL_FILE=${SCRIPT_DIR}/custom/templates/gitlab/merge-request-template.md
+
+if [[ $# -lt 1 ]];then
+    TARGET_BRANCH=master
 else
-  TPL_FILE=${SCRIPT_DIR}/templates/gitlab/merge-request-template.md
+    TARGET_BRANCH=${1}
 fi
-
-mkdir -p .s2i/
-cat  ${TPL_FILE} >> .s2i/merge-request-template.md
-echo ${CI_PAGES_URL} >> .s2i/merge-request-template.md
-
-gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
- --source-branch ${CI_COMMIT_BRANCH} \
- --target-branch master \
- --title "MR: ${CI_COMMIT_TITLE}" \
- --description @.s2i/merge-request-template.md \
- --labels ${GITLAB_USER_LOGIN} \
- --assignee-id ${GITLAB_USER_ID} \
-
-RV=$?
-if [[  ! -f .s2i/request-note.txt ]];then
-echo "Update by @${GITLAB_USER_LOGIN} " > .s2i/request-note.txt
-echo "镜像地址: " >> .s2i/request-note.txt
-cat *img.txt >> .s2i/request-note.txt
-fi
-
-
+echo "create merge request from ${CI_COMMIT_BRANCH} into ${TARGET_BRANCH} "
+# recreate branch name deploy-test from master, if merge success, will deploy into test env
 set -e
+gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH}
+rv=$?
+set +e
 
-if [[ ${RV=$?} -ne 0 ]];then
-    gitlab  project-merge-request  list \
-    --project-id ${CI_PROJECT_ID}   \
-    --source-branch ${CI_COMMIT_BRANCH} \
-    --target-branch master  | head -n 1 | awk '{print $2}' > $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -)
+if [[ ${rv=$?} -ne 0 ]];then
+  # ${TARGET_BRANCH} not exist
+  gitlab project-branch create --project-id ${CI_PROJECT_ID} \
+   --branch ${TARGET_BRANCH} --ref master
+else
+  # ${TARGET_BRANCH} exist, check ref on master
+  git fetch origin master
+  git fetch origin ${TARGET_BRANCH}
+  BR_MASTER_SHA=$(git rev-parse  refs/remotes/origin/master)
+  BR_DEPLOY_TEST_SHA=$(git rev-parse refs/remotes/origin/${TARGET_BRANCH})
 
-
-    gitlab project-merge-request-note create \
-    --project-id ${CI_PROJECT_ID}  \
-    --mr-iid $(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -)) \
-    --body @s2i.request-note.txt \
-
+  if [[ "${BR_MASTER_SHA}" == "${BR_DEPLOY_TEST_SHA}" ]];then
+    "ref same as master"
+    echo ""
+  else
+    echo "recreate ${TARGET_BRANCH} on master"
+    gitlab project-branch delete --project-id ${CI_PROJECT_ID} \
+    --name ${TARGET_BRANCH}
+    gitlab project-branch create --project-id ${CI_PROJECT_ID} \
+    --branch ${TARGET_BRANCH} --ref master
+  fi
 fi
+
+# check is there open mr on this branch
+gitlab  project-merge-request list --project-id ${CI_PROJECT_ID} \
+ --state opened --source-branch ${CI_COMMIT_BRANCH} | head -n 1 | awk '{print $2}' > $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -)
+
+MRIID=$(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -))
+
+if [[ "${MRIID}" == "" ]];then
+  if [[ -n ${GITLAB_MR_TPL} ]];then
+    if [[ -f ${GITLAB_MR_TPL} ]];then
+      TPL_FILE=${GITLAB_MR_TPL}
+    fi
+  elif [[ -f ${SCRIPT_DIR}/custom/templates/gitlab/merge-request-template.md ]];then
+    TPL_FILE=${SCRIPT_DIR}/custom/templates/gitlab/merge-request-template.md
+  else
+    TPL_FILE=${SCRIPT_DIR}/templates/gitlab/merge-request-template.md
+  fi
+  mkdir -p .s2i/
+  cat  ${TPL_FILE} >> .s2i/merge-request-template.md
+  echo ${CI_PAGES_URL} >> .s2i/merge-request-template.md
+
+  gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
+   --source-branch ${CI_COMMIT_BRANCH} \
+   --target-branch ${TARGET_BRANCH} \
+   --title "${CI_COMMIT_BRANCH} MR: ${CI_COMMIT_TITLE}" \
+   --description @.s2i/merge-request-template.md \
+   --labels ${GITLAB_USER_LOGIN} \
+   --assignee-id ${GITLAB_USER_ID}
+
+  rv=$?
+  if [[  ! -f .s2i/request-note.txt ]];then
+  echo "Update by @${GITLAB_USER_LOGIN} " > .s2i/request-note.txt
+  echo "镜像地址: " >> .s2i/request-note.txt
+  cat *img.txt >> .s2i/request-note.txt
+  fi
+
+  set -e
+  if [[ ${rv} -ne 0 ]];then
+      gitlab project-merge-request-note create \
+      --project-id ${CI_PROJECT_ID}  \
+      --mr-iid ${MRIID} \
+      --body @s2i.request-note.txt \
+
+  fi
+else
+  echo ""
+fi
+
 

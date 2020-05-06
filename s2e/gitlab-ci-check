@@ -25,10 +25,7 @@ function s2iversion_check() {
     echo "check OK "
     ;;
   *)
-    echo "璇锋洿鏂颁綘鐨� .gitlab-ci.yaml 鏂囦欢鍒皊2i:2 鐗堟湰"
-    echo "澶嶅埗绮樿创浠ヤ笅鍐呭"
     echo "\n\n\n\n"
-    cat /s2e/gitlab/s2i/v2/.gitlab-ci.yml
 
     ;;
   esac

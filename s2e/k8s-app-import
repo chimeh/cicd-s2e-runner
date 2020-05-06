@@ -9,6 +9,7 @@ USAGE="
   $0, oneof cicd toolset, integrate rancher with kubernetes, deploy a img into NS ,auto generate deployment, ingress, service;
   export K8S_DOMAIN_INTERNAL=nxengine.cn
   export K8S_DOMAIN_PUBLIC=bu5-dev.tx
+  export K8S_BLUE_POD_SFFIX=""
   export INGRESS_INTERNAL_ENABLED=1
   export INGRESS_PUBLIC_ENABLED=1
   export INGRESS_CLASS_INTERNAL=nginx
@@ -175,6 +176,7 @@ cat >> ${APPNAME}/requirements.yaml <<EOF
 EOF
 if [[ -n ${GITLAB_CI} ]];then
 cat > ${APPNAME}/charts/$name/files/srcmeta.txt <<EOF
+GITLAB_USER_LOGIN=${GITLAB_USER_LOGIN}
 CI_PROJECT_URL=${CI_PROJECT_URL}
 CI_PROJECT_PATH=${CI_PROJECT_PATH}
 CI_PROJECT_NAMESPACE=${CI_PROJECT_NAMESPACE}
@@ -221,6 +223,8 @@ ${name}:
         enabled: ${INGRESS_PUBLIC_ENABLED}
         host: {}
     image: ${IMG}
+    deployment:
+      podname_suffix: ${DEPLOYMENT_PODNAME_SUFFIX}
     service:
       type: ClusterIP
 EOF
