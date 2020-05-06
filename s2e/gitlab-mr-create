@@ -15,10 +15,10 @@ else
 fi
 echo "create merge request from ${CI_COMMIT_BRANCH} into ${TARGET_BRANCH} "
 # recreate branch name deploy-test from master, if merge success, will deploy into test env
-set -e
-gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH}
-rv=$?
 set +e
+gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH}
+set -e
+rv=$?
 
 if [[ ${rv=$?} -ne 0 ]];then
   # ${TARGET_BRANCH} not exist
