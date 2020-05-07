@@ -23,7 +23,7 @@ if [[ $# -gt 1 ]];then
 else
     TARGET_BRANCH=${2}
 fi
-echo "从master 创建分支 ${TARGET_BRANCH}，并把分支 ${SRC_BRANCH} 合并进 ${TARGET_BRANCH},从而部署环境 "
+echo "从 master 创建分支 ${TARGET_BRANCH}，并把分支 ${SRC_BRANCH} 合并进 ${TARGET_BRANCH},从而部署环境, 请找相关人员Review代码 "
 # recreate branch name deploy-test from master, if merge success, will deploy into test env
 set +e
 gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH} >/dev/null 2>&1

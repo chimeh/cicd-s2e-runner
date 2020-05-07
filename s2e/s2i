@@ -629,6 +629,7 @@ case ${ACTION_STAGE} in
         do-blue-pod-active-minutes
         ;;
     ACTION_ALL*)
+        echo "自动检测源码类型，并做artifact 构建，docker 构建"
         do_artifact_build
         do_docker_build
         do_deploy_k8s
