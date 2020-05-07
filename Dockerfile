@@ -26,7 +26,7 @@ RUN yum install -y vim bash  bash-completion wget unzip curl ca-certificates tzd
 RUN yum install -y java-1.8.0-openjdk-devel
 # maven
 RUN mkdir -p /root/ts \
- && wget  -P /root/ts https://mirror.azure.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+ && wget -q -P /root/ts https://mirror.azure.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
  && tar -xf /root/ts/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt \
  && mkdir -p /root/.m2 \
  && cp /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml /root/.m2/settings.xml \
@@ -34,14 +34,14 @@ RUN mkdir -p /root/ts \
  && rm -rf /root/ts
 # npm https://github.com/nodesource/distributions
 RUN mkdir -p /root/ts \
- && wget  -P /root/ts https://npm.taobao.org/mirrors/node/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz\
+ && wget -q -P /root/ts https://npm.taobao.org/mirrors/node/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz\
  && tar -xf /root/ts/node-${NODE_VERSION}-linux-x64.tar.gz -C /opt \
  && rm -rf /root/ts
 
 # python3
 RUN yum install -y python3-devel python3-pip python3-setuptools  yamllint
 # golang
-RUN wget -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz \
+RUN wget -q -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz \
  && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt \
  && rm -rf /root/ts
 # docker
@@ -51,20 +51,21 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
 # git
 RUN mkdir -p /root/ts \
  && yum install -y  openssl-devel zlib-devel curl-devel expat-devel gettext-devel \
- && wget  -P /root/ts "http://mirrors.ustc.edu.cn/kernel.org/software/scm/git/git-${GIT_VERSION}.tar.gz" \
+ && wget -q -P /root/ts "http://mirrors.ustc.edu.cn/kernel.org/software/scm/git/git-${GIT_VERSION}.tar.gz" \
  && tar -xvzf /root/ts/git-${GIT_VERSION}.tar.gz -C /root/ts \
  && make -j2 prefix=/usr/local install -C /root/ts/git-${GIT_VERSION} \
+ && yum install --nogpgcheck -y git-lfs \
  && rm -rf /root/ts
 
 # add offical deploy tools, k8s relate
 RUN mkdir -pv /root/.m2 /root/.docker /root/.kube /s2e
 
 # kubernetes client
-RUN wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
+RUN wget -q http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl \
-    && wget  http://mirror.azure.cn/kubernetes/helm/helm-${HELM2_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm2 \
+    && wget -q http://mirror.azure.cn/kubernetes/helm/helm-${HELM2_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm2 \
     && chmod +x /usr/local/bin/helm2 \
-    && wget  http://mirror.azure.cn/kubernetes/helm/helm-dev-v3-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm3 \
+    && wget -q http://mirror.azure.cn/kubernetes/helm/helm-dev-v3-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm3 \
     && chmod +x /usr/local/bin/helm3 \
     && ln -sf /usr/local/bin/helm2 /usr/local/bin/helm \
     && yum install -y nginx \
@@ -72,7 +73,7 @@ RUN wget http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd
 
 # android
 RUN mkdir -p /root/ts  \
-    &&  wget  -P /root/ts  https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip \
+    &&  wget -q -P /root/ts  https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip \
     && cd /root/ts \
     && mkdir -p /opt/android \
     && unzip  -qq sdk-tools-linux-4333796.zip -d /opt/android \
@@ -81,7 +82,7 @@ RUN mkdir -p /root/ts  \
     && rm -rf /root/ts
 # gradle
 RUN mkdir -p /root/ts \
-    &&  wget  -P /root/ts  https://downloads.gradle-dn.com/distributions/gradle-6.2.2-all.zip \
+    &&  wget -q -P /root/ts  https://downloads.gradle-dn.com/distributions/gradle-6.2.2-all.zip \
     && cd /root/ts \
     && mkdir -p /opt/gradle \
     && unzip  -qq gradle-6.2.2-all.zip -d /opt/gradle \
@@ -114,7 +115,7 @@ RUN wget -q https://releases.rancher.com/cli2/${RANCHER_VER}/rancher-linux-amd64
 
  # redis
  RUN mkdir -p /root/ts \
-     &&  wget  -P /root/ts  http://mirror.azure.cn/redis/releases/redis-5.0.8.tar.gz \
+     &&  wget -q -P /root/ts  http://mirror.azure.cn/redis/releases/redis-5.0.8.tar.gz \
      && cd /root/ts \
      && tar -xf redis-5.0.8.tar.gz \
      && cd redis-5.0.8 \

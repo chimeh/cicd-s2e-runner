@@ -19,25 +19,25 @@ else
   SRC_BRANCH=${1}
 fi
 if [[ $# -gt 1 ]];then
-    TARGET_BRANCH=master
-else
     TARGET_BRANCH=${2}
+else
+    TARGET_BRANCH=master
 fi
 echo "从 master 创建分支 ${TARGET_BRANCH}，并把分支 ${SRC_BRANCH} 合并进 ${TARGET_BRANCH},从而部署环境, 请找相关人员Review代码 "
 # recreate branch name deploy-test from master, if merge success, will deploy into test env
 set +e
-gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH} >/dev/null 2>&1
+gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH}
 set -e
 rv=$?
 
 if [[ ${rv=$?} -ne 0 ]];then
   # ${TARGET_BRANCH} not exist
   gitlab project-branch create --project-id ${CI_PROJECT_ID} \
-   --branch ${TARGET_BRANCH} --ref master
+   --branch ${TARGET_BRANCH} --ref master  >/dev/null 2>&1
 else
   # ${TARGET_BRANCH} exist, check ref on master
-  git fetch origin master
-  git fetch origin ${TARGET_BRANCH}
+  git fetch origin master  >/dev/null 2>&1
+  git fetch origin ${TARGET_BRANCH}  >/dev/null 2>&1
   BR_MASTER_SHA=$(git rev-parse  refs/remotes/origin/master)
   BR_TARGET_BRANCH_SHA=$(git rev-parse refs/remotes/origin/${TARGET_BRANCH})
 
@@ -46,9 +46,9 @@ else
   else
     echo "分支 ${TARGET_BRANCH} 和 master SHA 不一样， 重新从master拉取 ${TARGET_BRANCH} 分支 "
     gitlab project-branch delete --project-id ${CI_PROJECT_ID} \
-    --name ${TARGET_BRANCH}
+    --name ${TARGET_BRANCH} >/dev/null 2>&1
     gitlab project-branch create --project-id ${CI_PROJECT_ID} \
-    --branch ${TARGET_BRANCH} --ref master
+    --branch ${TARGET_BRANCH} --ref master >/dev/null 2>&1
   fi
 fi
 
@@ -71,7 +71,7 @@ if [[ "${MRIID}" == "" ]];then
     TPL_FILE=${SCRIPT_DIR}/templates/gitlab/merge-request-template.md
   fi
   mkdir -p .s2i/
-  cat  ${TPL_FILE} >> .s2i/merge-request-template.md
+  cat  ${TPL_FILE} > .s2i/merge-request-template.md
   echo ${CI_PAGES_URL} >> .s2i/merge-request-template.md
 
   gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
@@ -83,12 +83,13 @@ if [[ "${MRIID}" == "" ]];then
    --assignee-id ${GITLAB_USER_ID}
 
   rv=$?
+  set +e
   if [[  ! -f .s2i/request-note.txt ]];then
   echo "Update by @${GITLAB_USER_LOGIN} " > .s2i/request-note.txt
-  echo "镜像地址: " >> .s2i/request-note.txt
-  cat *img.txt >> .s2i/request-note.txt
+  echo "域名地址: " >> .s2i/request-note.txt;
+  egrep --no-filename '\- host' -r *ingress*.yaml >> .s2i/request-note.txt
+  egrep --no-filename 'clusterIP:' -r *service*.yaml >> .s2i/request-note.txt
   fi
-
   set -e
   if [[ ${rv} -ne 0 ]];then
       gitlab project-merge-request-note create \
@@ -100,6 +101,6 @@ if [[ "${MRIID}" == "" ]];then
 else
     echo "Merge Request ID 已存在， MRIID ${MRIID}"
 fi
-gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --target-branch ${TARGET_BRANCH}
-gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --labels "need-code-review"
+gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --target-branch ${TARGET_BRANCH} >/dev/null 2>&1
+gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --labels "need-code-review" >/dev/null 2>&1
 
