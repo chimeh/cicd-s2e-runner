@@ -3,17 +3,27 @@
 #email: jimminh@163.com
 #args TPL_FILE, where your gitlab mr template file is
 set -e
+USAGE="
+  usage:
+  Create Merge Request on Gitlab Project:
+  $(basename $(realpath $0)) SRC_BRANCH [DST_BRANCH]
+"
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 export LANG=en_US.UTF-8
 set +e
-
-if [[ $# -lt 1 ]];then
+if [[ $# -lt 0 ]];then
+  echo "Error on Param"
+  echo "${USAGE}"
+else
+  SRC_BRANCH=${1}
+fi
+if [[ $# -gt 1 ]];then
     TARGET_BRANCH=master
 else
-    TARGET_BRANCH=${1}
+    TARGET_BRANCH=${2}
 fi
-echo "从master 创建分支 ${TARGET_BRANCH}，并把分支 ${CI_COMMIT_BRANCH} 合并进 ${TARGET_BRANCH},从而部署环境 "
+echo "从master 创建分支 ${TARGET_BRANCH}，并把分支 ${SRC_BRANCH} 合并进 ${TARGET_BRANCH},从而部署环境 "
 # recreate branch name deploy-test from master, if merge success, will deploy into test env
 set +e
 gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH} >/dev/null 2>&1
@@ -45,9 +55,9 @@ fi
 
 # check is there open mr on this branch
 gitlab  project-merge-request list --project-id ${CI_PROJECT_ID} \
- --state opened --source-branch ${CI_COMMIT_BRANCH} | head -n 1 | awk '{print $2}' > $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -)
+ --state opened --source-branch ${SRC_BRANCH} | head -n 1 | awk '{print $2}' > $(echo .mr-iid.${CI_PROJECT_ID}.${SRC_BRANCH} | tr / -)
 
-MRIID=$(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -))
+MRIID=$(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${SRC_BRANCH} | tr / -))
 
 if [[ "${MRIID}" == "" ]];then
   echo "Merge Request ID 不存在， 创建MR"
@@ -65,9 +75,9 @@ if [[ "${MRIID}" == "" ]];then
   echo ${CI_PAGES_URL} >> .s2i/merge-request-template.md
 
   gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
-   --source-branch ${CI_COMMIT_BRANCH} \
+   --source-branch ${SRC_BRANCH} \
    --target-branch ${TARGET_BRANCH} \
-   --title "${CI_COMMIT_BRANCH} MR: ${CI_COMMIT_TITLE}" \
+   --title "${SRC_BRANCH} MR: ${CI_COMMIT_TITLE}" \
    --description @.s2i/merge-request-template.md \
    --labels ${GITLAB_USER_LOGIN} \
    --assignee-id ${GITLAB_USER_ID}
@@ -91,5 +101,5 @@ else
     echo "Merge Request ID 已存在， MRIID ${MRIID}"
 fi
 gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --target-branch ${TARGET_BRANCH}
-
+gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --labels "need-code-review"
 
