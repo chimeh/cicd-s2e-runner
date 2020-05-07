@@ -2,7 +2,7 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: "{{ template "xxxxxx.fullname" . }}"
+  name: "{{ template "xxxxxx.fullname" . }}{{ (index .Values (include "xxxxxx.name" .) "deployment" "podname_suffix") }}"
   labels:
     qcloud-app: "{{ template "xxxxxx.name" . }}"
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -30,7 +30,7 @@ spec:
       containers:
       - image:   {{ index .Values (include "xxxxxx.name" .) "image" }}
         imagePullPolicy: IfNotPresent
-        name: {{ template "xxxxxx.name" . }}
+        name: {{ template "xxxxxx.name" . }}{{ (index .Values (include "xxxxxx.name" .) "deployment" "podname_suffix") }}
         {{- if (index .Values "global") }}
         {{- if (index .Values "global" "containers") }}
         {{- if (index .Values "global" "containers" "livenessProbe") }}

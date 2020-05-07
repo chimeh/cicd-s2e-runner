@@ -1,0 +1,106 @@
+#!/bin/bash
+#email: jimin.huang@nx-engine.com
+#email: jimminh@163.com
+#args TPL_FILE, where your gitlab mr template file is
+set -e
+USAGE="
+  usage:
+  Create Merge Request on Gitlab Project:
+  $(basename $(realpath $0)) SRC_BRANCH [DST_BRANCH]
+"
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+export LANG=en_US.UTF-8
+set +e
+if [[ $# -lt 0 ]];then
+  echo "Error on Param"
+  echo "${USAGE}"
+else
+  SRC_BRANCH=${1}
+fi
+if [[ $# -gt 1 ]];then
+    TARGET_BRANCH=${2}
+else
+    TARGET_BRANCH=master
+fi
+echo "从 master 创建分支 ${TARGET_BRANCH}，并把分支 ${SRC_BRANCH} 合并进 ${TARGET_BRANCH},从而部署环境, 请找相关人员Review代码 "
+# recreate branch name deploy-test from master, if merge success, will deploy into test env
+set +e
+gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH}
+set -e
+rv=$?
+
+if [[ ${rv=$?} -ne 0 ]];then
+  # ${TARGET_BRANCH} not exist
+  gitlab project-branch create --project-id ${CI_PROJECT_ID} \
+   --branch ${TARGET_BRANCH} --ref master  >/dev/null 2>&1
+else
+  # ${TARGET_BRANCH} exist, check ref on master
+  git fetch origin master  >/dev/null 2>&1
+  git fetch origin ${TARGET_BRANCH}  >/dev/null 2>&1
+  BR_MASTER_SHA=$(git rev-parse  refs/remotes/origin/master)
+  BR_TARGET_BRANCH_SHA=$(git rev-parse refs/remotes/origin/${TARGET_BRANCH})
+
+  if [[ "${BR_MASTER_SHA}" == "${BR_TARGET_BRANCH_SHA}" ]];then
+    echo "分支 ${TARGET_BRANCH} 和 master SHA 一样"
+  else
+    echo "分支 ${TARGET_BRANCH} 和 master SHA 不一样， 重新从master拉取 ${TARGET_BRANCH} 分支 "
+    gitlab project-branch delete --project-id ${CI_PROJECT_ID} \
+    --name ${TARGET_BRANCH} >/dev/null 2>&1
+    gitlab project-branch create --project-id ${CI_PROJECT_ID} \
+    --branch ${TARGET_BRANCH} --ref master >/dev/null 2>&1
+  fi
+fi
+
+
+# check is there open mr on this branch
+gitlab  project-merge-request list --project-id ${CI_PROJECT_ID} \
+ --state opened --source-branch ${SRC_BRANCH} | head -n 1 | awk '{print $2}' > $(echo .mr-iid.${CI_PROJECT_ID}.${SRC_BRANCH} | tr / -)
+
+MRIID=$(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${SRC_BRANCH} | tr / -))
+
+if [[ "${MRIID}" == "" ]];then
+  echo "Merge Request ID 不存在， 创建MR"
+  if [[ -n ${GITLAB_MR_TPL} ]];then
+    if [[ -f ${GITLAB_MR_TPL} ]];then
+      TPL_FILE=${GITLAB_MR_TPL}
+    fi
+  elif [[ -f ${SCRIPT_DIR}/custom/templates/gitlab/merge-request-template.md ]];then
+    TPL_FILE=${SCRIPT_DIR}/custom/templates/gitlab/merge-request-template.md
+  else
+    TPL_FILE=${SCRIPT_DIR}/templates/gitlab/merge-request-template.md
+  fi
+  mkdir -p .s2i/
+  cat  ${TPL_FILE} > .s2i/merge-request-template.md
+  echo ${CI_PAGES_URL} >> .s2i/merge-request-template.md
+
+  gitlab project-merge-request  create  --project-id ${CI_PROJECT_ID} \
+   --source-branch ${SRC_BRANCH} \
+   --target-branch ${TARGET_BRANCH} \
+   --title "${SRC_BRANCH} MR: ${CI_COMMIT_TITLE}" \
+   --description @.s2i/merge-request-template.md \
+   --labels ${GITLAB_USER_LOGIN} \
+   --assignee-id ${GITLAB_USER_ID}
+
+  rv=$?
+  set +e
+  if [[  ! -f .s2i/request-note.txt ]];then
+  echo "Update by @${GITLAB_USER_LOGIN} " > .s2i/request-note.txt
+  echo "域名地址: " >> .s2i/request-note.txt;
+  egrep --no-filename '\- host' -r *ingress*.yaml >> .s2i/request-note.txt
+  egrep --no-filename 'clusterIP:' -r *service*.yaml >> .s2i/request-note.txt
+  fi
+  set -e
+  if [[ ${rv} -ne 0 ]];then
+      gitlab project-merge-request-note create \
+      --project-id ${CI_PROJECT_ID}  \
+      --mr-iid ${MRIID} \
+      --body @s2i.request-note.txt \
+
+  fi
+else
+    echo "Merge Request ID 已存在， MRIID ${MRIID}"
+fi
+gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --target-branch ${TARGET_BRANCH} >/dev/null 2>&1
+gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --labels "need-code-review" >/dev/null 2>&1
+

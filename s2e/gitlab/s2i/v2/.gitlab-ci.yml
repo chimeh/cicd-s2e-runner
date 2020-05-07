@@ -168,7 +168,7 @@ src-mr-create:
   stage: src-release
   when: manual
   script:
-     - gitlab-mr-create
+     - gitlab-merge-into
   except:
     - master
     - /^hotfix.*$/
