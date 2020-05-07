@@ -4,7 +4,6 @@ stages:
   - artifact-docker-build
   - deploy-dev-env
   - deploy-test-env
-  - manual-test
   - deploy-prod-env
   - src-auto-version
 #####
@@ -38,41 +37,15 @@ artifact-docker-build:
     - s2i . git-merge-master
     - s2i . artifact #${subdir}
     - s2i . docker #${subdir}
-    - done
-  after_script:
-    - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . exec post-all-job
-
-  except:
-    - tags
-    - master
-  artifacts:
-    when: on_success
-    expire_in: 24h
-    paths:
-      - .s2i/
-artifact-docker-build-master:
-  stage: artifact-docker-build
-  script:
-    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
-    - echo ${MOD_SUBDIR}
-    - for subdir in ${MOD_SUBDIR} .;do
-    - cd ${CI_PROJECT_DIR}/${subdir}
-    - echo "##${subdir}"
-    - s2i . artifact #${subdir}
-    - s2i . docker #${subdir}
     - if [[ -f ${SRC_TOP}/build.sh ]];then bash ${SRC_TOP}/build.sh;fi
     - done
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
-  only:
-    - master
-    - hotfix/*
+  except:
+    - tags
   artifacts:
     when: on_success
-    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
     expire_in: 24h
     paths:
       - .s2i/
@@ -105,6 +78,7 @@ deploy-to-dev:
   except:
     - tags
     - master
+    - /^deploy.*$/
   dependencies: []
   artifacts:
     when: on_success
@@ -112,7 +86,7 @@ deploy-to-dev:
     expire_in: 24h
     paths:
       - .s2i/
-deploy-to-test:
+deploy-test-blue:
   stage: deploy-test-env
   when: manual
   script:
@@ -133,17 +107,14 @@ deploy-to-test:
     - export INGRESS_PUBLIC_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
     - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
-    - if [[ ${CI_COMMIT_BRANCH} != "master" ]];then
-    - s2i . blue-deploy
-    - else
-    - s2i . blue-deploy
-    - fi
-    - done
+    - s2i . deploy-blue
+    - s2i . deploy-if-not-exist
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
   only:
     - deploy/test
+    - master
   dependencies: []
   artifacts:
     when: on_success
@@ -152,8 +123,47 @@ deploy-to-test:
     paths:
       - .s2i/
 
-effect-blue-a-while:
-  stage: manual-test
+roll-test-from-prd:
+  stage: deploy-test-env
+  when: manual
+  script:
+    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
+    - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
+    - echo ${MOD_SUBDIR}
+    - for subdir in ${MOD_SUBDIR} .;do
+    - cd ${CI_PROJECT_DIR}/${subdir}
+    - echo "##${subdir}"
+    - export S2E_ORG
+    - export S2E_NS
+    - export K8S_KUBECONFIG=${TEST_K8S_KUBECONFIG}
+    - export K8S_NS_SUFFIX=${TEST_K8S_NS_SUFFIX}
+    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
+    - export K8S_DOMAIN_INTERNAL=${TEST_K8S_DOMAIN_INTERNAL}
+    - export K8S_DOMAIN_PUBLIC=${TEST_K8S_DOMAIN_PUBLIC}
+    - export INGRESS_INTERNAL_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
+    - export INGRESS_PUBLIC_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
+    - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
+    - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
+    - export SRC_K8S_KUBECONFIG=${PRD_K8S_KUBECONFIG}
+    - export SRC_K8S_NS=${S2E_ORG}${S2E_NS}${PRD_K8S_NS_SUFFIX}
+    - s2i . exec k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG} ${SRC_K8S_NS} ${K8S_NS} ${CI_PROJECT_NAME}
+    - fi
+    - done
+  after_script:
+    - set -o allexport; source s2ectl.env;set +o allexport
+    - s2i . exec post-all-job
+  only:
+    - deploy/test
+    - master
+  dependencies: []
+  artifacts:
+    when: on_success
+    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
+    expire_in: 24h
+    paths:
+      - .s2i/
+test-blue-setup:
+  stage: deploy-test-env
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -224,7 +234,8 @@ deploy-to-uat:
     expire_in: 24h
     paths:
       - .s2i/
-rollback-uat-from-prd:
+
+deploy-to-prd-blue:
   stage: deploy-prod-env
   when: manual
   script:
@@ -236,46 +247,8 @@ rollback-uat-from-prd:
     - echo "##${subdir}"
     - export S2E_ORG
     - export S2E_NS
-    - export SRC_K8S_KUBECONFIG=${PRD_K8S_KUBECONFIG}
-    - export SRC_K8S_NS=${S2E_ORG}${S2E_NS}${PRD_K8S_NS_SUFFIX}
-    - export K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
-    - export K8S_NS=${S2E_ORG}${S2E_NS}${UAT_K8S_NS_SUFFIX}
-    - export K8S_DOMAIN_INTERNAL=${UAT_K8S_DOMAIN_INTERNAL}
-    - export K8S_DOMAIN_PUBLIC=${UAT_K8S_DOMAIN_PUBLIC}
-    - export INGRESS_INTERNAL_ENABLED=${UAT_INGRESS_INTERNAL_ENABLED}
-    - export INGRESS_PUBLIC_ENABLED=${UAT_INGRESS_INTERNAL_ENABLED}
-    - export INGRESS_CLASS_INTERNAL=${UAT_INGRESS_CLASS_INTERNAL}
-    - export INGRESS_CLASS_PUBLIC=${UAT_INGRESS_CLASS_PUBLIC}
-    - echo "##${subdir}"
-    - s2i . exec k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
-    - done
-  after_script:
-    - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . exec post-all-job
-  only:
-    - master
-    - /^hotfix.*$/
-  dependencies: []
-  artifacts:
-    when: on_success
-    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
-    expire_in: 24h
-    paths:
-      - .s2i/
-mirror-to-prd:
-  stage: deploy-prod-env
-  when: manual
-  script:
-    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
-    - echo ${MOD_SUBDIR}
-    - for subdir in ${MOD_SUBDIR} .;do
-    - cd ${CI_PROJECT_DIR}/${subdir}
-    - echo "##${subdir}"
-    - export S2E_ORG
-    - export S2E_NS
-    - export SRC_K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
-    - export SRC_K8S_NS=${S2E_ORG}${S2E_NS}${UAT_K8S_NS_SUFFIX}
+#    - export SRC_K8S_KUBECONFIG=${UAT_K8S_KUBECONFIG}
+#    - export SRC_K8S_NS=${S2E_ORG}${S2E_NS}${UAT_K8S_NS_SUFFIX}
     - export K8S_KUBECONFIG=${PRD_K8S_KUBECONFIG}
     - export K8S_NS=${S2E_ORG}${S2E_NS}${PRD_K8S_NS_SUFFIX}
     - export K8S_DOMAIN_INTERNAL=${PRD_K8S_DOMAIN_INTERNAL}
@@ -284,7 +257,8 @@ mirror-to-prd:
     - export INGRESS_PUBLIC_ENABLED=${PRD_INGRESS_INTERNAL_ENABLED}
     - export INGRESS_CLASS_INTERNAL=${PRD_INGRESS_CLASS_INTERNAL}
     - export INGRESS_CLASS_PUBLIC=${PRD_INGRESS_CLASS_PUBLIC}
-    - s2i k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG}
+    - s2i . deploy-blue
+    - s2i . deploy-if-not-exist
     - done
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport

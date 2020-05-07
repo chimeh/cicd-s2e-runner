@@ -502,12 +502,12 @@ function do_deploy_k8s()
                 RETVAL=$?
                 set -e
                 if [[ ${RETVAL} -eq 0 ]];then
-                    kubectl set image -n ${MY_K8S_NS} deployments ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} ${SVCNAME}=${DOCKER_URL}
+                    if [[ ${UPDATE_IMG_IF_EXIST} -gt 0 ]];then
+                      kubectl set image -n ${MY_K8S_NS} deployments ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} ${SVCNAME}=${DOCKER_URL}
+                    fi
                 else
                     bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
-                    if [[ "${DEPLOYMENT_PODNAME_SUFFIX}" != "" ]];then
-                      kubectl -n ${MY_K8S_NS} scale --replicas=0 deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
-                    fi
+                    kubectl -n ${MY_K8S_NS} scale --replicas=0 deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
                 fi
                     #report
                     set +e
@@ -614,13 +614,24 @@ case ${ACTION_STAGE} in
     art*)
         do_artifact_build
         ;;
-    docker*)
+    docker)
         do_docker_build
         ;;
-    deploy*)
+    deploy-if-not-exist)
+        UPDATE_IMG_IF_EXIST=0
         do_deploy_k8s
         ;;
-    blue-deploy*)
+    deploy)
+        UPDATE_IMG_IF_EXIST=1
+        do_deploy_k8s
+        ;;
+    deploy-green)
+        UPDATE_IMG_IF_EXIST=1
+        export DEPLOYMENT_PODNAME_SUFFIX="-green"
+        do_deploy_k8s
+        ;;
+    deploy-blue)
+        UPDATE_IMG_IF_EXIST=1
         export DEPLOYMENT_PODNAME_SUFFIX="-blue"
         do_deploy_k8s
         ;;
@@ -649,5 +660,8 @@ case ${ACTION_STAGE} in
           echo "OK, try exec $@ , CMD = $@ $(which $1)"
           exec $@
         fi
+        ;;
+    *)
+        echo "unkown action"
         ;;
 esac
