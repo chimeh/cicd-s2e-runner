@@ -564,7 +564,7 @@ function s2i_metric()
   which metric-util-lib >/dev/null 2>&1
   rv=$?
   if [[ ${rv} -eq 0 ]];then
-    set -o allexport; source metric-util-lib;set +o allexport
+    set -o allexport; source metric-util-lib >/dev/null;set +o allexport
   fi
 
   set -e
@@ -578,8 +578,7 @@ fi
 export S2E_CALLED_TIME
 export SRC_TOP
 # main logic
-echo "'$1'=$1 'ACTION_STAGE'=${ACTION_STAGE}"
-###################################################################  
+###################################################################
 
 
 # check config valid, not valid will regenerate
@@ -640,7 +639,6 @@ case ${ACTION_STAGE} in
     exec)
         shift 2
         set +e
-        echo "try exec $@"
         which $1 >/dev/null 2>&1
         rv=$?
         set -e
@@ -648,8 +646,7 @@ case ${ACTION_STAGE} in
           echo "Error, $1 cmd not exist in PATH"
           exit 1
         else
-          echo "OK, cmd $1 exist: $(which $1)"
-          echo CMD = $@
+          echo "OK, try exec $@ , CMD = $@ $(which $1)"
           exec $@
         fi
         ;;
