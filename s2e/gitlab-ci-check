@@ -32,26 +32,16 @@ function s2iversion_check() {
 }
 
 #if cmdtool refer by .gitlab-ci.yml not exist, create on it;
-TOOLS="post-all-job
-post-artifact-docker-build
-post-artifact-docker-build-master
-post-artifact-release
-post-deploy-dev
-post-deploy-prd
-post-deploy-test
-post-deploy-uat
-post-gitlab-auto-merge
-post-gitlab-ci-check
-post-gitlab-mr-create
-post-rollback-test
-post-rollback-uat"
+TOOLS="
+rancher-auto
+"
 for t in ${TOOLS}; do
   which -a $t >/dev/null  2>&1
   RV=$?
   if [[ ${RV} -ne 0 ]];then
     mkdir -p /usr/local/bin
     touch /usr/local/bin/$t
-    echo '#!/bin/bash' > /usr/local/bin/$t
+    echo '#!/bin/bash -xv' > /usr/local/bin/$t
     echo 'echo ${0}' > /usr/local/bin/$t
     chmod +x /usr/local/bin/$t
   fi

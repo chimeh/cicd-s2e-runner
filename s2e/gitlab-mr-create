@@ -13,10 +13,10 @@ if [[ $# -lt 1 ]];then
 else
     TARGET_BRANCH=${1}
 fi
-echo "create merge request from ${CI_COMMIT_BRANCH} into ${TARGET_BRANCH} "
+echo "从master 创建分支 ${TARGET_BRANCH}，并把分支 ${CI_COMMIT_BRANCH} 合并进 ${TARGET_BRANCH},从而部署环境 "
 # recreate branch name deploy-test from master, if merge success, will deploy into test env
 set +e
-gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH}
+gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH} >/dev/null 2>&1
 set -e
 rv=$?
 
@@ -29,19 +29,19 @@ else
   git fetch origin master
   git fetch origin ${TARGET_BRANCH}
   BR_MASTER_SHA=$(git rev-parse  refs/remotes/origin/master)
-  BR_DEPLOY_TEST_SHA=$(git rev-parse refs/remotes/origin/${TARGET_BRANCH})
+  BR_TARGET_BRANCH_SHA=$(git rev-parse refs/remotes/origin/${TARGET_BRANCH})
 
-  if [[ "${BR_MASTER_SHA}" == "${BR_DEPLOY_TEST_SHA}" ]];then
-    "ref same as master"
-    echo ""
+  if [[ "${BR_MASTER_SHA}" == "${BR_TARGET_BRANCH_SHA}" ]];then
+    echo "分支 ${TARGET_BRANCH} 和 master SHA 一样"
   else
-    echo "recreate ${TARGET_BRANCH} on master"
+    echo "分支 ${TARGET_BRANCH} 和 master SHA 不一样， 重新从master拉取 ${TARGET_BRANCH} 分支 "
     gitlab project-branch delete --project-id ${CI_PROJECT_ID} \
     --name ${TARGET_BRANCH}
     gitlab project-branch create --project-id ${CI_PROJECT_ID} \
     --branch ${TARGET_BRANCH} --ref master
   fi
 fi
+
 
 # check is there open mr on this branch
 gitlab  project-merge-request list --project-id ${CI_PROJECT_ID} \
@@ -50,6 +50,7 @@ gitlab  project-merge-request list --project-id ${CI_PROJECT_ID} \
 MRIID=$(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${CI_COMMIT_BRANCH} | tr / -))
 
 if [[ "${MRIID}" == "" ]];then
+  echo "Merge Request ID 不存在， 创建MR"
   if [[ -n ${GITLAB_MR_TPL} ]];then
     if [[ -f ${GITLAB_MR_TPL} ]];then
       TPL_FILE=${GITLAB_MR_TPL}
@@ -87,7 +88,8 @@ if [[ "${MRIID}" == "" ]];then
 
   fi
 else
-  echo ""
+    echo "Merge Request ID 已存在， MRIID ${MRIID}"
 fi
+gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --target-branch ${TARGET_BRANCH}
 
 

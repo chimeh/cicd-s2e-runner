@@ -281,3 +281,8 @@ set -v
 fi
 set +v
 rm -rf ${K8S_NS}-${SVCNAME}
+set +e
+if [[ -f ${SCRIPT_DIR}/rancher-auto ]];then
+  source  ${SCRIPT_DIR}/rancher-auto
+fi
+set -e
