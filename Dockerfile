@@ -154,7 +154,9 @@ COPY deployments/s2erunner/runner/secrets/email/mail.rc             /etc/mail.rc
 COPY deployments/s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properties
 COPY deployments/s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
 COPY deployments/s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
+#
 COPY deployments/s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
+#
 COPY deployments/s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
 COPY deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
 COPY deployments/s2emetricd/secrets/logstash                             /etc/logstash

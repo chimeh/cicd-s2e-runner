@@ -228,10 +228,10 @@ function do_artifact_build_java()
         SONAR_OPT=""
     fi
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-        mvn clean package deploy ${SONAR_OPT}
+        mvn clean package deploy ${SONAR_OPT} ${S2I_MVN_OPT}
         exit 0
     else
-        mvn clean package ${SONAR_OPT}
+        mvn clean package ${SONAR_OPT} ${S2I_MVN_OPT}
     fi
 }
 function do_artifact_build()
@@ -269,6 +269,9 @@ function do_artifact_build()
 function do_docker_get_imgurl_by_dockerfile()
 {
     echo "$FUNCNAME"
+    if [[ ! -f .dockerignore ]];then
+      echo ".git" > .dockerignore
+    fi
     DOCKER_THIS_DOCKERFILE=$(realpath $1)
     if [[ $# -gt 1 ]];then
         MY_SLOT=$2
@@ -374,7 +377,7 @@ function do_docker_build()
         echo "DOCKER_URL=${DOCKER_URL}"
         echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
         echo "##########################################"
-        docker build --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
+        docker build ${S2I_DOCKER_OPT} --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
         docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
 
         slot=0
