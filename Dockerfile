@@ -42,7 +42,7 @@ RUN mkdir -p /root/ts \
 RUN yum install -y python3-devel python3-pip python3-setuptools  yamllint
 # golang
 RUN wget -q -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz \
- && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt \
+ && tar -xzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt \
  && rm -rf /root/ts
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
@@ -52,7 +52,7 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
 RUN mkdir -p /root/ts \
  && yum install -y  openssl-devel zlib-devel curl-devel expat-devel gettext-devel \
  && wget -q -P /root/ts "http://mirrors.ustc.edu.cn/kernel.org/software/scm/git/git-${GIT_VERSION}.tar.gz" \
- && tar -xvzf /root/ts/git-${GIT_VERSION}.tar.gz -C /root/ts \
+ && tar -xzf /root/ts/git-${GIT_VERSION}.tar.gz -C /root/ts \
  && make -j2 prefix=/usr/local install -C /root/ts/git-${GIT_VERSION} \
  && yum install --nogpgcheck -y git-lfs \
  && rm -rf /root/ts
