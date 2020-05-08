@@ -11,7 +11,7 @@ code-check:
   stage: artifact-docker-build
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
+    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
     - echo ${MOD_SUBDIR}
     - for subdir in ${MOD_SUBDIR} .;do
@@ -30,7 +30,7 @@ artifact-docker-build:
   stage: artifact-docker-build
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
+    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
     - echo ${MOD_SUBDIR}
     - for subdir in ${MOD_SUBDIR} .;do
@@ -56,7 +56,7 @@ deploy-to-dev:
   stage: deploy-dev-env
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
+    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
     - echo ${MOD_SUBDIR}
     - for subdir in ${MOD_SUBDIR} .;do
@@ -94,7 +94,7 @@ deploy-test-blue:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
+    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
     - echo ${MOD_SUBDIR}
     - for subdir in ${MOD_SUBDIR} .;do
@@ -133,7 +133,7 @@ roll-test-from-prd:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
+    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
     - echo ${MOD_SUBDIR}
     - for subdir in ${MOD_SUBDIR} .;do
@@ -172,7 +172,7 @@ test-blue-setup:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
+    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
     - echo ${MOD_SUBDIR}
     - for subdir in ${MOD_SUBDIR} .;do
@@ -209,7 +209,7 @@ deploy-uat:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
+    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
     - echo ${MOD_SUBDIR}
     - for subdir in ${MOD_SUBDIR} .;do
@@ -247,7 +247,7 @@ deploy-prd-blue:
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
+    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
     - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
     - echo ${MOD_SUBDIR}
     - for subdir in ${MOD_SUBDIR} .;do
