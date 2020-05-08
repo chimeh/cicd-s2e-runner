@@ -89,7 +89,8 @@ RUN mkdir -p /root/ts \
     && rm -rf /root/ts
 
 # gitlab cli
-RUN  pip3 install --index-url http://mirrors.cloud.tencent.com/pypi/simple --upgrade python-gitlab
+RUN  pip3 install --index-url http://mirrors.cloud.tencent.com/pypi/simple \
+  --trusted-host mirrors.cloud.tencent.com --upgrade python-gitlab
 
 # jira ... atlassian cli
 # atlassian cli https://marketplace.atlassian.com/search?query=bob%20swift%20cli
@@ -105,7 +106,7 @@ RUN mkdir -p /root/ts \
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
 RUN tar -xf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /opt/aliyun-cli-linux-latest-amd64.tgz \
- && pip3 install --index-url http://mirrors.cloud.tencent.com/pypi/simple  coscmd tccli
+ && pip3 install --index-url http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com  coscmd tccli
 
 #rancher cli
 ARG RANCHER_VER=v2.3.1
