@@ -171,7 +171,7 @@ RUN export PATH="/opt/go/bin/:${PATH}" \
 COPY docker /docker
 
 RUN yum -y update \
- && yum install --nogpgcheck -y sudo \
+ && yum install --nogpgcheck -y sudo bind-utils\
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
  && yum clean all \
  && rm -rf /var/cache/yum \
