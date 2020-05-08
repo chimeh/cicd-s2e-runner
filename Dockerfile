@@ -13,7 +13,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
 
 RUN yum install -y --nogpgcheck  epel-release \
  && sed -e 's|^metalink=|#metalink=|g' \
-         -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.cloud.tencent.com/epel/|g' \
+         -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=http://mirrors.cloud.tencent.com/epel/|g' \
          -i.bak /etc/yum.repos.d/epel.repo \
  && yum install -y ansible
 
