@@ -167,7 +167,7 @@ COPY deployments/s2emetricd/secrets/nginx/default.conf                   /etc/ng
 COPY s2e    /s2e
 COPY s2ectl /s2ectl
 RUN export PATH="/opt/go/bin/:${PATH}" \
- && go env -w GOPROXY="https://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
+ && go env -w GOPROXY="http://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
  && cd /s2ectl;bash build.sh;
 
 # runner entrypoint
