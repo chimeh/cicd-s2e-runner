@@ -4,7 +4,7 @@ stages:
   - artifact-docker-build
   - deploy-dev-env
   - deploy-test-env
-  - deploy-prod-env
+  - deploy
   - src-auto-version
 #####
 code-check:
@@ -109,6 +109,7 @@ deploy-test-blue:
     - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
     - s2i . deploy-blue
     - s2i . deploy-if-not-exist
+    - done
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
@@ -147,7 +148,6 @@ roll-test-from-prd:
     - export SRC_K8S_KUBECONFIG=${PRD_K8S_KUBECONFIG}
     - export SRC_K8S_NS=${S2E_ORG}${S2E_NS}${PRD_K8S_NS_SUFFIX}
     - s2i . exec k8s-app-mirror ${SRC_K8S_KUBECONFIG} ${K8S_KUBECONFIG} ${SRC_K8S_NS} ${K8S_NS} ${CI_PROJECT_NAME}
-    - fi
     - done
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
@@ -198,8 +198,8 @@ test-blue-setup:
     paths:
       - .s2i/
 
-deploy-to-uat:
-  stage: deploy-prod-env
+deploy-uat:
+  stage: deploy
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -235,8 +235,8 @@ deploy-to-uat:
     paths:
       - .s2i/
 
-deploy-to-prd-blue:
-  stage: deploy-prod-env
+deploy-prd-blue:
+  stage: deploy
   when: manual
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -297,7 +297,7 @@ prepare-deploy-test:
       - .s2i/
 #####
 prepare-deploy-prod:
-  stage: deploy-prod-env
+  stage: deploy
   when: manual
   script:
     - - DST_BRANCH_NAME="master"
@@ -316,7 +316,7 @@ prepare-deploy-prod:
     paths:
       - .s2i/
 pages:
-  stage: deploy-prod-env
+  stage: deploy
   script:
     - mkdir -p .s2i
     - mkdir -p public

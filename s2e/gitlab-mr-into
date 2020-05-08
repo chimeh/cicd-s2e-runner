@@ -91,7 +91,7 @@ if [[ "${MRIID}" == "" ]];then
   egrep --no-filename 'clusterIP:' -r *service*.yaml >> .s2i/request-note.txt
   fi
   set -e
-  if [[ ${rv} -ne 0 ]];then
+  if [[ ${rv} -eq 0 ]];then
       gitlab project-merge-request-note create \
       --project-id ${CI_PROJECT_ID}  \
       --mr-iid ${MRIID} \
@@ -101,6 +101,9 @@ if [[ "${MRIID}" == "" ]];then
 else
     echo "Merge Request ID 已存在， MRIID ${MRIID}"
 fi
+set +e
 gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --target-branch ${TARGET_BRANCH} >/dev/null 2>&1
+echo $?
 gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --labels "need-code-review" >/dev/null 2>&1
-
+echo $?
+set -e
