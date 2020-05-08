@@ -461,6 +461,14 @@ function do_deploy_k8s()
     echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
     echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
     echo "##########################################"
+    echo "detect Dockerfile"
+    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
+    eval ${DETECT_DOCKERFILE}
+    DOCKERFILE_COUNT=`eval ${DETECT_DOCKERFILE}|wc -l`
+    if [[ ${DOCKERFILE_COUNT} -eq 0 ]];then
+        echo "no Dockerfile detect"
+        exit 0
+    fi
     kubectl get node
     kubectl  cluster-info
     ### ensure ns exists
@@ -470,14 +478,6 @@ function do_deploy_k8s()
     set -e
     if [[ ${rv} -ne 0 ]];then
         kubectl --kubeconfig ${K8S_KUBECONFIG} create  namespace ${K8S_NS}
-    fi
-    echo "detect Dockerfile"
-    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
-    eval ${DETECT_DOCKERFILE}
-    DOCKERFILE_COUNT=`eval ${DETECT_DOCKERFILE}|wc -l`
-    if [[ ${DOCKERFILE_COUNT} -eq 0 ]];then
-        echo "no Dockerfile detect"
-        exit 0
     fi
     i=0
     eval ${DETECT_DOCKERFILE} | while read d;do
@@ -509,7 +509,7 @@ function do_deploy_k8s()
                       kubectl set image -n ${MY_K8S_NS} deployments ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} ${SVCNAME}=${DOCKER_URL}
                     fi
                 else
-                    bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
+                    bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
                     kubectl -n ${MY_K8S_NS} scale --replicas=0 deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
                 fi
                     #report
@@ -527,9 +527,9 @@ function do_deploy_k8s()
 }
 function do-blue-pod-active-minutes() {
     DEPLOYMENT_PODNAME_SUFFIX=""
-    save_green_pod_cnt=$(kubectl get -n  ${SRC_NS} -o=jsonpath='{.spec.replicas}' deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX})
+    save_green_pod_cnt=$(kubectl get -n  ${K8S_NS} -o=jsonpath='{.spec.replicas}' deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX})
     DEPLOYMENT_PODNAME_SUFFIX="-blue"
-    save_blue_pod_cnt=$(kubectl get -n  ${SRC_NS} -o=jsonpath='{.spec.replicas}' deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX})
+    save_blue_pod_cnt=$(kubectl get -n  ${K8S_NS} -o=jsonpath='{.spec.replicas}' deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX})
     if [[ ${save_green_pod_cnt} == "" ]];then
       return
       save_green_pod_cnt=1

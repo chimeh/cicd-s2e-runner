@@ -167,42 +167,6 @@ roll-test-from-prd:
     expire_in: 24h
     paths:
       - .s2i/
-test-blue-setup:
-  stage: deploy-test-env
-  when: manual
-  script:
-    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
-    - MOD_SUBDIR=$(git diff  --dirstat=files,0,cumulative  $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | sed 's/^[ 0-9.]\+% //g' | cut -d/ -f1 | sort | uniq)
-    - echo ${MOD_SUBDIR}
-    - for subdir in ${MOD_SUBDIR} .;do
-    - cd ${CI_PROJECT_DIR}/${subdir}
-    - echo "##${subdir}"
-    - export S2E_ORG
-    - export S2E_NS
-    - export K8S_KUBECONFIG=${TEST_K8S_KUBECONFIG}
-    - export K8S_NS_SUFFIX=${TEST_K8S_NS_SUFFIX}
-    - export K8S_NS=${S2E_ORG}${S2E_NS}${K8S_NS_SUFFIX}
-    - export K8S_DOMAIN_INTERNAL=${TEST_K8S_DOMAIN_INTERNAL}
-    - export K8S_DOMAIN_PUBLIC=${TEST_K8S_DOMAIN_PUBLIC}
-    - export INGRESS_INTERNAL_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
-    - export INGRESS_PUBLIC_ENABLED=${TEST_INGRESS_INTERNAL_ENABLED}
-    - export INGRESS_CLASS_INTERNAL=${TEST_INGRESS_CLASS_INTERNAL}
-    - export INGRESS_CLASS_PUBLIC=${TEST_INGRESS_CLASS_PUBLIC}
-    - s2i . blue-active-minutes
-    - done
-  after_script:
-    - set -o allexport; source s2ectl.env;set +o allexport
-    - s2i . exec post-all-job
-  only:
-    - deploy/test
-  dependencies: []
-  artifacts:
-    when: on_success
-    name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
-    expire_in: 24h
-    paths:
-      - .s2i/
 
 deploy-uat:
   stage: deploy

@@ -9,14 +9,13 @@ USAGE="
   $0, oneof cicd toolset, integrate rancher with kubernetes, deploy a img into NS ,auto generate deployment, ingress, service;
   export K8S_DOMAIN_INTERNAL=nxengine.cn
   export K8S_DOMAIN_PUBLIC=bu5-dev.tx
-  export K8S_BLUE_POD_SFFIX=""
+  export DEPLOYMENT_PODNAME_SUFFIX="${DEPLOYMENT_PODNAME_SUFFIX}"
   export INGRESS_INTERNAL_ENABLED=1
   export INGRESS_PUBLIC_ENABLED=1
   export INGRESS_CLASS_INTERNAL=nginx
   export INGRESS_CLASS_PUBLIC=nginx
   usage: $(basename $(realpath $0))  IMG SVCNAME K8S_NS [PORTS: 80,8080,...] [K8S_AUTOCD:0|1] [DOMAIN_INTERNAL] [DOMAIN_PUBLIC]
   usage: $(basename $(realpath $0)) docker.io/nginx:latest nginx  default 80,8080  1 dev-k8s.tx e-engine.cn"
-echo "${USAGE}"
 echo "###########################################"
 
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
@@ -90,9 +89,9 @@ else
     K8S_AUTOCD=$5
 fi
 
-CATALOG_NAME=$(echo ${SVCNAME} | tr '[A-Z]' '[a-z]')
+CATALOG_NAME=$(echo ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} | tr '[A-Z]' '[a-z]')
 VERSION=${CURDATE}${BUILD_COUNTER}
-APPNAME=${WORKDIR}/${K8S_NS}-${SVCNAME}
+APPNAME=${WORKDIR}/${K8S_NS}-${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
 VAULE_FILENAME=values-${SVCNAME}.yaml
 COMMONCHARTVERSION=1.0
 echo "IMG=${IMG}"
@@ -148,10 +147,14 @@ EOF
 echo "#gen charts and depencies"
 echo  'dependencies:' > ${APPNAME}/requirements.yaml
 for i in ${SVCNAME};do \
-    name=$i
+    name=${SVCNAME}
     echo "gen ${name} charts"
     img=${IMG}
     /bin/cp -rf  ${TPLTOP}/generic/xxx-generic-chart ${APPNAME}/charts/$name
+    # if DEPLOYMENT_PODNAME_SUFFIX not empty, only keey deployment, rm service、ingress
+    if [[ "${DEPLOYMENT_PODNAME_SUFFIX}" != "" ]];then
+      find ${APPNAME}/charts/${name}/templates -type f -iname "*.yaml" -and  ! -iname "deployment.yaml"  -delete
+    fi
     if [[ -n ${K8S_NS} ]];then
        echo "get env.txt from ${K8S_NS} "
        touch ${APPNAME}/charts/${name}/env.txt.old
@@ -209,7 +212,7 @@ EOF
 
 
 for i in ${SVCNAME};do \
-    name=$i
+    name=${SVCNAME}
     img=${IMG}
 cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
 ${name}:
@@ -250,13 +253,13 @@ done
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
 echo "#auto deploy"
   set +e
-  kubectl get -n ${K8S_NS} deployment $i
+  kubectl get -n ${K8S_NS} deployment ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
   rv=$?
   set -e
   set -x
 set -v
   if [[ ${rv} -eq 0 ]];then
-    kubectl set image -n ${K8S_NS} deployment ${SVCNAME}  ${SVCNAME}=${IMG}
+    kubectl set image -n ${K8S_NS} deployment ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}  ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}=${IMG}
   else
     set +e
     kubectl version
@@ -267,10 +270,10 @@ set -v
     rv=$?
     if [[ ${rv} -eq 0 ]];then
        # helm 2.x
-       helm2 upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+       helm2 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME}
     else
        # helm 3.x
-       helm3 upgrade --force --install  --namespace ${K8S_NS} ${K8S_NS}-${SVCNAME} ${APPNAME}
+       helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME}
     fi
   fi
 #  kubectl set resources deployment -n ${K8S_NS} deployment ${i} --limits=cpu=200m,memory=1024Mi 
@@ -280,7 +283,7 @@ set -v
   fi
 fi
 set +v
-rm -rf ${K8S_NS}-${SVCNAME}
+rm -rf ${APPNAME}
 set +e
 if [[ -f ${SCRIPT_DIR}/rancher-auto ]];then
   source  ${SCRIPT_DIR}/rancher-auto
