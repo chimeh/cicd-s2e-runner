@@ -54,10 +54,11 @@ fi
 
 
 # check is there open mr on this branch
+MIID_FILE=$(echo .mr-iid.${CI_PROJECT_ID}.${SRC_BRANCH} | tr / -)
 gitlab  project-merge-request list --project-id ${CI_PROJECT_ID} \
- --state opened --source-branch ${SRC_BRANCH} | head -n 1 | awk '{print $2}' > $(echo .mr-iid.${CI_PROJECT_ID}.${SRC_BRANCH} | tr / -)
+ --state opened --source-branch ${SRC_BRANCH} | head -n 1  > ${MIID_FILE}
 
-MRIID=$(head -n 1  $(echo .mr-iid.${CI_PROJECT_ID}.${SRC_BRANCH} | tr / -))
+MRIID=$(head -n 1 ${MIID_FILE} | awk '{print $2}')
 
 if [[ "${MRIID}" == "" ]];then
   echo "Merge Request ID 不存在， 创建MR"
@@ -80,27 +81,29 @@ if [[ "${MRIID}" == "" ]];then
    --title "${SRC_BRANCH} MR: ${CI_COMMIT_TITLE}" \
    --description @.s2i/merge-request-template.md \
    --labels ${GITLAB_USER_LOGIN} \
-   --assignee-id ${GITLAB_USER_ID}
+   --assignee-id ${GITLAB_USER_ID}  | tee  ${MIID_FILE}
 
   rv=$?
   set +e
   if [[  ! -f .s2i/request-note.txt ]];then
   echo "Update by @${GITLAB_USER_LOGIN} " > .s2i/request-note.txt
   echo "域名地址: " >> .s2i/request-note.txt;
-  egrep --no-filename '\- host' -r *ingress*.yaml >> .s2i/request-note.txt
-  egrep --no-filename 'clusterIP:' -r *service*.yaml >> .s2i/request-note.txt
+  egrep --no-filename '\- host' -r *ingress*.yaml >> .s2i/request-note.txt 2>/dev/null
+  egrep --no-filename 'clusterIP:' -r *service*.yaml >> .s2i/request-note.txt 2>/dev/null
   fi
   set -e
+
+  MRIID=$(head -n 1 ${MIID_FILE} | awk '{print $2}')
   if [[ ${rv} -eq 0 ]];then
       gitlab project-merge-request-note create \
       --project-id ${CI_PROJECT_ID}  \
       --mr-iid ${MRIID} \
-      --body @s2i.request-note.txt \
-
+      --body @.s2i/request-note.txt
   fi
 else
     echo "Merge Request ID 已存在， MRIID ${MRIID}"
 fi
+
 set +e
 gitlab project-merge-request update  --project-id ${CI_PROJECT_ID}  --iid ${MRIID} --target-branch ${TARGET_BRANCH} >/dev/null 2>&1
 echo $?
