@@ -52,7 +52,7 @@ artifact-docker-build:
     paths:
       - .s2i/
 #####
-deploy-dev:
+deploy-feature-branch:
   stage: deploy-dev-env
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -89,7 +89,7 @@ deploy-dev:
     expire_in: 24h
     paths:
       - .s2i/
-deploy-test:
+deploy-test-branch:
   stage: deploy-test-env
   when: manual
   script:
@@ -130,7 +130,6 @@ deploy-test:
     - s2i . exec post-all-job
   only:
     - deploy/test
-    - master
   dependencies: []
   artifacts:
     when: on_success
@@ -140,7 +139,7 @@ deploy-test:
       - .s2i/
 
 
-deploy-master:
+deploy-master-branch:
   stage: deploy
   when: manual
   script:
