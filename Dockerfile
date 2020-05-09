@@ -9,11 +9,11 @@ ARG GO_VERSION=1.14.1
 
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
  && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo \
- && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.ustc.edu.cn/centos/$releasever|' /etc/yum.repos.d/*.repo
+ && sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.cloud.tencent.com/centos/$releasever|' /etc/yum.repos.d/*.repo
 
 RUN yum install -y --nogpgcheck  epel-release \
  && sed -e 's|^metalink=|#metalink=|g' \
-         -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.ustc.edu.cn/epel/|g' \
+         -e 's|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=http://mirrors.cloud.tencent.com/epel/|g' \
          -i.bak /etc/yum.repos.d/epel.repo \
  && yum install -y ansible
 
@@ -42,7 +42,7 @@ RUN mkdir -p /root/ts \
 RUN yum install -y python3-devel python3-pip python3-setuptools  yamllint
 # golang
 RUN wget -q -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz \
- && tar -xvzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt \
+ && tar -xzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt \
  && rm -rf /root/ts
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
@@ -52,7 +52,7 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
 RUN mkdir -p /root/ts \
  && yum install -y  openssl-devel zlib-devel curl-devel expat-devel gettext-devel \
  && wget -q -P /root/ts "http://mirrors.ustc.edu.cn/kernel.org/software/scm/git/git-${GIT_VERSION}.tar.gz" \
- && tar -xvzf /root/ts/git-${GIT_VERSION}.tar.gz -C /root/ts \
+ && tar -xzf /root/ts/git-${GIT_VERSION}.tar.gz -C /root/ts \
  && make -j2 prefix=/usr/local install -C /root/ts/git-${GIT_VERSION} \
  && yum install --nogpgcheck -y git-lfs \
  && rm -rf /root/ts
@@ -89,7 +89,8 @@ RUN mkdir -p /root/ts \
     && rm -rf /root/ts
 
 # gitlab cli
-RUN  pip3 install --index-url https://mirrors.aliyun.com/pypi/simple/ --upgrade python-gitlab
+RUN  pip3 install --index-url http://mirrors.cloud.tencent.com/pypi/simple \
+  --trusted-host mirrors.cloud.tencent.com --upgrade python-gitlab
 
 # jira ... atlassian cli
 # atlassian cli https://marketplace.atlassian.com/search?query=bob%20swift%20cli
@@ -105,7 +106,7 @@ RUN mkdir -p /root/ts \
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
 RUN tar -xf /opt/aliyun-cli-linux-latest-amd64.tgz -C /usr/local/bin && rm -f /opt/aliyun-cli-linux-latest-amd64.tgz \
- && pip3 install --index-url https://mirrors.cloud.tencent.com/pypi/simple  coscmd tccli
+ && pip3 install --index-url http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com  coscmd tccli
 
 #rancher cli
 ARG RANCHER_VER=v2.3.1
@@ -154,7 +155,9 @@ COPY deployments/s2erunner/runner/secrets/email/mail.rc             /etc/mail.rc
 COPY deployments/s2erunner/runner/secrets/jira/acli.properties      /root/jira/acli.properties
 COPY deployments/s2erunner/runner/secrets/rancher/cli2.json           /root/.rancher/cli2.json
 COPY deployments/s2erunner/runner/secrets/s2ectl/config.yaml         /root/.s2ectl/config.yaml
+#
 COPY deployments/s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
+#
 COPY deployments/s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
 COPY deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
 COPY deployments/s2emetricd/secrets/logstash                             /etc/logstash
@@ -164,14 +167,14 @@ COPY deployments/s2emetricd/secrets/nginx/default.conf                   /etc/ng
 COPY s2e    /s2e
 COPY s2ectl /s2ectl
 RUN export PATH="/opt/go/bin/:${PATH}" \
- && go env -w GOPROXY="https://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
+ && go env -w GOPROXY="http://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"\
  && cd /s2ectl;bash build.sh;
 
 # runner entrypoint
 COPY docker /docker
 
 RUN yum -y update \
- && yum install --nogpgcheck -y sudo \
+ && yum install --nogpgcheck -y sudo bind-utils\
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
  && yum clean all \
  && rm -rf /var/cache/yum \
