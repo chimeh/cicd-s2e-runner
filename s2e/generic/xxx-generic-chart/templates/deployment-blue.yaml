@@ -32,7 +32,7 @@ spec:
         release: {{ .Release.Name }}
     spec:
       containers:
-      - image:   {{ index .Values (include "xxxxxx.name" .) "image" }}
+      - image:   {{ index .Values (include "xxxxxx.name" .) "blue-image" }}
         imagePullPolicy: IfNotPresent
         name: {{ template "xxxxxx.name" . }}
         {{- if (index .Values "global") }}

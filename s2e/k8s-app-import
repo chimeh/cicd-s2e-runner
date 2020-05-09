@@ -206,13 +206,55 @@ global:
 EOF
 
 
-for i in ${SVCNAME};do \
+#check default deployment
+set +e
+kubectl get -n ${K8S_NS} deployment ${SVCNAME} >/dev/null 2>&1
+rv=$?
+set -e
+if [[ ${rv} -eq 0 ]];then
+  DEPLOYMENT_DEFAULT_EXIST=1
+  OLD_DEFUALT_IMG=$(kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o=jsonpath='{.spec.template.spec.containers[0].image}')
+else
+  DEPLOYMENT_DEFAULT_EXIST=0
+fi
+# check blue deployment
+set +e
+kubectl get -n ${K8S_NS} deployment ${SVCNAME}-blue  >/dev/null 2>&1
+rv=$?
+set -e
+if [[ ${rv} -eq 0  ]];then
+  DEPLOYMENT_BLUE_EXIST=1
+  OLD_BLUE_IMG=$(kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o=jsonpath='{.spec.template.spec.containers[0].image}')
+else
+  DEPLOYMENT_BLUE_EXIST=0
+fi
+
+set +e
+kubectl get -n ${K8S_NS} service ${SVCNAME}  >/dev/null 2>&1
+rv=$?
+set -e
+if [[ ${rv} -eq 0 ]];then
+  SERVICE_EXIST=1
+else
+  SERVICE_EXIST=0
+fi
+if [[ ${DEPLOYMENT_DEFAULT_EXIST} == 0 && ${DEPLOYMENT_BLUE_EXIST} == 0 ]];then
+  SERVICE_EXIST=0
+fi
+
+function do_first_helm_deploy() {
+DEFUALT_IMG=${IMG}
+BLUE_IMG=${IMG}
+
+
+for i in ${SVCNAME};do
     name=${SVCNAME}
     img=${IMG}
 cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
 ${name}:
   ${name}:
-    image: ${IMG}
+    default-image: ${DEFUALT_IMG}
+    blue-image: ${BLUE_IMG}
     deployment:
       default: ${DEPLOYMENT_DEFAULT:-1}
       blue: ${DEPLOYMENT_BLUE:-0}
@@ -242,43 +284,73 @@ cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
 EOF
 
 done
-/bin/cp -f ${APPNAME}/${VAULE_FILENAME}  ${APPNAME}/values.yaml
+  /bin/cp -f ${APPNAME}/${VAULE_FILENAME}  ${APPNAME}/values.yaml
 
-
-if [[ ${K8S_AUTOCD} -gt 0 ]];then
-echo "#auto deploy"
-  if [[ ${DEPLOYMENT_BLUE} -ne 0 ]];then
-    DEPLOYNAME_SUFFIX="-blue"
-  else
-    unset DEPLOYNAME_SUFFIX
-  fi
-  set +e
-  kubectl get -n ${K8S_NS} deployment ${SVCNAME}${DEPLOYNAME_SUFFIX}
+  # detect helm version on k8s
+  kubectl get pod --all-namespaces |egrep tiller >/dev/null 2>&1
   rv=$?
-  set -e
-  set -x
   if [[ ${rv} -eq 0 ]];then
-    if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
-      kubectl set image -n ${K8S_NS} deployment ${SVCNAME}${DEPLOYNAME_SUFFIX} ${SVCNAME}=${IMG}
-    fi
+     # helm 2.x
+     helm2 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME}
   else
-    set +e
-    kubectl version
-    helm version
-    set -e
-    # detect helm version on k8s
-    kubectl get pod --all-namespaces |egrep tiller >/dev/null 2>&1
-    rv=$?
-    if [[ ${rv} -eq 0 ]];then
-       # helm 2.x
-       helm2 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME}
-    else
-       # helm 3.x
-       helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME}
+     # helm 3.x
+     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME}
+  fi
+  rm -rf ${APPNAME}
+}
+
+function do_update_deploy_img() {
+    if [[ ${DEPLOYMENT_DEFAULT} -ne 0 ]];then
+      DEFUALT_IMG=${IMG}
+      set +e
+      kubectl set image -n ${K8S_NS} deployment ${SVCNAME} ${SVCNAME}=${DEFUALT_IMG}
+      rv=$?
+      set -e
+      if [[ ${rv} -ne 0 ]];then
+        # helm already run, but default not exist, copy from blue
+        kubectl get -n ${K8S_NS} deployment ${SVCNAME}-blue -o yaml --export > deploy.${SVCNAME}.yaml
+        perl -ni -e "s@@[ ]{0,4}name: ${SVCNAME}-blue@name: ${SVCNAME}@g;print"   deploy.${SVCNAME}.yaml
+        kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}.yaml
+        kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}.yaml
+        kubectl set image -n ${K8S_NS} deployment ${SVCNAME} ${SVCNAME}=${DEFUALT_IMG}
+      fi
+    fi
+    if [[ ${DEPLOYMENT_BLUE} -ne 0 ]];then
+      BLUE_IMG=${IMG}
+      set +e
+      kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
+      rv=$?
+      set -e
+      if [[ ${rv} -ne 0 ]];then
+        # helm already run, but default not exist, copy from default
+        kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o yaml --export > deploy.${SVCNAME}-blue.yaml
+        perl -ni -e "s@([ ]{0,4})name: ${SVCNAME}@\1name: ${SVCNAME}-blue@g;print"   deploy.${SVCNAME}-blue.yaml
+        kubectl apply -f deploy.${SVCNAME}-blue.yaml
+        kubectl scale --replicas=0 -f deploy.${SVCNAME}-blue.yaml
+        kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
+      fi
+    fi
+}
+
+set +e
+kubectl version
+helm version
+set -e
+if [[ ${K8S_AUTOCD} -gt 0 ]];then
+  echo "#auto deploy"
+  if [[ ${SERVICE_EXIST} -eq 0 ]];then
+    # service not exist
+    do_first_helm_deploy
+  else
+    if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
+      do_update_deploy_img
     fi
   fi
+
+
+
 fi
-rm -rf ${APPNAME}
+
 set +e
 if [[ -f ${SCRIPT_DIR}/rancher-auto ]];then
   source  ${SCRIPT_DIR}/rancher-auto
