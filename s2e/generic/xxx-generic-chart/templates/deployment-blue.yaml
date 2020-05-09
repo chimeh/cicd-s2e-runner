@@ -1,10 +1,10 @@
 {{- if (index .Values (include "xxxxxx.name" .)) }}
 {{- if (index .Values (include "xxxxxx.name" .) "deployment") }}
-{{- if (index .Values (include "xxxxxx.name" .) "deployment" "default") -}}
+{{- if (index .Values (include "xxxxxx.name" .) "deployment" "blue") -}}
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: "{{ template "xxxxxx.fullname" . }}"
+  name: "{{ template "xxxxxx.fullname" . }}-blue"
   labels:
     qcloud-app: "{{ template "xxxxxx.name" . }}"
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -15,7 +15,7 @@ spec:
   {{- if and (index .Values (include "xxxxxx.name" .)) (index .Values (include "xxxxxx.name" .) "replicaCount") }}
   replicas: {{ index .Values (include "xxxxxx.name" .) "replicaCount" }}
   {{- else -}}
-  replicas: 1
+  replicas: 0
   {{- end}}
   selector:
     matchLabels:
