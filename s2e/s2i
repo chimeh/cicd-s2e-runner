@@ -501,17 +501,15 @@ function do_deploy_k8s()
             do_docker_get_imgurl_by_dockerfile ${d} $slot
             for SVCNAME in ${K8S_SVCNAMES};do
                 set +e
-                kubectl get -n ${MY_K8S_NS}  deployments ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
+                kubectl get -n ${MY_K8S_NS}  deployments ${SVCNAME}
                 RETVAL=$?
                 set -e
                 if [[ ${RETVAL} -eq 0 ]];then
-                    if [[ ${UPDATE_IMG_IF_EXIST} -gt 0 ]];then
-                      kubectl set image -n ${MY_K8S_NS} deployments ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} ${SVCNAME}=${DOCKER_URL}
+                    if [[ ${DEPLOYMENT_UPDATE_IMG} -gt 0 ]];then
+                      kubectl set image -n ${MY_K8S_NS} deployments ${SVCNAME} ${SVCNAME}=${DOCKER_URL}
                     fi
                 else
                     bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
-                    kubectl -n ${MY_K8S_NS} scale --replicas=0 deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
-                fi
                     #report
                     set +e
                     kubectl get -n ${MY_K8S_NS}  service ${SVCNAME}  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.service.yaml
@@ -519,46 +517,12 @@ function do_deploy_k8s()
                     kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}-public  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.ingress.public.yaml
                     kubectl get -n ${MY_K8S_NS}  ingress ${SVCNAME}-internal  -o yaml > ${S2I_REPORT_DIR}/${CI_JOB_STAGE}.${SVCNAME}.ingress.internal.yaml
                     set -e
+                fi
             done
             slot=$(( $slot + 1 ))
           done
         fi
     done
-}
-function do-blue-pod-active-minutes() {
-    DEPLOYMENT_PODNAME_SUFFIX=""
-    save_green_pod_cnt=$(kubectl get -n  ${K8S_NS} -o=jsonpath='{.spec.replicas}' deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX})
-    DEPLOYMENT_PODNAME_SUFFIX="-blue"
-    save_blue_pod_cnt=$(kubectl get -n  ${K8S_NS} -o=jsonpath='{.spec.replicas}' deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX})
-    if [[ ${save_green_pod_cnt} == "" ]];then
-      return
-      save_green_pod_cnt=1
-    fi
-    if [[ ${save_blue_pod_cnt} == "" ]];then
-      return
-      save_blue_pod_cnt=0
-    fi
-    set +e
-    # active blue pod replicas
-    DEPLOYMENT_PODNAME_SUFFIX="-blue"
-    kubectl scale -n ${K8S_NS} --replicas=1 deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
-    # unactive default pod replicas
-    DEPLOYMENT_PODNAME_SUFFIX=""
-    kubectl scale -n ${K8S_NS} --replicas=0 deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
-
-    for i in $(seq 1 5); do
-      kubectl get -n ${K8S_NS} deployment/${SVCNAME} deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
-      echo "sleep 60s,";
-      kubectl get -n ${K8S_NS} ingress  |egrep ${SVCNAME}
-      sleep 60
-    done
-    # reactive default pod replicas
-    DEPLOYMENT_PODNAME_SUFFIX=""
-    kubectl scale -n ${K8S_NS} --replicas=${save_green_pod_cnt} deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
-    # recover blue pod replicas
-    DEPLOYMENT_PODNAME_SUFFIX="-blue"
-    kubectl scale -n ${K8S_NS} --replicas=${save_blue_pod_cnt} deployment/${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
-    set -e
 }
 
 function s2i_metric()
@@ -620,26 +584,29 @@ case ${ACTION_STAGE} in
     docker)
         do_docker_build
         ;;
-    deploy-if-not-exist)
-        UPDATE_IMG_IF_EXIST=0
-        do_deploy_k8s
-        ;;
     deploy)
-        UPDATE_IMG_IF_EXIST=1
+        export DEPLOYMENT_UPDATE_IMG=1
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
         do_deploy_k8s
         ;;
-    deploy-green)
-        UPDATE_IMG_IF_EXIST=1
-        export DEPLOYMENT_PODNAME_SUFFIX="-green"
+    deploy-update-default)
+        export DEPLOYMENT_UPDATE_IMG=1
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
         do_deploy_k8s
         ;;
-    deploy-blue)
-        UPDATE_IMG_IF_EXIST=1
-        export DEPLOYMENT_PODNAME_SUFFIX="-blue"
+    deploy-update-blue)
+        export DEPLOYMENT_UPDATE_IMG=1
+        export DEPLOYMENT_DEFAULT=0
+        export DEPLOYMENT_BLUE=1
         do_deploy_k8s
         ;;
-    blue-active-minutes*)
-        do-blue-pod-active-minutes
+    deploy-insert-default)
+        export DEPLOYMENT_UPDATE_IMG=0
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
+        do_deploy_k8s
         ;;
     ACTION_ALL*)
         echo "自动检测源码类型，并做artifact 构建，docker 构建"

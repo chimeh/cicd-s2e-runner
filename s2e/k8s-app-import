@@ -9,7 +9,6 @@ USAGE="
   $0, oneof cicd toolset, integrate rancher with kubernetes, deploy a img into NS ,auto generate deployment, ingress, service;
   export K8S_DOMAIN_INTERNAL=nxengine.cn
   export K8S_DOMAIN_PUBLIC=bu5-dev.tx
-  export DEPLOYMENT_PODNAME_SUFFIX="${DEPLOYMENT_PODNAME_SUFFIX}"
   export INGRESS_INTERNAL_ENABLED=1
   export INGRESS_PUBLIC_ENABLED=1
   export INGRESS_CLASS_INTERNAL=nginx
@@ -89,9 +88,9 @@ else
     K8S_AUTOCD=$5
 fi
 
-CATALOG_NAME=$(echo ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX} | tr '[A-Z]' '[a-z]')
+CATALOG_NAME=$(echo ${SVCNAME} | tr '[A-Z]' '[a-z]')
 VERSION=${CURDATE}${BUILD_COUNTER}
-APPNAME=${WORKDIR}/${K8S_NS}-${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
+APPNAME=${WORKDIR}/${K8S_NS}-${SVCNAME}
 VAULE_FILENAME=values-${SVCNAME}.yaml
 COMMONCHARTVERSION=1.0
 echo "IMG=${IMG}"
@@ -151,10 +150,6 @@ for i in ${SVCNAME};do \
     echo "gen ${name} charts"
     img=${IMG}
     /bin/cp -rf  ${TPLTOP}/generic/xxx-generic-chart ${APPNAME}/charts/$name
-    # if DEPLOYMENT_PODNAME_SUFFIX not empty, only keey deployment, rm service、ingress
-    if [[ "${DEPLOYMENT_PODNAME_SUFFIX}" != "" ]];then
-      find ${APPNAME}/charts/${name}/templates -type f -iname "*.yaml" -and  ! -iname "deployment.yaml"  -delete
-    fi
     if [[ -n ${K8S_NS} ]];then
        echo "get env.txt from ${K8S_NS} "
        touch ${APPNAME}/charts/${name}/env.txt.old
@@ -217,17 +212,17 @@ for i in ${SVCNAME};do \
 cat >> ${APPNAME}/${VAULE_FILENAME} <<EOF
 ${name}:
   ${name}:
-    replicaCount: 1
-    ingress:
-      internal: 
-        enabled: ${INGRESS_INTERNAL_ENABLED}
-        host: {}
-      public: 
-        enabled: ${INGRESS_PUBLIC_ENABLED}
-        host: {}
     image: ${IMG}
     deployment:
-      podname_suffix: ${DEPLOYMENT_PODNAME_SUFFIX}
+      default: ${DEPLOYMENT_DEFAULT:-1}
+      blue: ${DEPLOYMENT_BLUE:-0}
+    ingress:
+      internal:
+        enabled: ${INGRESS_INTERNAL_ENABLED}
+        host: {}
+      public:
+        enabled: ${INGRESS_PUBLIC_ENABLED}
+        host: {}
     service:
       type: ClusterIP
 EOF
@@ -252,21 +247,27 @@ done
 
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
 echo "#auto deploy"
+  if [[ ${DEPLOYMENT_BLUE} -ne 0 ]];then
+    DEPLOYNAME_SUFFIX="-blue"
+  else
+    unset DEPLOYNAME_SUFFIX
+  fi
   set +e
-  kubectl get -n ${K8S_NS} deployment ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}
+  kubectl get -n ${K8S_NS} deployment ${SVCNAME}${DEPLOYNAME_SUFFIX}
   rv=$?
   set -e
   set -x
-set -v
   if [[ ${rv} -eq 0 ]];then
-    kubectl set image -n ${K8S_NS} deployment ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}  ${SVCNAME}${DEPLOYMENT_PODNAME_SUFFIX}=${IMG}
+    if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
+      kubectl set image -n ${K8S_NS} deployment ${SVCNAME}${DEPLOYNAME_SUFFIX} ${SVCNAME}=${IMG}
+    fi
   else
     set +e
     kubectl version
     helm version
     set -e
     # detect helm version on k8s
-    kubectl get pod --all-namespaces |egrep tiller
+    kubectl get pod --all-namespaces |egrep tiller >/dev/null 2>&1
     rv=$?
     if [[ ${rv} -eq 0 ]];then
        # helm 2.x
@@ -276,13 +277,7 @@ set -v
        helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME}
     fi
   fi
-#  kubectl set resources deployment -n ${K8S_NS} deployment ${i} --limits=cpu=200m,memory=1024Mi 
-  set +x
-  if [[ ${CICD_NS_RABC_ENABLED} -gt 0 ]];then
-    kubectl set -n  ${K8S_NS}  serviceaccount deployment ${SVCNAME}  ${SVCNAME}
-  fi
 fi
-set +v
 rm -rf ${APPNAME}
 set +e
 if [[ -f ${SCRIPT_DIR}/rancher-auto ]];then
