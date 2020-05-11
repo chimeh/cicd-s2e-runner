@@ -267,7 +267,7 @@ function do_update_deploy_img() {
     if [[ ${DEPLOYMENT_DEFAULT} -ne 0 ]];then
       DEFUALT_IMG=${IMG}
       set +e
-      kubectl get image -n ${K8S_NS} deployment ${SVCNAME}
+      kubectl get -n ${K8S_NS} deployment ${SVCNAME}
       rv=$?
       set -e
       if [[ ${rv} -ne 0 ]];then
@@ -278,7 +278,7 @@ function do_update_deploy_img() {
         kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}.json
       fi
       if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
-        kubectl set image -n ${K8S_NS} deployment ${SVCNAME} ${SVCNAME}=${DEFUALT_IMG}
+        kubectl set -n ${K8S_NS} deployment ${SVCNAME} ${SVCNAME}=${DEFUALT_IMG}
       fi
     fi
     if [[ ${DEPLOYMENT_BLUE} -ne 0 ]];then
