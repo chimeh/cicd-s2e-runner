@@ -308,10 +308,10 @@ function do_update_deploy_img() {
       set -e
       if [[ ${rv} -ne 0 ]];then
         # helm already run, but default not exist, copy from blue
-        kubectl get -n ${K8S_NS} deployment ${SVCNAME}-blue -o yaml --export > deploy.${SVCNAME}.yaml
-        perl -ni -e "s@@[ ]{0,4}name: ${SVCNAME}-blue@name: ${SVCNAME}@g;print"   deploy.${SVCNAME}.yaml
-        kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}.yaml
-        kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}.yaml
+        kubectl get -n ${K8S_NS} deployment ${SVCNAME}-blue -o json --export > deploy.${SVCNAME}-blue.json
+        jq ".metadata.name=\"${SVCNAME}\"" deploy.${SVCNAME}-blue.json > deploy.${SVCNAME}.json
+        kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}.json
+        kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}.json
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME} ${SVCNAME}=${DEFUALT_IMG}
       fi
     fi
@@ -323,10 +323,10 @@ function do_update_deploy_img() {
       set -e
       if [[ ${rv} -ne 0 ]];then
         # helm already run, but default not exist, copy from default
-        kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o yaml --export > deploy.${SVCNAME}-blue.yaml
-        perl -ni -e "s@([ ]{0,4})name: ${SVCNAME}@\1name: ${SVCNAME}-blue@g;print"   deploy.${SVCNAME}-blue.yaml
-        kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}-blue.yaml
-        kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}-blue.yaml
+        kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o json --export > deploy.${SVCNAME}.json
+        jq ".metadata.name=\"${SVCNAME}-blue\"" deploy.cicd-gitlab-runner-s2e.json > deploy.cicd-gitlab-runner-s2e-blue.json
+        kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}-blue.json
+        kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}-blue.json
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
       fi
     fi
