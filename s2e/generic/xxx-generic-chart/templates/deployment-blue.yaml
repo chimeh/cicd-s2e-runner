@@ -42,6 +42,7 @@ spec:
                       operator: In
                       values:
                         - {{ template "xxxxxx.name" . }}
+                topologyKey: kubernetes.io/hostname
       containers:
       - image:   {{ index .Values (include "xxxxxx.name" .) "blue-image" }}
         imagePullPolicy: IfNotPresent
