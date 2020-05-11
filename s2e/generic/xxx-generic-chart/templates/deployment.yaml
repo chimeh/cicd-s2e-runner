@@ -31,6 +31,17 @@ spec:
         qcloud-app: {{ template "xxxxxx.name" . }}
         release: {{ .Release.Name }}
     spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: qcloud-app
+                      operator: In
+                      values:
+                        - {{ template "xxxxxx.name" . }}
       containers:
       - image:   {{ index .Values (include "xxxxxx.name" .) "default-image" }}
         imagePullPolicy: IfNotPresent
