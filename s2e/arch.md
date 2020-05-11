@@ -160,3 +160,11 @@ STORY
 metric 功能
 
 每个job 的env 存储到磁盘，由filebeat，es 分析
+
+使用gitlab page 生成 runner部署文档、各语言仓库模板
+
+自动生成docker-compose
+
+非master 最多只能部署到test
+
+master 可以部署到生产

@@ -27,8 +27,8 @@ echo "从 master 创建分支 ${TARGET_BRANCH}，并把分支 ${SRC_BRANCH} 合�
 # recreate branch name deploy-test from master, if merge success, will deploy into test env
 set +e
 gitlab project-branch get --project-id ${CI_PROJECT_ID} --name ${TARGET_BRANCH}
-set -e
 rv=$?
+set -e
 
 if [[ ${rv=$?} -ne 0 ]];then
   # ${TARGET_BRANCH} not exist
