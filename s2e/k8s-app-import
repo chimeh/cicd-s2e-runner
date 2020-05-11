@@ -206,42 +206,6 @@ global:
 EOF
 
 
-#check default deployment
-set +e
-kubectl get -n ${K8S_NS} deployment ${SVCNAME} >/dev/null 2>&1
-rv=$?
-set -e
-if [[ ${rv} -eq 0 ]];then
-  DEPLOYMENT_DEFAULT_EXIST=1
-  OLD_DEFUALT_IMG=$(kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o=jsonpath='{.spec.template.spec.containers[0].image}')
-else
-  DEPLOYMENT_DEFAULT_EXIST=0
-fi
-# check blue deployment
-set +e
-kubectl get -n ${K8S_NS} deployment ${SVCNAME}-blue  >/dev/null 2>&1
-rv=$?
-set -e
-if [[ ${rv} -eq 0  ]];then
-  DEPLOYMENT_BLUE_EXIST=1
-  OLD_BLUE_IMG=$(kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o=jsonpath='{.spec.template.spec.containers[0].image}')
-else
-  DEPLOYMENT_BLUE_EXIST=0
-fi
-
-set +e
-kubectl get -n ${K8S_NS} service ${SVCNAME}  >/dev/null 2>&1
-rv=$?
-set -e
-if [[ ${rv} -eq 0 ]];then
-  SERVICE_EXIST=1
-else
-  SERVICE_EXIST=0
-fi
-if [[ ${DEPLOYMENT_DEFAULT_EXIST} == 0 && ${DEPLOYMENT_BLUE_EXIST} == 0 ]];then
-  SERVICE_EXIST=0
-fi
-
 function do_first_helm_deploy() {
 DEFUALT_IMG=${IMG}
 BLUE_IMG=${IMG}
@@ -303,7 +267,7 @@ function do_update_deploy_img() {
     if [[ ${DEPLOYMENT_DEFAULT} -ne 0 ]];then
       DEFUALT_IMG=${IMG}
       set +e
-      kubectl set image -n ${K8S_NS} deployment ${SVCNAME} ${SVCNAME}=${DEFUALT_IMG}
+      kubectl get -n ${K8S_NS} deployment ${SVCNAME}
       rv=$?
       set -e
       if [[ ${rv} -ne 0 ]];then
@@ -312,13 +276,15 @@ function do_update_deploy_img() {
         jq ".metadata.name=\"${SVCNAME}\"" deploy.${SVCNAME}-blue.json > deploy.${SVCNAME}.json
         kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}.json
         kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}.json
+      fi
+      if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME} ${SVCNAME}=${DEFUALT_IMG}
       fi
     fi
     if [[ ${DEPLOYMENT_BLUE} -ne 0 ]];then
       BLUE_IMG=${IMG}
       set +e
-      kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
+      kubectl get image -n ${K8S_NS} deployment ${SVCNAME}-blue
       rv=$?
       set -e
       if [[ ${rv} -ne 0 ]];then
@@ -327,6 +293,8 @@ function do_update_deploy_img() {
         jq ".metadata.name=\"${SVCNAME}-blue\"" deploy.${SVCNAME}.json > deploy.${SVCNAME}-blue.json
         kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}-blue.json
         kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}-blue.json
+      fi
+      if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
       fi
     fi
@@ -336,18 +304,49 @@ set +e
 kubectl version
 helm version
 set -e
+#check default deployment
+set +e
+kubectl get -n ${K8S_NS} deployment ${SVCNAME} >/dev/null 2>&1
+rv=$?
+set -e
+if [[ ${rv} -eq 0 ]];then
+  DEPLOYMENT_DEFAULT_EXIST=1
+else
+  DEPLOYMENT_DEFAULT_EXIST=0
+fi
+# check blue deployment
+set +e
+kubectl get -n ${K8S_NS} deployment ${SVCNAME}-blue  >/dev/null 2>&1
+rv=$?
+set -e
+if [[ ${rv} -eq 0  ]];then
+  DEPLOYMENT_BLUE_EXIST=1
+else
+  DEPLOYMENT_BLUE_EXIST=0
+fi
+set +e
+kubectl get -n ${K8S_NS} service ${SVCNAME}  >/dev/null 2>&1
+rv=$?
+set -e
+if [[ ${rv} -eq 0 ]];then
+  SERVICE_EXIST=1
+else
+  SERVICE_EXIST=0
+fi
+#both default and blue not exist
+if [[ ${DEPLOYMENT_DEFAULT_EXIST} == 0 && ${DEPLOYMENT_BLUE_EXIST} == 0 ]];then
+  SERVICE_EXIST=0
+fi
+
+
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
   echo "#auto deploy"
   if [[ ${SERVICE_EXIST} -eq 0 ]];then
     # service not exist
     do_first_helm_deploy
   else
-    if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
-      do_update_deploy_img
-    fi
+    do_update_deploy_img
   fi
-
-
 
 fi
 
