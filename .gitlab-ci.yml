@@ -129,7 +129,7 @@ deploy-test-branch:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
   only:
-    - deploy/test
+    - /^deploy/test.*$/
   dependencies: []
   artifacts:
     when: on_success
@@ -194,7 +194,7 @@ prepare-deploy-test:
   stage: deploy-test-env
   when: manual
   script:
-    - DST_BRANCH_NAME="deploy/test"
+    - DST_BRANCH_NAME="deploy/test-$(date +%Y%m)"
     - echo "重新从master 拉取分支 ${DST_BRANCH_NAME}，创建MR，Review，从${CI_COMMIT_BRANCH}合并进${DST_BRANCH_NAME}，从而部署测试环境 "
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - s2i . exec gitlab-mr-into ${CI_COMMIT_BRANCH} ${DST_BRANCH_NAME}
@@ -217,15 +217,16 @@ prepare-deploy-prod:
   stage: deploy
   when: manual
   script:
+    - - SRC_BRANCH_NAME="deploy/test-$(date +%Y%m)"
     - - DST_BRANCH_NAME="master"
       - echo "重新从master 拉取分支 ${DST_BRANCH_NAME}，创建MR，Review，从test分支合并进${DST_BRANCH_NAME}，从而部署环境 "
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . exec gitlab-mr-into deploy/test ${DST_BRANCH_NAME}
+    - s2i . exec gitlab-mr-into ${SRC_BRANCH_NAME} ${DST_BRANCH_NAME}
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
   only:
-    - deploy/test
+    - /^deploy/test.*$/
   artifacts:
     when: on_success
     name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
