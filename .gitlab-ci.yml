@@ -1,6 +1,7 @@
 #s2i:2
 
 stages:
+  - code-check
   - artifact-docker-build
   - deploy-dev-env
   - deploy-test-env
@@ -8,7 +9,7 @@ stages:
   - src-auto-version
 #####
 code-check:
-  stage: artifact-docker-build
+  stage: code-check
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
@@ -130,6 +131,7 @@ deploy-test-branch:
     - s2i . exec post-all-job
   only:
     - /^deploy/test.*$/
+    - /^deploy/hotfix.*$/
   dependencies: []
   artifacts:
     when: on_success
@@ -245,18 +247,6 @@ pages:
     expire_in: 120h
   only:
     - master
-gitlab-auto-merge:
-  stage: src-auto-version
-  script:
-    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . exec gitlab-auto-merge
-  after_script:
-    - s2i . exec post-all-job
-  only:
-    - /^hotfix.*$/
-  except:
-    - tags
-  dependencies: []
 #####
 
 artifact-gen:

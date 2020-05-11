@@ -324,7 +324,7 @@ function do_update_deploy_img() {
       if [[ ${rv} -ne 0 ]];then
         # helm already run, but default not exist, copy from default
         kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o json --export > deploy.${SVCNAME}.json
-        jq ".metadata.name=\"${SVCNAME}-blue\"" deploy.cicd-gitlab-runner-s2e.json > deploy.cicd-gitlab-runner-s2e-blue.json
+        jq ".metadata.name=\"${SVCNAME}-blue\"" deploy.${SVCNAME}.json > deploy.${SVCNAME}-blue.json
         kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}-blue.json
         kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}-blue.json
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
