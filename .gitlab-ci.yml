@@ -192,7 +192,7 @@ deploy-master-branch:
     paths:
       - .s2i/
 #####
-prepare-deploy-test:
+deploy-test-prepare:
   stage: deploy-test-env
   when: manual
   script:
@@ -215,7 +215,7 @@ prepare-deploy-test:
     paths:
       - .s2i/
 #####
-prepare-deploy-prod:
+deploy-prod-prepare:
   stage: deploy
   when: manual
   script:
