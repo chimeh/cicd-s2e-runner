@@ -46,7 +46,8 @@ RUN wget -q -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.t
  && rm -rf /root/ts
 # docker
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 \
- && yum-config-manager --add-repo  https://download.docker.com/linux/centos/docker-ce.repo \
+ && yum-config-manager --add-repo  http://download.docker.com/linux/centos/docker-ce.repo \
+ && sed -i 's+download.docker.com+mirrors.cloud.tencent.com/docker-ce+' /etc/yum.repos.d/docker-ce.repo \
  && yum install -y docker-ce docker-compose
 # git
 RUN mkdir -p /root/ts \
