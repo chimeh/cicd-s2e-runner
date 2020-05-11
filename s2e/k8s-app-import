@@ -326,7 +326,7 @@ function do_update_deploy_img() {
         kubectl get -n ${K8S_NS} deployment ${SVCNAME} -o yaml --export > deploy.${SVCNAME}-blue.yaml
         perl -ni -e "s@([ ]{0,4})name: ${SVCNAME}@\1name: ${SVCNAME}-blue@g;print"   deploy.${SVCNAME}-blue.yaml
         kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}-blue.yaml
-        kubectl scale -n ${K8S_NS}--replicas=0 -f deploy.${SVCNAME}-blue.yaml
+        kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}-blue.yaml
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
       fi
     fi
