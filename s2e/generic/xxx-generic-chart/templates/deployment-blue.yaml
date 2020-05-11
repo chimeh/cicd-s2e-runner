@@ -4,7 +4,7 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: "{{ template "xxxxxx.fullname" . }}-blue"
+  name: {{ template "xxxxxx.fullname" . }}-blue
   labels:
     qcloud-app: "{{ template "xxxxxx.name" . }}"
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -14,9 +14,9 @@ metadata:
 spec:
   {{- if and (index .Values (include "xxxxxx.name" .)) (index .Values (include "xxxxxx.name" .) "replicaCount") }}
   replicas: {{ index .Values (include "xxxxxx.name" .) "replicaCount" }}
-  {{- else -}}
+  {{- else }}
   replicas: 0
-  {{- end}}
+  {{- end }}
   selector:
     matchLabels:
       qcloud-app: {{ template "xxxxxx.name" . }}
@@ -32,7 +32,7 @@ spec:
         release: {{ .Release.Name }}
     spec:
       containers:
-      - image:   {{ index .Values (include "xxxxxx.name" .) "image" }}
+      - image:   {{ index .Values (include "xxxxxx.name" .) "blue-image" }}
         imagePullPolicy: IfNotPresent
         name: {{ template "xxxxxx.name" . }}
         {{- if (index .Values "global") }}

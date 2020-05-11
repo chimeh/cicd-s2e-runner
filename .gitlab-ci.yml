@@ -1,6 +1,7 @@
 #s2i:2
 
 stages:
+  - code-check
   - artifact-docker-build
   - deploy-dev-env
   - deploy-test-env
@@ -8,7 +9,7 @@ stages:
   - src-auto-version
 #####
 code-check:
-  stage: artifact-docker-build
+  stage: code-check
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
@@ -52,7 +53,7 @@ artifact-docker-build:
     paths:
       - .s2i/
 #####
-deploy-dev:
+deploy-feature-branch:
   stage: deploy-dev-env
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
@@ -89,7 +90,7 @@ deploy-dev:
     expire_in: 24h
     paths:
       - .s2i/
-deploy-test:
+deploy-test-branch:
   stage: deploy-test-env
   when: manual
   script:
@@ -129,8 +130,8 @@ deploy-test:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
   only:
-    - deploy/test
-    - master
+    - /^deploy/test.*$/
+    - /^deploy/hotfix.*$/
   dependencies: []
   artifacts:
     when: on_success
@@ -140,7 +141,7 @@ deploy-test:
       - .s2i/
 
 
-deploy-master:
+deploy-master-branch:
   stage: deploy
   when: manual
   script:
@@ -195,7 +196,7 @@ prepare-deploy-test:
   stage: deploy-test-env
   when: manual
   script:
-    - DST_BRANCH_NAME="deploy/test"
+    - DST_BRANCH_NAME="deploy/test-$(date +%Y%m)"
     - echo "重新从master 拉取分支 ${DST_BRANCH_NAME}，创建MR，Review，从${CI_COMMIT_BRANCH}合并进${DST_BRANCH_NAME}，从而部署测试环境 "
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - s2i . exec gitlab-mr-into ${CI_COMMIT_BRANCH} ${DST_BRANCH_NAME}
@@ -218,15 +219,16 @@ prepare-deploy-prod:
   stage: deploy
   when: manual
   script:
+    - - SRC_BRANCH_NAME="deploy/test-$(date +%Y%m)"
     - - DST_BRANCH_NAME="master"
       - echo "重新从master 拉取分支 ${DST_BRANCH_NAME}，创建MR，Review，从test分支合并进${DST_BRANCH_NAME}，从而部署环境 "
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . exec gitlab-mr-into deploy/test ${DST_BRANCH_NAME}
+    - s2i . exec gitlab-mr-into ${SRC_BRANCH_NAME} ${DST_BRANCH_NAME}
   after_script:
     - set -o allexport; source s2ectl.env;set +o allexport
     - s2i . exec post-all-job
   only:
-    - deploy/test
+    - /^deploy/test.*$/
   artifacts:
     when: on_success
     name: ${CI_PROJECT_NAME}-${CI_JOB_STAGE}
@@ -245,18 +247,6 @@ pages:
     expire_in: 120h
   only:
     - master
-gitlab-auto-merge:
-  stage: src-auto-version
-  script:
-    - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
-    - s2i . exec gitlab-auto-merge
-  after_script:
-    - s2i . exec post-all-job
-  only:
-    - /^hotfix.*$/
-  except:
-    - tags
-  dependencies: []
 #####
 
 artifact-gen:
