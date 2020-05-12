@@ -284,7 +284,7 @@ function do_update_deploy_img() {
     if [[ ${DEPLOYMENT_BLUE} -ne 0 ]];then
       BLUE_IMG=${IMG}
       set +e
-      kubectl get image -n ${K8S_NS} deployment ${SVCNAME}-blue
+      kubectl get -n ${K8S_NS} deployment ${SVCNAME}-blue
       rv=$?
       set -e
       if [[ ${rv} -ne 0 ]];then
