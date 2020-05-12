@@ -92,7 +92,7 @@ deploy-feature-branch:
       - .s2i/
 deploy-test-branch:
   stage: deploy-test-env
-  when: manual
+  when: on_success
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
@@ -143,7 +143,7 @@ deploy-test-branch:
 
 deploy-master-branch:
   stage: deploy
-  when: manual
+  when: on_success
   script:
     - set -o allexport;s2ectl exec du -d 1; touch s2ectl.env;source  s2ectl.env;set +o allexport
     - if [[ $CI_BUILD_BEFORE_SHA =~ /^0+$/ ]]; then CI_BUILD_BEFORE_SHA=${$CI_COMMIT_SHA} ; fi
