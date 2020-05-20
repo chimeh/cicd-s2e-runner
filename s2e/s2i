@@ -23,7 +23,7 @@ USAGE="
     export K8S_KUBECONFIG=/root/.kube/config
     export K8S_NS_SUFFIX=-dev
     export K8S_NS=default
-    export K8S_DOMAIN_INTERNAL=nxengine.cn
+    export K8S_DOMAIN_INTERNAL=benload.cn
     export K8S_DOMAIN_PUBLIC=bu5-dev.tx
     export INGRESS_INTERNAL_ENABLED=1
     export INGRESS_PUBLIC_ENABLED=1
@@ -438,7 +438,7 @@ function do_deploy_k8s()
         K8S_DOMAIN_INTERNAL="bu5-idc.k8s.cd"
     fi
     if [[ -z ${K8S_DOMAIN_PUBLIC} ]];then
-        K8S_DOMAIN_PUBLIC="bu5-idc.nxengine.com"
+        K8S_DOMAIN_PUBLIC="bu5-idc.benload.com"
     fi
     
 

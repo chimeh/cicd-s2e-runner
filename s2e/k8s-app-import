@@ -7,7 +7,7 @@ echo "###########################################"
 set -e
 USAGE="
   $0, oneof cicd toolset, integrate rancher with kubernetes, deploy a img into NS ,auto generate deployment, ingress, service;
-  export K8S_DOMAIN_INTERNAL=nxengine.cn
+  export K8S_DOMAIN_INTERNAL=benload.cn
   export K8S_DOMAIN_PUBLIC=bu5-dev.tx
   export INGRESS_INTERNAL_ENABLED=1
   export INGRESS_PUBLIC_ENABLED=1

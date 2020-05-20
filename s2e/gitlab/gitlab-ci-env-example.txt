@@ -87,7 +87,7 @@
  CI_PROJECT_REPOSITORY_LANGUAGES=java,shell,dockerfile
  CI_BUILD_REF=83f7b13a33d4647fc0b810e396b17858bed0a90c
  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/helm-maker/cicd:/usr/local/scala-2.12.8/bin/
- K8S_DOMAIN_PUBLIC=cd-dev.nxengine.com
+ K8S_DOMAIN_PUBLIC=cd-dev.benload.com
  CI_PIPELINE_SOURCE=push
  PS1=\h:\w\$
  CI_PROJECT_NAMESPACE=bu5/saleen/mid-tier
@@ -195,7 +195,7 @@
  CI_PROJECT_REPOSITORY_LANGUAGES=java,shell,dockerfile
  CI_BUILD_REF=83f7b13a33d4647fc0b810e396b17858bed0a90c
  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/helm-maker/cicd:/usr/local/scala-2.12.8/bin/
- K8S_DOMAIN_PUBLIC=cd-dev.nxengine.com
+ K8S_DOMAIN_PUBLIC=cd-dev.benload.com
  CI_PIPELINE_SOURCE=push
  CI_PROJECT_NAMESPACE=bu5/saleen/mid-tier
  HELM_VERSION=v2.12.2
