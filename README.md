@@ -25,12 +25,12 @@ cicd-s2e-runner 是二次封装的容器化gitlab runner镜像，集成一系列
 ## cd 自动部署设计思路
 根据源码，取name，解析Dockerfile等，以及注入进runner的环境变量，自动生成 helm value.yaml 
 部署目的地由kubectl配置决定；
-参考 ![s2i 实现](./s2e/s2i)
-参考 ![helm chart 模板实现](./s2e/generic/xxx-generic-chart/templates)
-参考 ![value.yaml 自动生成实现 k8s-app-import ](./s2e/k8s-app-import)
+参考 [s2i 实现](./s2e/s2i)
+参考 [helm chart 模板实现](./s2e/generic/xxx-generic-chart/templates)
+参考 [value.yaml 自动生成实现 k8s-app-import ](./s2e/k8s-app-import)
 ## cd 自动访问设计思路
 根据源码，取name，解析Dockerfile等，以及注入进runner的环境变量，自动生成 helm value.yaml 
-参考 ![s2i 实现](./s2e/generic/xxx-generic-chart/templates/ingress-public.yaml)
+参考 [s2i 实现](./s2e/generic/xxx-generic-chart/templates/ingress-public.yaml)
 # 使用
 * 下载 cicd-s2e-runner，解压
 
