@@ -1,0 +1,7 @@
+#s2i:1
+stages:
+  - s2i
+s2i:
+  stage: s2i
+  script:
+     - s2i .

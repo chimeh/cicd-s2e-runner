@@ -44,6 +44,8 @@ services:
       - ./runner/tools:/s2e/custom/tools
       ###########################template
       - ./runner/templates:/s2e/custom/templates
+      ###########################demo code
+      - ./runner/democode:/root/democode
   metricbeat:
     restart: always
     #    build: .
