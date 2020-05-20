@@ -19,7 +19,7 @@ cicd-s2e-runner 是二次封装的容器化gitlab runner镜像，集成一系列
     - 集成了开箱即用的cicd命令行工具 s2i;
     
 # 设计思路
-![cicd-s2e-runner-composition](https://gitee.com/chimeh/jim-lfs/blob/master/pic/cicd-s2e-runner-composition.png)
+![cicd-s2e-runner-composition](https://gitee.com/chimeh/jim-lfs/raw/master/pic/cicd-s2e-runner-composition.png)
 # 使用
 * 下载 cicd-s2e-runner，解压
 
