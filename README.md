@@ -17,6 +17,9 @@ cicd-s2e-runner 是二次封装的容器化gitlab runner镜像，集成一系列
 - s2i CD 命令行工具；
     - 集成了环境变量注入工具 s2ectl;
     - 集成了开箱即用的cicd命令行工具 s2i;
+    
+# 设计思路
+![cicd-s2e-runner-composition](https://gitee.com/chimeh/jim-lfs/blob/master/pic/cicd-s2e-runner-composition.png)
 # 使用
 * 下载 cicd-s2e-runner，解压
 
@@ -65,4 +68,49 @@ s2i:
 ```
 ##
 
-# cicd-s2e-runner 安装包说明
+# cicd-s2e-runner 安装包简要说明
+1. docker-compose.yaml 本runner的容器部署文件，docker-compose 方式
+2. runner/secrets 目录， runner里各个cmd 工具的配置，挂载进容器里
+3. templates 目录， CI、CD过程中用到的默认模板
+4. runner/tools 目录， cmd 目录挂载进容器，在容器里环境变量 PATH 最前
+```text
+s2erunner/
+├── democode
+│   └── cicd-java-refer
+├── docker-compose.yaml
+└── runner
+    ├── secrets
+    │   ├── acli
+    │   │   └── acli.properties
+    │   ├── cloud-aliyun
+    │   │   └── README.md
+    │   ├── cloud-tencent
+    │   │   └── README.md
+    │   ├── docker
+    │   │   └── config.json
+    │   ├── email
+    │   │   └── mail.rc
+    │   ├── gitlab
+    │   ├── gitlab-runner
+    │   │   ├── config.toml
+    │   │   └── gitlab-runner.repo
+    │   ├── jira
+    │   │   ├── acli.properties
+    │   │   └── README.md
+    │   ├── k8s/.kube
+    │   ├── maven
+    │   │   └── settings.xml
+    │   ├── profile.d
+    │   │   └── env.sh
+    │   ├── rancher
+    │   │   └── cli2.json
+    │   └── s2ectl
+    │       └── config.yaml
+    ├── templates
+    │   ├── dockerfile
+    │   │   └── Dockerfile
+    │   └── gitlab
+    │       └── merge-request-template.md
+    └── tools
+        └── your-tool.sh
+```
