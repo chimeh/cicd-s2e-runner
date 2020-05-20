@@ -1,4 +1,4 @@
-<!--email: jimin.huang@nx-engine.com, jimminh@163.com -->
+<!--email: jimin.huang@benload.com, jimminh@163.com -->
 
 <!--请说明本MR 解决的缺陷和引入的特性 -->
 ## 客户视角：MR合并做了哪些变更，解决了哪些缺陷BUG，完成了哪些特性 Feature?

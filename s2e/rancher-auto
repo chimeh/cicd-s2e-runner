@@ -1,6 +1,6 @@
 #!/bin/bash
 #author: ming.zu
-#email: ming.zu@nx-engine.com
+#email: ming.zu@benload.com
 set -e
 USAGE="
   usage:

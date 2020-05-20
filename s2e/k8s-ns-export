@@ -1,6 +1,6 @@
 #!/bin/bash
 #author huangjimin
-#jimin.huang@nx-engine.com
+#jimin.huang@benload.com
 #get info from k8s namespace, then generate helm template for all services in the NS
 USAGE="usage: $0 K8S_NS [O_DIR]"
 

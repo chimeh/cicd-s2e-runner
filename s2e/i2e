@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # author: huangjimin
-# e-mail: jimin.huang@nx-engine.com
+# e-mail: jimin.huang@benload.com
 # e-mail: jimminh@163.com
 
 # Import directives
@@ -27,8 +27,8 @@ def do_shell_exe(cmd, env_append={}):
             pass
     return
 
-#curl -X GET --header 'Accept: application/json' 'https://harbor.nx-engine.com/api/repositories/icev3%2Fcpsp-integration-service/tags?detail=false&api_key=repositories'
-def do_get_harbor_img_latest(docker_name, docker_ns="library", docker_repo="harbor.nx-engine.com"):
+#curl -X GET --header 'Accept: application/json' 'https://harbor.benload.com/api/repositories/icev3%2Fcpsp-integration-service/tags?detail=false&api_key=repositories'
+def do_get_harbor_img_latest(docker_name, docker_ns="library", docker_repo="harbor.benload.com"):
     if docker_ns == "library":
         docker_ns = os.environ.get("DOCKER_NS", 'library')
     url = "http://%s/api/repositories/%s/%s/tags?detail=false" %(docker_repo, docker_ns, docker_name)
@@ -64,7 +64,7 @@ def do_k8s_ns_import(file, options, action_args):
     log.info("do_k8s_ns_import")
     k8s_script_dir = "%s" % (os.path.dirname(os.path.realpath(__file__)))
     k8s_app_import = "k8s-app-import"
-    docker_repo = os.environ.get("DOCKER_REPO", 'harbor.nx-engine.com')
+    docker_repo = os.environ.get("DOCKER_REPO", 'harbor.benload.com')
     docker_ns = os.environ.get("DOCKER_NS", 'default')
 
     with open(file) as f:
@@ -163,7 +163,7 @@ def do_docker_ns_mirror(file, options, action_args):
     log.info("do_docker_ns_mirror")
     script_dir = "%s" % (os.path.dirname(os.path.realpath(__file__)))
     cmd_tool = "docker-ns-mirror"
-    docker_dst_repo = os.environ.get("DOCKER_DST_REPO", 'harbor.nx-engine.com')
+    docker_dst_repo = os.environ.get("DOCKER_DST_REPO", 'harbor.benload.com')
     docker_dst_ns = os.environ.get("DOCKER_DST_NS", 'default')
 
     with open(file) as f:

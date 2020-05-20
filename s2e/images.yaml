@@ -4,11 +4,11 @@ global:
       kubeconfig: /root/.kube/test.config
       ns: nx-cloud-eco-test
     docker:
-      repo: harbor.nx-engine.com
+      repo: harbor.benload.com
       ns: nx-cloud-eco
   dst:
     docker:
-      repo: harbor.nx-engine.com
+      repo: harbor.benload.com
       ns: nx-cloud-eco
     k8s:
       rc-fullname: false
@@ -20,7 +20,7 @@ global:
           domain: bu5-prd.tx
         public:
           annotations-ingress-class: nginx
-          domain: bu5-prd.nx-engine.com
+          domain: bu5-prd.benload.com
       containers:
         securityContext:
           privileged: true

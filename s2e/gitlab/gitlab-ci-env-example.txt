@@ -55,7 +55,7 @@
  CI_PROJECT_PATH_SLUG=bu5-saleen-mid-tier-saleen-user-service
  CHARSET=UTF-8
  CI_API_V4_URL=https://git.nx-code.com/api/v4
- GITLAB_USER_EMAIL=hailong.zhang@nx-engine.com
+ GITLAB_USER_EMAIL=hailong.zhang@benload.com
  CI_COMMIT_REF_NAME=master
  CI_SERVER_VERSION_PATCH=5
  CI_PIPELINE_IID=108
@@ -78,7 +78,7 @@
  CI_NODE_TOTAL=1
  SHLVL=2
  CI_RUNNER_DESCRIPTION=saleen-dev@tencent_10.128.2.9
- DOCKER_REPO=harbor.nx-engine.com
+ DOCKER_REPO=harbor.benload.com
  KUBE_VERSION=v1.13.2
  CI_PAGES_URL=http://bu5.xauto.club/saleen/mid-tier/saleen-user-service
  CI_PROJECT_PATH=bu5/saleen/mid-tier/saleen-user-service
@@ -162,7 +162,7 @@
  CI_PROJECT_PATH_SLUG=bu5-saleen-mid-tier-saleen-user-service
  CHARSET=UTF-8
  CI_API_V4_URL=https://git.nx-code.com/api/v4
- GITLAB_USER_EMAIL=hailong.zhang@nx-engine.com
+ GITLAB_USER_EMAIL=hailong.zhang@benload.com
  CI_SERVER_VERSION_PATCH=5
  CI_COMMIT_REF_NAME=master
  CI_PIPELINE_IID=108
@@ -186,7 +186,7 @@
  CI_NODE_TOTAL=1
  SHLVL=3
  CI_RUNNER_DESCRIPTION=saleen-dev@tencent_10.128.2.9
- DOCKER_REPO=harbor.nx-engine.com
+ DOCKER_REPO=harbor.benload.com
  KUBE_VERSION=v1.13.2
  CI_PAGES_URL=http://bu5.xauto.club/saleen/mid-tier/saleen-user-service
  CI_PROJECT_PATH=bu5/saleen/mid-tier/saleen-user-service

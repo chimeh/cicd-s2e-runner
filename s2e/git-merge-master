@@ -1,5 +1,5 @@
 #!/bin/bash
-#email: jimin.huang@nx-engine.com
+#email: jimin.huang@benload.com
 #email: jimminh@163.com
 set -e
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))

@@ -1,6 +1,6 @@
 #!/bin/bash
 #author huangjimin
-#jimin.huang@nx-engine.com
+#jimin.huang@benload.com
 #jimminh@163.com
 #
 echo "###########################################"
@@ -134,9 +134,9 @@ appVersion: 1.0
 description: gen helm for ${APPNAME}
 keywords:
 - ${SVCNAME}
-home: https://www.nx-engine.com/
+home: https://www.benload.com/
 sources:
-- https://www.nx-engine.com/
+- https://www.benload.com/
 maintainers:
 - name: Jimmy Huang
   email: jimagile@gmail.com

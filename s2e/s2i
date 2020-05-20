@@ -1,7 +1,7 @@
 #!/bin/bash
 #cicd toolset
 #author: jimin.huang
-#email: jimin.huang@nx-engine.com
+#email: jimin.huang@benload.com
 #email: jimminh@163.com
 set -e
 
@@ -17,7 +17,7 @@ USAGE="
 
     $(basename $(realpath $0)) /path/to/srctop analysis
     $(basename $(realpath $0)) /path/to/srctop artifact
-    export DOCKER_REPO=harbor.nx-engine.com
+    export DOCKER_REPO=harbor.benload.com
     export DOCKER_NS=bu5
     $(basename $(realpath $0)) /path/to/srctop docker
     export K8S_KUBECONFIG=/root/.kube/config
@@ -291,7 +291,7 @@ function do_docker_get_imgurl_by_dockerfile()
     K8S_THIS_NS=$(perl -e "@K8SNS = split(/\s+/, \$ENV{K8S_NS});print STDOUT \$K8SNS[$MY_SLOT];")
 
     if [[ "" == "${DOCKER_REPO}" ]];then
-        DOCKER_REPO=${DOCKER_REPO:-harbor.nx-engine.com}
+        DOCKER_REPO=${DOCKER_REPO:-harbor.benload.com}
     fi
     if [[ "" == "${DOCKER_NS}" ]];then
     DOCKER_NS=${DEFAULT_NS}
