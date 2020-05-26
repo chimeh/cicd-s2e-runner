@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# author jimin.huang@nx-engine.com
+# author jimin.huang@benload.com
 
 import sys
 import os
