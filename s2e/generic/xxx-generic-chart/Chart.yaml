@@ -5,10 +5,10 @@ description: generic Chart for all nextengine ICE V3 app.
 keywords:
 - nextengine
 - icev3-generic-chart
-home: https://www.nx-engine.com/
+home: https://www.benload.com/
 icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-110x117.png
 sources:
-- https://www.nx-engine.com/
+- https://www.benload.com/
 maintainers:
 - name: Jimmy Huang
   email: jimagile@gmail.com

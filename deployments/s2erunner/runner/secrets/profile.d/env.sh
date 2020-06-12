@@ -8,4 +8,4 @@ export DOCKER_NS=bettercode
 S2I_DOCKER_OPT="--add-host mirrors.cloud.tencent.com:169.254.0.3 "
 
 grep -qxF '10.99.16.41 rancher.ops' /etc/hosts || echo '10.99.16.41 rancher.ops' >> /etc/hosts
-grep -qxF '10.128.2.12 harbor.nx-engine.com' /etc/hosts || echo '10.128.2.12 harbor.nx-engine.com' >> /etc/hosts
+grep -qxF '10.128.2.12 harbor.benload.com' /etc/hosts || echo '10.128.2.12 harbor.benload.com' >> /etc/hosts

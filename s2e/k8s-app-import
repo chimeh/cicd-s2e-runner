@@ -1,13 +1,13 @@
 #!/bin/bash
 #author huangjimin
-#jimin.huang@nx-engine.com
+#jimin.huang@benload.com
 #jimminh@163.com
 #
 echo "###########################################"
 set -e
 USAGE="
   $0, oneof cicd toolset, integrate rancher with kubernetes, deploy a img into NS ,auto generate deployment, ingress, service;
-  export K8S_DOMAIN_INTERNAL=nxengine.cn
+  export K8S_DOMAIN_INTERNAL=benload.cn
   export K8S_DOMAIN_PUBLIC=bu5-dev.tx
   export INGRESS_INTERNAL_ENABLED=1
   export INGRESS_PUBLIC_ENABLED=1
@@ -134,9 +134,9 @@ appVersion: 1.0
 description: gen helm for ${APPNAME}
 keywords:
 - ${SVCNAME}
-home: https://www.nx-engine.com/
+home: https://www.benload.com/
 sources:
-- https://www.nx-engine.com/
+- https://www.benload.com/
 maintainers:
 - name: Jimmy Huang
   email: jimagile@gmail.com
@@ -249,16 +249,17 @@ EOF
 
 done
   /bin/cp -f ${APPNAME}/${VAULE_FILENAME}  ${APPNAME}/values.yaml
-
+  set +e
   # detect helm version on k8s
   kubectl get pod --all-namespaces |egrep tiller >/dev/null 2>&1
   rv=$?
+  set -e
   if [[ ${rv} -eq 0 ]];then
      # helm 2.x
      helm2 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME}
   else
      # helm 3.x
-     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME}
+     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME} --disable-openapi-validation
   fi
   rm -rf ${APPNAME}
 }

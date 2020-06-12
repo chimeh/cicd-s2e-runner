@@ -1,12 +1,12 @@
 #!/bin/bash
 #author: ming.zu
-#email: ming.zu@nx-engine.com
+#email: ming.zu@benload.com
 set -e
 USAGE="
   usage:
   $0, oneof cicd toolset, integrate rancher with gitlab, mgr rancher project, user;
   export K8S_NS=default
-  export GITLAB_USER_LOGIN=nxengine.cn
+  export GITLAB_USER_LOGIN=benload.cn
   $(basename $(realpath $0))
 
 "

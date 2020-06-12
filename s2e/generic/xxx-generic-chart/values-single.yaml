@@ -6,7 +6,7 @@ global:
       domain: okd.cd
     public:
       annotations-ingress-class: nginx
-      domain: nxengine.cn
+      domain: benload.cn
 icev3-xxx-generic:
   replicaCount: 1
   ingress:

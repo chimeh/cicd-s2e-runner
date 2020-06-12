@@ -1,6 +1,6 @@
 #!/bin/bash
 #author huangjimin
-#jimin.huang@nx-engine.com
+#jimin.huang@benload.com
 #generate helm template for middleware
 
 USAGE=" usage: $0 CHARTS_DIR [NEWNAME] [POST2REPO]
@@ -124,5 +124,5 @@ if [ $# -ge 3 ];then
   /bin/cp -rf ${RCNAME} ${RCNAME}/../${CATALOG_NAME}
   cd ${RCNAME}/..
   helm package ${CATALOG_NAME}
-  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" https://helm-charts.nx-engine.com/api/charts
+  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" https://helm-charts.benload.com/api/charts
 fi

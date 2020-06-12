@@ -1,6 +1,6 @@
 #!/bin/bash
 #author huangjimin
-#jimin.huang@nx-engine.com
+#jimin.huang@benload.com
 #convert txtdir to helm 
 echo "##############################################################"
 USAGE="
@@ -62,7 +62,7 @@ if [[ -z ${DOMAIN_INTERNAL} ]];then
     DOMAIN_INTERNAL=prd-k8s.tx
 fi
 if [[ -z ${DOMAIN_PUBLIC} ]];then
-    DOMAIN_PUBLIC=nx-engine.com
+    DOMAIN_PUBLIC=benload.com
 fi
 if [[ -z ${INGRESS_CLASS_INTERNAL} ]];then
     INGRESS_CLASS_INTERNAL=nginx
@@ -99,9 +99,9 @@ appVersion: 0.1
 description: gen helm from  $(basename $1) ${VERSION}
 keywords:
 - $(basename $1)
-home: https://www.nx-engine.com/
+home: https://www.benload.com/
 sources:
-- https://www.nx-engine.com/
+- https://www.benload.com/
 maintainers:
 - name: Jimmy Huang
   email: jimagile@gmail.com
@@ -218,6 +218,6 @@ if [ $# -gt 3 ];then
   cd ${RCNAME}/..
   helm package ${CATALOG_NAME}
   rm -rf ${RCNAME}/../${CATALOG_NAME}
-  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" https://helm-charts.nx-engine.com/api/charts
+  curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" https://helm-charts.benload.com/api/charts
   curl --data-binary "@${CATALOG_NAME}-${VERSION}.tgz" $3
 fi

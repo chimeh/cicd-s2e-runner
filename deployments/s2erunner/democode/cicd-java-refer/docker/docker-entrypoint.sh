@@ -1,6 +1,6 @@
 #!/bin/sh
 # inject config data into container
-#@author jimin.huang@nx-engine.com
+#@author jimin.huang@benload.com
 
 set -e
 

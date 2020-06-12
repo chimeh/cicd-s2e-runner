@@ -1,6 +1,6 @@
 #!/bin/bash
 #author huangjimin
-#jimin.huang@nx-engine.com
+#jimin.huang@benload.com
 #jimminh@163.com
 #
 echo "###########################################"
@@ -10,7 +10,7 @@ USAGE="
   export SRC_K8S_KUBECONFIG=/root/.kube/config
   export SRC_K8S_NS=xxx-from
   export K8S_NS=xxx-to
-  export K8S_DOMAIN_INTERNAL=nxengine.cn
+  export K8S_DOMAIN_INTERNAL=benload.cn
   export K8S_DOMAIN_PUBLIC=bu5-dev.tx
   export INGRESS_INTERNAL_ENABLED=1
   export INGRESS_PUBLIC_ENABLED=1
@@ -44,7 +44,7 @@ if [[ -z ${DOMAIN_INTERNAL} ]];then
     DOMAIN_INTERNAL=bu5-test.tx
 fi
 if [[ -z ${DOMAIN_PUBLIC} ]];then
-    DOMAIN_PUBLIC=bu5-test.nxengine.com
+    DOMAIN_PUBLIC=bu5-test.benload.com
 fi
 if [[ -z ${INGRESS_CLASS_INTERNAL} ]];then
     INGRESS_CLASS_INTERNAL=nginx
