@@ -249,16 +249,17 @@ EOF
 
 done
   /bin/cp -f ${APPNAME}/${VAULE_FILENAME}  ${APPNAME}/values.yaml
-
+  set +e
   # detect helm version on k8s
   kubectl get pod --all-namespaces |egrep tiller >/dev/null 2>&1
   rv=$?
+  set -e
   if [[ ${rv} -eq 0 ]];then
      # helm 2.x
      helm2 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME}
   else
      # helm 3.x
-     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME}
+     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME} --disable-openapi-validation
   fi
   rm -rf ${APPNAME}
 }

@@ -1,7 +1,7 @@
 FROM centos:7
 ARG KUBE_VERSION=v1.15.7
 ARG HELM2_VERSION=v2.12.2
-ARG HELM3_VERSION=v3.0.2
+ARG HELM3_VERSION=v3.2.3
 ARG GIT_VERSION=2.24.1
 ARG NODE_VERSION=v10.16.2
 ARG MAVEN_VERSION=3.6.3
@@ -61,16 +61,21 @@ RUN mkdir -p /root/ts \
 # add offical deploy tools, k8s relate
 RUN mkdir -pv /root/.m2 /root/.docker /root/.kube /s2e
 
-# kubernetes client
+# kubernetes client, helm2, helm3
 RUN wget -q http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl \
     && wget -q http://mirror.azure.cn/kubernetes/helm/helm-${HELM2_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm2 \
     && chmod +x /usr/local/bin/helm2 \
-    && wget -q http://mirror.azure.cn/kubernetes/helm/helm-dev-v3-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm3 \
-    && chmod +x /usr/local/bin/helm3 \
     && ln -sf /usr/local/bin/helm2 /usr/local/bin/helm \
     && yum install -y nginx \
     && sed -i 's@/usr/share/nginx/html;@/s2e;@' /etc/nginx/nginx.conf
+# helm3
+RUN mkdir -p /root/ts \
+ && wget -q -P /root/ts "https://github.com/helm/helm/archive/${HELM3_VERSION}.tar.gz" \
+ && tar -xzf /root/ts/helm-${HELM3_VERSION}.tar.gz -C /root/ts \
+ && make -j2 -C /root/ts/git-${HELM3_VERSION} \
+ && cp /root/ts/helm-${HELM3_VERSION}/bin/helm /usr/local/bin/helm3  \
+ && rm -rf /root/ts
 
 # android
 RUN mkdir -p /root/ts  \
