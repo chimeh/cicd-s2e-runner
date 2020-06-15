@@ -74,7 +74,7 @@ RUN mkdir -p /root/ts \
  && cd /root/ts \
  && git clone https://gitee.com/chimeh/helm.git \
  && cd helm; git checkout ${HELM3_VERSION} \
- && make -j2 -C . \
+ && PATH="${PATH}:/opt/go/bin:/root/go/bin" make -j2 -C . \
  && cp /root/ts/helm-${HELM3_VERSION}/bin/helm /usr/local/bin/helm3  \
  && rm -rf /root/ts
 
