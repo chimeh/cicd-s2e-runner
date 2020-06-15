@@ -75,7 +75,7 @@ RUN mkdir -p /root/ts \
  && git clone https://gitee.com/chimeh/helm.git \
  && cd helm; git checkout ${HELM3_VERSION} \
  && env GOPROXY="http://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct" PATH="${PATH}:/opt/go/bin:/root/go/bin" make -j2 -C . \
- && cp /root/ts/helm-${HELM3_VERSION}/bin/helm /usr/local/bin/helm3  \
+ && cp /root/ts/helm/bin/helm /usr/local/bin/helm3  \
  && rm -rf /root/ts
 
 # android
