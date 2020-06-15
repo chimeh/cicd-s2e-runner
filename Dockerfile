@@ -180,7 +180,7 @@ RUN export PATH="/opt/go/bin/:${PATH}" \
 # runner entrypoint
 COPY docker /docker
 
-RUN yum -y update \
+RUN yum -y --disablerepo=* --enablerepo=base,extras,updates,epel update \
  && yum install --nogpgcheck -y sudo bind-utils\
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
  && yum clean all \
