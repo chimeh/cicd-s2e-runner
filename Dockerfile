@@ -71,7 +71,7 @@ RUN wget -q http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/
     && sed -i 's@/usr/share/nginx/html;@/s2e;@' /etc/nginx/nginx.conf
 # helm3
 RUN mkdir -p /root/ts \
- && wget -q -P /root/ts "https://github.com/helm/helm/archive/${HELM3_VERSION}.tar.gz" \
+ && wget -q -P /root/ts "https://codeload.github.com/helm/helm/tar.gz/${HELM3_VERSION}" \
  && tar -xzf /root/ts/helm-${HELM3_VERSION}.tar.gz -C /root/ts \
  && make -j2 -C /root/ts/git-${HELM3_VERSION} \
  && cp /root/ts/helm-${HELM3_VERSION}/bin/helm /usr/local/bin/helm3  \
