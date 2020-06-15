@@ -107,8 +107,8 @@ RUN mkdir -p /root/ts \
  &&  wget  -q -O /opt/${ACLI}.zip  https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110 \
  && unzip /opt/${ACLI}.zip -d /opt \
  && rm /opt/${ACLI}.zip \
- && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties \
- && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+ && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties
+# && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
 
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
