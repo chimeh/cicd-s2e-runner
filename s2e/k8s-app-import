@@ -128,6 +128,7 @@ fi
 
 mkdir -p ${APPNAME}/charts
 cat > ${APPNAME}/Chart.yaml <<EOF
+apiVersion: v2
 name: ${CATALOG_NAME}
 version: ${VERSION}
 appVersion: 1.0
@@ -259,7 +260,7 @@ done
      helm2 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME}
   else
      # helm 3.x
-     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${${APPNAME}}) ${APPNAME} --disable-openapi-validation
+     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME} --disable-openapi-validation
   fi
   rm -rf ${APPNAME}
 }
@@ -342,12 +343,14 @@ fi
 
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
   echo "#auto deploy"
+  set -x
   if [[ ${SERVICE_EXIST} -eq 0 ]];then
     # service not exist
     do_first_helm_deploy
   else
     do_update_deploy_img
   fi
+  set +x
 
 fi
 
