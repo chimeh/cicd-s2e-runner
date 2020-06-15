@@ -71,10 +71,11 @@ RUN wget -q http://mirror.azure.cn/kubernetes/kubectl/${KUBE_VERSION}/bin/linux/
     && sed -i 's@/usr/share/nginx/html;@/s2e;@' /etc/nginx/nginx.conf
 # helm3
 RUN mkdir -p /root/ts \
- && wget -q -P /root/ts "https://github.com/helm/helm/archive/${HELM3_VERSION}.tar.gz" \
- && tar -xzf /root/ts/helm-${HELM3_VERSION}.tar.gz -C /root/ts \
- && make -j2 -C /root/ts/git-${HELM3_VERSION} \
- && cp /root/ts/helm-${HELM3_VERSION}/bin/helm /usr/local/bin/helm3  \
+ && cd /root/ts \
+ && git clone https://gitee.com/chimeh/helm.git \
+ && cd helm; git checkout ${HELM3_VERSION} \
+ && env GOPROXY="http://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct" PATH="${PATH}:/opt/go/bin:/root/go/bin" make -j2 -C . \
+ && cp /root/ts/helm/bin/helm /usr/local/bin/helm3  \
  && rm -rf /root/ts
 
 # android
@@ -106,8 +107,8 @@ RUN mkdir -p /root/ts \
  &&  wget  -q -O /opt/${ACLI}.zip  https://marketplace.atlassian.com/download/plugins/org.swift.atlassian.cli/version/9110 \
  && unzip /opt/${ACLI}.zip -d /opt \
  && rm /opt/${ACLI}.zip \
- && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties \
- && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+ && ln -sf  /root/jira/acli.properties /opt/${ACLI}/acli.properties
+# && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
 
 # cloud cli aliyun, tencent cloud
 ADD https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz /opt/aliyun-cli-linux-latest-amd64.tgz
@@ -179,7 +180,7 @@ RUN export PATH="/opt/go/bin/:${PATH}" \
 # runner entrypoint
 COPY docker /docker
 
-RUN yum -y update \
+RUN yum -y --disablerepo=* --enablerepo=base,extras,updates,epel update \
  && yum install --nogpgcheck -y sudo bind-utils\
  && echo "gitlab-runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
  && yum clean all \
