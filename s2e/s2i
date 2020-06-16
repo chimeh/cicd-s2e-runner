@@ -596,6 +596,9 @@ case ${ACTION_STAGE} in
         echo "自动检测源码类型，并做artifact 构建，docker 构建"
         do_artifact_build
         do_docker_build
+        export DEPLOYMENT_UPDATE_IMG=1
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
         do_deploy_k8s
         ;;
     help*)
