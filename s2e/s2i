@@ -13,13 +13,21 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 USAGE="
   usage:
   A cicd tool, from src to artifact, to docker img, deploy into kubernetes:
-  $(basename $(realpath $0)) /path/to/srctop [ analysis|artifact|docker|deploy ]
+  I. default do all action(artifact,docker,deploy):
+  $(basename $(realpath $0)) /path/to/srctop
 
-    $(basename $(realpath $0)) /path/to/srctop analysis
+  II. only do specify action:
+  $(basename $(realpath $0)) /path/to/srctop [ analysis|artifact|docker|deploy|deploy-update-blue ]
+
+    1. only do artifact
     $(basename $(realpath $0)) /path/to/srctop artifact
+
+    2. only do docker build push
     export DOCKER_REPO=harbor.benload.com
     export DOCKER_NS=bu5
     $(basename $(realpath $0)) /path/to/srctop docker
+
+    3. only do kubernetes deploy
     export K8S_KUBECONFIG=/root/.kube/config
     export K8S_NS_SUFFIX=-dev
     export K8S_NS=default
@@ -30,10 +38,11 @@ USAGE="
     export INGRESS_CLASS_INTERNAL=nginx
     export INGRESS_CLASS_PUBLIC=nginx
     $(basename $(realpath $0)) /path/to/srctop deploy
-  A exec wrapper:
-  $(basename $(realpath $0)) /path/to/rundir exec wrappercmd [...]
 
-    $(basename $(realpath $0)) /root ls #ls on /root
+  III. do exec cmd:
+  $(basename $(realpath $0)) /path/to/rundir exec wrappercmd [...]
+    1. do ls on /root directory
+    $(basename $(realpath $0)) /root ls
 "
 
 if [[ $# -lt 1 ]];then
