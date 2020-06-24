@@ -5,10 +5,10 @@ COPY . /cicd-s2e-runner
 ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/helpers
 ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/installers
 
-RUN apt-get update
-RUN apt-get install -y lsb wget \
- && ln -sf /bin/echo /usr/local/bin/systemctl \
- && bash /cicd-s2e-runner/os/ubuntu/scripts/base/apt.sh \
+RUN apt-get update \
+ && apt-get install -y lsb wget
+
+RUN  bash /cicd-s2e-runner/os/ubuntu/scripts/base/apt.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/base/limits.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/base/repos.sh
 
