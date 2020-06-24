@@ -42,7 +42,7 @@ jobs:
     # Ensure test job passes before pushing image.
     needs: test
 
-    runs-on: centos-latest
+    runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
     steps:
