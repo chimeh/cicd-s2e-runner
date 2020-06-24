@@ -33,7 +33,7 @@ jobs:
             docker-compose --file docker-compose.test.yml build
             docker-compose --file docker-compose.test.yml run sut
           else
-            docker build . --file Dockerfile
+            docker build . --file Dockerfile.ubuntu
           fi
 
   # Push image to GitHub Packages.
@@ -74,6 +74,6 @@ jobs:
           TAG=${VERSION}-ubuntu
 
           docker tag imagex $IMAGE_URL:${TAG}
-          
+
           docker rmi imagex
           docker rmi $IMAGE_URL:${TAG}
