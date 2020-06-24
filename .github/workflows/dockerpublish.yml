@@ -42,20 +42,19 @@ jobs:
     # Ensure test job passes before pushing image.
     needs: test
 
-    runs-on: ubuntu-latest
+    runs-on: centos-latest
     if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image
-        run: docker build . --file Dockerfile --tag imagex
+      - name: change mirror
+        run:
 
-      - name: Log into hub.docker.com
-        run: echo "${{ secrets. hub_docker_com_pass }}" | docker login docker.io -u ${{ github. hub_docker_com_user }} --password-stdin
-
-      - name: Push image
+      - name: Build, Push image
         run: |
+          docker build . --file Dockerfile.ubuntu --tag imagex
+          echo "${{ secrets. hub_docker_com_pass }}" | docker login docker.io -u ${{ github. hub_docker_com_user }} --password-stdin
           IMAGE_URL=${DOCKER_REPO}/${DOCKER_NS}/${{ github.repository }}
           
           # Change all uppercase to lowercase
@@ -72,7 +71,8 @@ jobs:
 
           echo IMAGE_URL=$IMAGE_URL
           echo VERSION=$VERSION
+          TAG=${VERSION}-ubuntu
 
-          docker tag imagex $IMAGE_URL:$VERSION
-          docker push $IMAGE_URL:$VERSION
+          docker tag imagex $IMAGE_URL:${TAG}
+          docker push $IMAGE_URL:${TAG}
           docker rmi imagex
