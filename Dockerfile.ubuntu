@@ -4,9 +4,12 @@ COPY . /cicd-s2e-runner
 
 ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/helpers
 ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/installers
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
- && apt-get install -y lsb wget
+ && apt-get install -y lsb wget sudo dialog apt-utils \
+ && apt-get -y install \
+ && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 RUN  bash /cicd-s2e-runner/os/ubuntu/scripts/base/apt.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/base/limits.sh \
