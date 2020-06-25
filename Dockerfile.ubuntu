@@ -20,6 +20,6 @@ RUN  bash ${INSTALL_SCRIPTS}/basic.sh \
 RUN for s in $(ls ${INSTALL_SCRIPTS}/1804/*.sh|sort);do echo "#### $s";bash $s;done
 RUN DISABLE="cleanup.sh|basic.sh|dotnetcore-sdk.sh"; \
  for s in $(ls ${INSTALL_SCRIPTS}/*.sh|sort); \
- do bash ${INSTALL_SCRIPTS}/validate-disk-space.sh;echo $s;bash $s;done; \
+ do bash ${INSTALL_SCRIPTS}/validate-disk-space.sh;echo "###$s";bash $s;done; \
  bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  cat ${METADATA_FILE}
