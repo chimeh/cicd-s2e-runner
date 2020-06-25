@@ -107,7 +107,7 @@ RUN cd ${INSTALL_SCRIPTS}; \
          bash validate-disk-space.sh;bash $s; \
      else \
          echo "*** not install $s" \
-     fi
+     fi \
  done; \
  bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  cat ${METADATA_FILE}
