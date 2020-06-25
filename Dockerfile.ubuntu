@@ -100,14 +100,14 @@ RUN cd ${INSTALL_SCRIPTS}; \
  do \
      set +e; \
      egrep "$s" <<< "${TCLIST}"; \
-     rv=$? \
+     rv=$? ;\
      set -e; \
      if [[ ${rv} -eq 0 ]];then \
          echo "###$s"; \
          bash validate-disk-space.sh;bash $s; \
      else \
-         echo "*** not install $s" \
-     fi \
+         echo "*** not install $s"; \
+     fi; \
  done; \
  bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  cat ${METADATA_FILE}
