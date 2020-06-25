@@ -18,7 +18,7 @@ RUN  bash ${INSTALL_SCRIPTS}/basic.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/base/repos.sh
 
 
-ARGS TCLIST="7-zip.sh \
+ARG TCLIST="7-zip.sh \
 aliyun-cli.sh \
 ansible.sh \
 aws.sh \
