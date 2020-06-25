@@ -18,3 +18,5 @@ RUN  bash ${INSTALL_SCRIPTS}/basic.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/base/repos.sh
 
 RUN bash ${INSTALL_SCRIPTS}/aliyun-cli.sh
+RUN for s in $(ls ${INSTALL_SCRIPTS}/*.sh|sort);do echo $s;bash $s;done
+RUN for s in $(ls ${INSTALL_SCRIPTS}/1804/*.sh|sort);do echo $s;bash $s;done
