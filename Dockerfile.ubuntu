@@ -99,7 +99,7 @@ RUN cd ${INSTALL_SCRIPTS}; \
  for s in $(ls .|sort); \
  do \
      set +e; \
-     egrep "$s" <<< "${TCLIST}"; \
+     "${TCLIST}" | egrep "$s" -; \
      rv=$? ;\
      set -e; \
      if [[ ${rv} -eq 0 ]];then \
