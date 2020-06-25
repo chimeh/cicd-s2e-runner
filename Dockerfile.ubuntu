@@ -99,7 +99,7 @@ RUN cd ${INSTALL_SCRIPTS}; \
  for s in $(ls ls *.sh */*.sh|sort); \
  do \
      set +e; \
-     "${TCLIST}" | egrep "$s" -; \
+     echo "${TCLIST}" | egrep "$s" -; \
      rv=$? ;\
      set -e; \
      if [ ${rv} -eq 0 ];then \
