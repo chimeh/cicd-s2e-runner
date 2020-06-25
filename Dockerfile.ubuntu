@@ -5,6 +5,7 @@ COPY . /cicd-s2e-runner
 ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/helpers
 ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/installers
 ARG DEBIAN_FRONTEND=noninteractive
+ARG METADATA_FILE=/cicd-s2e-runner/os/ubuntu/build.txt
 
 RUN apt-get update \
  && apt-get install -y lsb wget sudo dialog apt-utils \
