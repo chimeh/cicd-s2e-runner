@@ -102,7 +102,7 @@ RUN cd ${INSTALL_SCRIPTS}; \
      "${TCLIST}" | egrep "$s" -; \
      rv=$? ;\
      set -e; \
-     if [[ ${rv} -eq 0 ]];then \
+     if [ ${rv} -eq 0 ];then \
          echo "###$s"; \
          bash validate-disk-space.sh;bash $s; \
      else \
