@@ -97,10 +97,10 @@ Validate-Toolset.ps1 \
 vercel.sh"
 
 RUN cd ${INSTALL_SCRIPTS}; \
- for s in $(ls ls *.sh */*.sh|sort); \
+ for s in ${TCLIST}; \
  do \
      set +e; \
-     echo "${TCLIST}" | egrep "$s" -; \
+     ls ${INSTALL_SCRIPTS}/$s >/dev/null 2>&1; \
      rv=$? ;\
      set -e; \
      if [ ${rv} -eq 0 ];then \
