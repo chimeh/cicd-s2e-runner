@@ -8,9 +8,14 @@
 source $HELPER_SCRIPTS/document.sh
 source $HELPER_SCRIPTS/etc-environment.sh
 
+HOMEBREW_PREFIX=${HOMEBREW_PREFIX:-/home/linuxbrew}
 # Install the Homebrew on Linux
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+
+test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
+test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+test -r ~/.bash_profile && echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>~/.bash_profile
+echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>~/.profile
 
 # Make brew files and directories writable by any user
 sudo chmod -R o+w $HOMEBREW_PREFIX
