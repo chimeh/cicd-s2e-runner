@@ -22,6 +22,7 @@ ARG TCLIST="7-zip.sh \
 aliyun-cli.sh \
 ansible.sh \
 aws.sh \
+homebrew.sh \
 aws-sam-cli.sh \
 #azcopy.sh \
 #azpowershell.sh \
