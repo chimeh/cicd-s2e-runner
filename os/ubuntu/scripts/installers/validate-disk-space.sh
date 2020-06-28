@@ -10,7 +10,7 @@ gcminimumFreeSpaceMB=20000
 
 echo "Available disk space: $availableSpaceMB MB"
 
-if [ $RUN_VALIDATION != "true" ]; then
+if [ "$RUN_VALIDATION" != "true" ]; then
     echo "Skipping validation disk space..."
     exit 0
 fi
