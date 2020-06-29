@@ -1,6 +1,6 @@
-FROM ubuntu:18.04
 FROM bettercode/scurl:latest as scurl
-COPY --from=scurl /usrl/local/bin/scurl /usrl/local/bin/scurl
+FROM ubuntu:18.04
+COPY --from=scurl /usr/local/bin/scurl /usrl/local/bin/scurl
 COPY . /cicd-s2e-runner
 
 ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/helpers
