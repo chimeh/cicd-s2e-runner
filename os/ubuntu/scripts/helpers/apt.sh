@@ -29,6 +29,7 @@ fi
 
 
 # Use apt-fast for parallel downloads
+apt-get update
 apt-get install aria2
 apt-get install python3-software-properties
 add-apt-repository -y ppa:apt-fast/stable
