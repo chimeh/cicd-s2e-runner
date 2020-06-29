@@ -11,90 +11,113 @@ source $HELPER_SCRIPTS/os.sh
 
 set -e
 
-common_packages="dnsutils
-                 iproute2
-                 iputils-ping
-                 libunwind8
-                 locales
-                 openssh-client
-                 tzdata
-                 upx
-                 zstd
-                 libxkbfile-dev
-                 pkg-config
-                 libsecret-1-dev
-                 libxss1
-                 libgconf-2-4
-                 dbus
-                 xvfb
-                 libgbm-dev
-                 libgtk-3-0
-                 tk
-                 fakeroot
-                 dpkg
-                 rpm
-                 xz-utils
-                 xorriso
-                 zsync
-                 gnupg2
-                 lib32z1
-                 texinfo"
+pkg_list=(
+  bison
+  curl
+  dbus
+  dnsutils
+  dpkg
+  fakeroot
+  file
+  flex
+  ftp
+  gnupg2
+  iproute2
+  iputils-ping
+  jq
+  lib32z1
+  libgbm-dev
+  libgconf-2-4
+  libgtk-3-0
+  libsecret-1-dev
+  libunwind8
+  libxkbfile-dev
+  libxss1
+  locales
+  m4
+  netcat
+  openssh-client
+  parallel
+  pkg-config
+  rpm
+  rsync
+  shellcheck
+  ssh
+  sudo
+  telnet
+  texinfo
+  time
+  tk
+  tzdata
+  unzip
+  upx
+  vim
+  wget
+  xorriso
+  xvfb
+  xz-utils
+  zip
+  zstd
+  zsync
+)
 
-cmd_packages="curl
-              file
-              ftp
-              jq
-              netcat
-              ssh
-              parallel
-              rsync
-              shellcheck
-              sudo
-              telnet
-              time
-              unzip
-              zip
-              wget
-              m4
-              bison
-              flex"
+cmd_list=(
+  curl
+  file
+  ftp
+  jq
+  netcat
+  ssh
+  parallel
+  rsync
+  shellcheck
+  sudo
+  telnet
+  time
+  unzip
+  zip
+  wget
+  m4
+  bison
+  vim
+  flex
+)
 
-if isUbuntu20 ; then
-    echo "Install python2"
-    apt-get install -y --no-install-recommends python-is-python2
+if isUbuntu20; then
+  echo "Install python2"
+  apt-get install -y --no-install-recommends python-is-python2
 fi
 
 echo "Install libcurl"
-if isUbuntu18 ; then
-   libcurelVer="libcurl3"
+if isUbuntu18; then
+  libcurelVer="libcurl3"
 fi
 
-if isUbuntu20 ; then
-    libcurelVer="libcurl4"
+if isUbuntu20; then
+  libcurelVer="libcurl4"
 fi
 
 apt-get install -y --no-install-recommends $libcurelVer
 
-for package in $common_packages $cmd_packages; do
-    echo "Install $package"
-    apt-get install -y --no-install-recommends $package
+for package in ${pkg_list[*]}; do
+  echo "Install $package"
+  apt-get install -y --no-install-recommends $package
 done
-
 
 # Run tests to determine that the software installed as expected
 echo "Testing to make sure that script performed as expected, and basic scenarios work"
-for cmd in $cmd_packages; do
-    if ! command -v $cmd; then
-        echo "$cmd was not installed"
-        exit 1
-    fi
+for cmd in ${cmd_list[*]}; do
+  if ! command -v $cmd; then
+    echo "$cmd was not installed"
+    exit 1
+  fi
 done
 
 # Document what was added to the image
 echo "Lastly, documenting what we added to the metadata file"
 DocumentInstalledItem "Basic packages:"
-for package in $common_packages $cmd_packages; do
-    DocumentInstalledItemIndent $package
+for package in ${pkg_list[*]}; do
+  DocumentInstalledItemIndent $package
 done
 
 DocumentInstalledItemIndent "$libcurelVer"

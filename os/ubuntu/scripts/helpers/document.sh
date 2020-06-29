@@ -4,6 +4,7 @@
 ##  Desc:  Helper functions for writing information to the metadata document
 ################################################################################
 
+METADATA_FILE=${METADATA_FILE:-/ubuntu-tc.txt}
 function WriteItem {
     if [ -z "$METADATA_FILE" ]; then
         echo "METADATA_FILE environment variable must be set to output to Metadata Document!"
