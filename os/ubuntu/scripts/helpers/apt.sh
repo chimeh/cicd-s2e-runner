@@ -32,6 +32,7 @@ fi
 apt-get update
 apt-get install -y aria2
 apt-get install -y python3-software-properties
+apt-get install -y software-properties-common
 apt-get install -y python3-software-common
 add-apt-repository -y apt-utilsppa:apt-fast/stable
 apt-get update
