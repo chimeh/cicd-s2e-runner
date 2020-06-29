@@ -21,7 +21,7 @@ set +e
 scurl --connect-timeout 1 http://metadata.tencentyun.com/latest/meta-data/instance-id
 rv=$?
 set -e
-if [ ${rv} -eq 0 ];then
+if [[ ${rv} -eq 0 ]];then
   sed -i 's|^\(\s*deb\s*\)http://security.ubuntu.com/ubuntu/|\1http://mirrors.tencentyun.com/ubuntu|' /etc/apt/sources.list
   sed -i 's|^\(\s*deb\s*\)http://archive.ubuntu.com/ubuntu/|\1http://mirrors.tencentyun.com/ubuntu|' /etc/apt/sources.list
   exit 0
