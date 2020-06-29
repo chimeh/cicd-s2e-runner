@@ -18,7 +18,7 @@ cp /etc/apt/sources.list /etc/apt/sources.list.origin
 echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
 
 set +e
-curl --connect-timeout 1 http://metadata.tencentyun.com/latest/meta-data/instance-id
+scurl --connect-timeout 1 http://metadata.tencentyun.com/latest/meta-data/instance-id
 rv=$?
 set -e
 if [ ${rv} -eq 0 ];then

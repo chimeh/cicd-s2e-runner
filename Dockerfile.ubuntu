@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
-
+FROM bettercode/scurl:latest as scurl
+COPY --from=scurl /usrl/local/bin/scurl /usrl/local/bin/scurl
 COPY . /cicd-s2e-runner
 
 ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/helpers
@@ -7,13 +8,14 @@ ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/installers
 ARG DEBIAN_FRONTEND=noninteractive
 ARG METADATA_FILE=/cicd-s2e-runner/os/ubuntu/build.txt
 
-RUN bash ${INSTALL_SCRIPTS}/basic.sh \
+RUN bash ${INSTALL_SCRIPTS}/apt.sh \
  && apt-get update \
  && apt-get install -y lsb wget sudo dialog apt-utils \
  && apt-get -y install \
  && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
-RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/apt-update.sh \
+RUN bash bash ${INSTALL_SCRIPTS}/basic.sh \
+ && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/apt-update.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/limits.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/repos.sh
 
