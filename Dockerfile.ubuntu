@@ -14,7 +14,7 @@ RUN bash ${HELPER_SCRIPTS}/apt-init.sh \
  && apt-get -y install \
  && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
-RUN bash ${INSTALL_SCRIPTS}/apt.sh \
+RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/apt.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/basic.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/limits.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/repos.sh
