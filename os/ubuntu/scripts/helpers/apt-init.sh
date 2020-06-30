@@ -28,7 +28,7 @@ apt-get install -yqq apt-fast
 
 
 apt-get -yqq update
-apt-get -yqq dist-upgrade
+apt-get -yqq upgrade
 set +e
 systemctl disable apt-daily.service
 systemctl disable apt-daily.timer

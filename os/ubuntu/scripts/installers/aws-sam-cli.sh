@@ -8,6 +8,7 @@
 # Source the helpers for use with the script
 source $HELPER_SCRIPTS/document.sh
 
+sudo su linuxbrew
 # Install aws sam cli
 brew tap aws/tap
 brew install aws-sam-cli
