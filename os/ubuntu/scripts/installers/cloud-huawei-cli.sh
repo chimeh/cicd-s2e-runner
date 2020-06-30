@@ -17,7 +17,7 @@ mv /tmp/obsutil_linux_amd64_*/obsutil /usr/local/bin/
 # Run tests to determine that the software installed as expected
 echo "Testing to make sure that script performed as expected, and basic scenarios work"
 if ! command -v obsutil ; then
-    echo "aliyun was not installed"
+    echo "obsutil was not installed"
     exit 1
 fi
 

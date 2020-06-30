@@ -1,7 +1,7 @@
 #!/bin/bash
 ################################################################################
 ##  File:  aliyun-cli.sh
-##  Desc:  Installs Tencent Cloud CLI
+##  Desc:  Installs Gitlab CLI
 ################################################################################
 
 # Source the helpers for use with the script
@@ -18,23 +18,16 @@ else if runon_alicloud
 else
   PIP_OPT=""
 fi
- pip3 install ${PIP_OPT} coscmd coscmd
- pip3 install ${PIP_OPT} coscmd tccli
+ pip3 install ${PIP_OPT} python-gitlab
 
 # Run tests to determine that the software installed as expected
 echo "Testing to make sure that script performed as expected, and basic scenarios work"
-if ! command -v coscmd ; then
-    echo "coscmd was not installed"
+if ! command -v gitlab ; then
+    echo "gitlab was not installed"
     exit 1
 fi
-if ! command -v tccli ; then
-    echo "tccli was not installed"
-    exit 1
-fi
-# Document what was added to the image
-coscmd_version="$(coscmd --version|head -n 1)"
-tccli_version="$(tccli version)"
-echo "Lastly, documenting what we added to the metadata file"
-DocumentInstalledItem "coscmd, Tencent Cos Cli ($coscmd_version)"
 
-DocumentInstalledItem "tccli, Tencent Cloud Cli ($tccli_version)"
+# Document what was added to the image
+gitlab_version="$(gitlab --version|head -n 1)"
+echo "Lastly, documenting what we added to the metadata file"
+DocumentInstalledItem "gitlab, cli for gitlab  ($gitlab_version)"
