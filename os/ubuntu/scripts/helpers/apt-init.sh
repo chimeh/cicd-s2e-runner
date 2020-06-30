@@ -4,6 +4,7 @@ export DEBIAN_FRONTEND=noninteractive
 # Configure apt to always assume Y
 echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
 
+###
 cp /etc/apt/sources.list /etc/apt/sources.list.origin
 set +e
 scurl --connect-timeout 1 http://metadata.tencentyun.com/latest/meta-data/instance-id
@@ -34,3 +35,8 @@ systemctl disable apt-daily.timer
 systemctl disable apt-daily-upgrade.timer
 systemctl disable apt-daily-upgrade.service
 set -e
+
+### init non-root
+useradd   --user-group --shell /bin/bash --groups sudo,root linuxbrew  --create-home
+localedef -i en_US -f UTF-8 en_US.UTF-8
+echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
