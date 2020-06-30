@@ -11,6 +11,7 @@ source $HELPER_SCRIPTS/apt.sh
 # Install Alibaba Cloud CLI
 URL=https://obs-community.obs.cn-north-1.myhuaweicloud.com/obsutil/current/obsutil_linux_amd64.tar.gz
 wget -P /tmp $URL
+cd /tmp
 tar xzvf /tmp/obsutil_linux_amd64.tar.gz
 mv /tmp/obsutil_linux_amd64_*/obsutil /usr/local/bin/
 

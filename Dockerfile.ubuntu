@@ -58,7 +58,9 @@ RUN cd ${INSTALL_SCRIPTS}; \
      set -e; \
      if [ ${rv} -eq 0 ];then \
          echo "###${INSTALL_SCRIPTS}/$s"; \
-         bash ${INSTALL_SCRIPTS}/validate-disk-space.sh;bash ${INSTALL_SCRIPTS}/$s; \
+         bash ${INSTALL_SCRIPTS}/validate-disk-space.sh; \
+         set +e; bash ${INSTALL_SCRIPTS}/$s; ok=$?;set -e; \
+         if [ ${ok} -ne 0 ];then echo $s >> /error.txt;fi \
      else \
          echo "*** not install $s"; \
      fi; \
@@ -66,4 +68,5 @@ RUN cd ${INSTALL_SCRIPTS}; \
  bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  cat ${METADATA_FILE}
 
-RUN ${INSTALL_SCRIPTS}/cleanup.sh
+RUN ${INSTALL_SCRIPTS}/cleanup.sh; \
+  touch /error.txt; cat /error.txt;
