@@ -51,7 +51,7 @@ enabled=1
 gpgcheck=0
 EOF
 yum --disablerepo=* --enablerepo=base,extras,updates,epel,svn makecache
-yum erase subversion
+yum erase -y subversion
 yum --disablerepo=* --enablerepo=base,extras,updates,epel,svn install -y subversion
 
 
