@@ -32,15 +32,11 @@ clang.sh \
 cmake.sh \
 docker-compose.sh \
 docker-moby.sh \
-erlang.sh \
-example.sh \
 gcc.sh \
 github-cli.sh \
 go.sh \
-haskell.sh \
 image-magick.sh \
 java-tools.sh \
-kind.sh \
 kubernetes-tools.sh \
 nodejs.sh \
 nvm.sh \

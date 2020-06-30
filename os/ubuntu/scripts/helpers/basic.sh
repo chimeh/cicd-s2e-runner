@@ -13,10 +13,12 @@ set -e
 
 pkg_list=(
   bison
+  bsd-mailx
   curl
   dbus
   dnsutils
   dpkg
+  expect
   fakeroot
   file
   flex
@@ -38,16 +40,19 @@ pkg_list=(
   netcat
   openssh-client
   parallel
+  pigz
   pkg-config
   rpm
   rsync
   shellcheck
   ssh
+  sshpass
   sudo
   telnet
   texinfo
   time
   tk
+  tree
   tzdata
   unzip
   upx
