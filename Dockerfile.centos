@@ -1,0 +1,48 @@
+FROM bettercode/scurl:latest as scurl
+FROM centos:7
+COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
+COPY . /cicd-s2e-runner
+
+ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/centos/scripts/helpers
+ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/centos/scripts/installers
+ARG METADATA_FILE=/cicd-s2e-runner/os/centos/build.txt
+
+RUN bash ${HELPER_SCRIPTS}/yum.sh
+
+RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/basic.sh
+
+ARG TCLIST="ansible.sh \
+            cloud-aliyun-tencent-huawei-cli.sh \
+            docker.sh \
+            github-cli.sh \
+            gitlab-cli.sh \
+            gitlab-runner.sh \
+            go.sh \
+            image-magick.sh \
+            java.sh \
+            kubernetes-cli.sh \
+            nodejs.sh \
+            python.sh"
+
+RUN cd ${INSTALL_SCRIPTS}; \
+ for s in ${TCLIST}; \
+ do \
+     set +e; \
+     ls ${INSTALL_SCRIPTS}/$s >/dev/null 2>&1; \
+     rv=$? ;\
+     set -e; \
+     if [ ${rv} -eq 0 ];then \
+         echo "###${INSTALL_SCRIPTS}/$s"; \
+         bash ${INSTALL_SCRIPTS}/validate-disk-space.sh; \
+         set +e; bash ${INSTALL_SCRIPTS}/$s; ok=$?;set -e; \
+         if [ ${ok} -ne 0 ];then echo $s >> /error.txt;fi \
+     else \
+         echo "*** not install $s"; \
+     fi; \
+ done; \
+ bash ${INSTALL_SCRIPTS}/cleanup.sh; \
+ cat ${METADATA_FILE}
+
+RUN ${INSTALL_SCRIPTS}/cleanup.sh; \
+  touch /error.txt; cat /error.txt;
+
