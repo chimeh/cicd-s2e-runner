@@ -21,6 +21,7 @@ fi
 apt-get update
 apt-get install -yqq apt-file
 apt-get install -yqq aria2
+apt-get install -yqq apt-utils
 apt-get install -yqq software-properties-common
 add-apt-repository -y ppa:apt-fast/stable
 apt-get update
@@ -28,7 +29,7 @@ apt-get install -yqq apt-fast
 
 
 apt-get -yqq update
-apt-get -yqq upgrade
+#apt-get -yqq upgrade
 set +e
 systemctl disable apt-daily.service
 systemctl disable apt-daily.timer
