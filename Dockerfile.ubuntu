@@ -20,7 +20,6 @@ ARG TCLIST="7-zip.sh \
 ansible.sh \
 aws.sh \
 azcopy.sh \
-azpowershell.sh \
 azure-cli.sh \
 azure-devops-cli.sh \
 bazel.sh \
