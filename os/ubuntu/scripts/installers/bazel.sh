@@ -3,6 +3,9 @@
 ##  File:  bazel.sh
 ##  Desc:  Installs Bazel and Bazelisk (A user-friendly launcher for Bazel)
 ################################################################################
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 # Source the helpers for use with the script
 source $HELPER_SCRIPTS/document.sh
@@ -13,6 +16,9 @@ echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" |
 apt-get update -y
 apt-get install -y bazel
 
+if ! command -v npm; then
+  bash ${SCRIPT_DIR}/nodejs.sh
+fi
 # Install bazelisk
 npm install -g @bazel/bazelisk
 
