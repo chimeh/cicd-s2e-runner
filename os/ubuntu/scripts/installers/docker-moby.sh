@@ -45,18 +45,18 @@ else
     set +e
 fi
 
-docker pull node:10
-docker pull node:12
-docker pull buildpack-deps:stretch
-docker pull node:10-alpine
-docker pull node:12-alpine
-docker pull debian:8
-docker pull debian:9
-docker pull alpine:3.7
-docker pull alpine:3.8
-docker pull alpine:3.9
-docker pull alpine:3.10
-docker pull ubuntu:14.04
+#docker pull node:10
+#docker pull node:12
+#docker pull buildpack-deps:stretch
+#docker pull node:10-alpine
+#docker pull node:12-alpine
+#docker pull debian:8
+#docker pull debian:9
+#docker pull alpine:3.7
+#docker pull alpine:3.8
+#docker pull alpine:3.9
+#docker pull alpine:3.10
+#docker pull ubuntu:14.04
 
 ## Add version information to the metadata file
 echo "Documenting Docker version"

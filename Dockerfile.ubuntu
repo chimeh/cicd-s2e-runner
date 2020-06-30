@@ -22,77 +22,37 @@ ansible.sh \
 homebrew.sh \
 aws.sh \
 aws-sam-cli.sh \
-#azcopy.sh \
-#azpowershell.sh \
-#azure-cli.sh \
-#azure-devops-cli.sh \
-basic.sh \
+azcopy.sh \
+azpowershell.sh \
+azure-cli.sh \
+azure-devops-cli.sh \
 bazel.sh \
 boost.sh \
 build-essential.sh \
 clang.sh \
-cleanup.sh \
 cmake.sh \
-complete-snap-setup.sh \
-configure-environment.sh \
 docker-compose.sh \
 docker-moby.sh \
-dotnetcore-sdk.sh \
-dpkg-config.sh \
 erlang.sh \
 example.sh \
-#firefox.sh \
 gcc.sh \
-#gfortran.sh \
-git.sh \
 github-cli.sh \
 go.sh \
-#google-chrome.sh \
-#google-cloud-sdk.sh \
-#haskell.sh \
-#heroku.sh \
-#hhvm.sh \
-#homebrew.sh \
-#homebrew-validate.sh \
-#hosted-tool-cache.sh \
+haskell.sh \
 image-magick.sh \
-#Install-Toolset.ps1 \
 java-tools.sh \
-#julia.sh \
 kind.sh \
 kubernetes-tools.sh \
-#leiningen.sh \
-#mercurial.sh \
-#miniconda.sh \
-#mongodb.sh \
-#mono.sh \
-#mysql.sh \
 nodejs.sh \
 nvm.sh \
 packer.sh \
-#phantomjs.sh \
 php.sh \
-#pollinate.sh \
-#postgresql.sh \
-#powershellcore.sh \
-#preimagedata.sh \
-#preparemetadata.sh \
 pypy.sh \
 python.sh \
-#rndgenerator.sh \
 ruby.sh \
 rust.sh \
-#sbt.sh \
-#selenium.sh \
-#sphinx.sh \
-subversion.sh \
 swift.sh \
-#terraform.sh \
-test-toolcache.sh \
-validate-disk-space.sh \
-Validate-Toolset.ps1 \
-#vcpkg.sh \
-vercel.sh"
+"
 
 RUN cd ${INSTALL_SCRIPTS}; \
  for s in ${TCLIST}; \
@@ -110,3 +70,5 @@ RUN cd ${INSTALL_SCRIPTS}; \
  done; \
  bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  cat ${METADATA_FILE}
+
+RUN ${INSTALL_SCRIPTS}/cleanup.sh
