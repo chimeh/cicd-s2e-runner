@@ -1,4 +1,9 @@
 #!/bin/bash
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
+source ${SCRIPT_DIR}/document.sh
 
 yum groupinstall -y 'Development Tools' 'Legacy UNIX Compatibility'
 
@@ -19,11 +24,11 @@ pkg=(
   iputils
   jq
   nmap-ncat
-  openssh-client
+  openssh-clients
   parallel
   redhat-lsb
   rsync
-  shellcheck
+  ShellCheck
   sshpass
   sudo
   sudo
@@ -42,7 +47,7 @@ cmd_test=(
   file
   ftp
   jq
-  netcat
+  nc
   ssh
   parallel
   rsync
@@ -57,14 +62,14 @@ cmd_test=(
   bison
   flex
 )
-for p in ${pkg}; do
+for p in ${pkg[*]}; do
   echo "Install $p"
   yum install -y $p
 done
 
 # Run tests to determine that the software installed as expected
 echo "Testing to make sure that script performed as expected, and basic scenarios work"
-for cmd in $cmd_test; do
+for cmd in ${cmd_test[*]}; do
   if ! command -v $cmd; then
     echo "$cmd was not installed"
     exit 1
@@ -74,6 +79,8 @@ done
 # Document what was added to the image
 echo "Lastly, documenting what we added to the metadata file"
 DocumentInstalledItem "Basic packages:"
-for p in $pkg; do
+for p in ${pkg[*]}; do
   DocumentInstalledItemIndent $p
 done
+
+bash ${SCRIPT_DIR}/scm-tools.sh
