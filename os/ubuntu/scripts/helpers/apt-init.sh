@@ -37,8 +37,12 @@ systemctl disable apt-daily-upgrade.timer
 systemctl disable apt-daily-upgrade.service
 set -e
 
+apt-get install -yqq lsb sudo dialog
+echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
 ### init non-root
 useradd   --user-group --shell /bin/bash --groups sudo,root linuxbrew  --create-home
-apt-get install -yqq language-pack-zh-hans
+#apt-get install -yqq language-pack-zh-hans
+locale-gen
 localedef -i en_US -f UTF-8 en_US.UTF-8
 echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers

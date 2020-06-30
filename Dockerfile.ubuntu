@@ -8,10 +8,7 @@ ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/installers
 ARG DEBIAN_FRONTEND=noninteractive
 ARG METADATA_FILE=/cicd-s2e-runner/os/ubuntu/build.txt
 
-RUN bash ${HELPER_SCRIPTS}/apt-init.sh \
- && apt-get update \
- && apt-get install -yqq lsb wget sudo dialog apt-utils  \
- && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+RUN bash ${HELPER_SCRIPTS}/apt-init.sh
 
 RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/apt.sh \
  && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/basic.sh \
