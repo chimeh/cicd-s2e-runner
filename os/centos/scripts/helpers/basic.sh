@@ -27,7 +27,6 @@ pkg=(
   openssh-clients
   openssl-devel
   parallel
-  redhat-lsb
   rsync
   ShellCheck
   sshpass

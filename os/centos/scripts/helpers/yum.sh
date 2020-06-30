@@ -4,9 +4,15 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 source ${SCRIPT_DIR}/cloud.sh
-
+ls /etc/yum.repos.d
 sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf
 sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo
+if runon_tencentcloud;then
+  sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.cloud.tencent.com/centos/$releasever|' /etc/yum.repos.d/*.repo
+fi
+
+
+egrep "^baseurl" -r /etc/yum.repos.d
 
 yum install -y --nogpgcheck  epel-release
 

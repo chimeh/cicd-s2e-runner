@@ -5,11 +5,10 @@ COPY . /cicd-s2e-runner
 
 ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/centos/scripts/helpers
 ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/centos/scripts/installers
-ARG METADATA_FILE=/cicd-s2e-runner/os/centos/build.txt
 
 RUN bash ${HELPER_SCRIPTS}/yum.sh
 
-RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/basic.sh
+RUN bash /cicd-s2e-runner/os/centos/scripts/helpers/basic.sh
 
 ARG TCLIST="ansible.sh \
             cloud-aliyun-tencent-huawei-cli.sh \
