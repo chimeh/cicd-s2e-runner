@@ -19,7 +19,6 @@ RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/apt.sh \
 ARG TCLIST="7-zip.sh \
 ansible.sh \
 aws.sh \
-aws-sam-cli.sh \
 azcopy.sh \
 azpowershell.sh \
 azure-cli.sh \
