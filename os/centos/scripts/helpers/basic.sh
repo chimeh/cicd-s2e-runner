@@ -25,6 +25,7 @@ pkg=(
   jq
   nmap-ncat
   openssh-clients
+  openssl-devel
   parallel
   redhat-lsb
   rsync
@@ -39,7 +40,9 @@ pkg=(
   unzip
   vim
   wget
+  wqy-microhei-fonts
   zip
+  zlib-devel
 )
 
 cmd_test=(
