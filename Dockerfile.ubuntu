@@ -10,8 +10,7 @@ ARG METADATA_FILE=/cicd-s2e-runner/os/ubuntu/build.txt
 
 RUN bash ${HELPER_SCRIPTS}/apt-init.sh \
  && apt-get update \
- && apt-get install -y lsb wget sudo dialog apt-utils  \
- && apt-get -y install \
+ && apt-get install -yqq lsb wget sudo dialog apt-utils  \
  && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/apt.sh \
