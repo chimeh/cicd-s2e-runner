@@ -17,7 +17,6 @@ RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/apt.sh \
 
 
 ARG TCLIST="7-zip.sh \
-aliyun-cli.sh \
 ansible.sh \
 aws.sh \
 aws-sam-cli.sh \
@@ -29,6 +28,9 @@ bazel.sh \
 boost.sh \
 build-essential.sh \
 clang.sh \
+cloud-aliyun-cli.sh \
+cloud-huawei-cli.sh \
+cloud-tencent-cli.sh \
 cmake.sh \
 docker-compose.sh \
 docker-moby.sh \
