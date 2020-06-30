@@ -1,6 +1,12 @@
 #!/bin/bash
 
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
 export DEBIAN_FRONTEND=noninteractive
+bash ${SCRIPT_DIR}/dpkg-config.sh
+
 # Configure apt to always assume Y
 echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
 
@@ -46,3 +52,4 @@ useradd   --user-group --shell /bin/bash --groups sudo,root linuxbrew  --create-
 locale-gen
 localedef -i en_US -f UTF-8 en_US.UTF-8
 echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
+
