@@ -39,5 +39,6 @@ set -e
 
 ### init non-root
 useradd   --user-group --shell /bin/bash --groups sudo,root linuxbrew  --create-home
+apt-get install -yqq language-pack-zh-hans
 localedef -i en_US -f UTF-8 en_US.UTF-8
 echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
