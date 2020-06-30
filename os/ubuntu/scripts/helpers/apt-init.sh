@@ -21,7 +21,7 @@ apt-get update
 apt-get install -yqq apt-file
 apt-get install -yqq aria2
 apt-get install -yqq software-properties-common
-add-apt-repository -y apt-utilsppa:apt-fast/stable
+add-apt-repository -y ppa:apt-fast/stable
 apt-get update
 apt-get install -yqq apt-fast
 
