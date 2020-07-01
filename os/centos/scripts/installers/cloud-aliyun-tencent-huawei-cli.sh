@@ -11,7 +11,9 @@ source ${SCRIPT_DIR}/../helpers/cloud.sh
 ## Alibaba
 # Install Alibaba Cloud CLI
 URL=$(curl -s https://api.github.com/repos/aliyun/aliyun-cli/releases/latest | jq -r '.assets[].browser_download_url | select(contains("aliyun-cli-linux"))')
-wget -P /tmp $URL
+URL_FALLBACK=https://github.com/aliyun/aliyun-cli/releases/download/v3.0.49/aliyun-cli-linux-3.0.49-amd64.tgz
+wget -P /tmp ${URL:-${URL_FALLBACK}}
+cd /tmp 
 tar xzvf $(/bin/ls /tmp/aliyun-cli-linux-*-amd64.tgz)
 mv aliyun /usr/local/bin
 
@@ -20,7 +22,7 @@ mv aliyun /usr/local/bin
 if runon_tencentcloud;then
   PIP_OPT="--index-url http://mirrors.tencentyun.com/pypi/simple
   --trusted-host mirrors.tencentyun.com"
-else if runon_alicloud
+elif runon_alicloud
   PIP_OPT="--index-url http://mirrors.cloud.aliyuncs.com/pypi/simple \
   --trusted-host mirrors.cloud.aliyuncs.com"
 else
