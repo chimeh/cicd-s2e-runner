@@ -7,9 +7,6 @@ source ${SCRIPT_DIR}/cloud.sh
 ls /etc/yum.repos.d
 sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf
 sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/*.repo
-if runon_tencentcloud;then
-  sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirrors.cloud.tencent.com/centos/$releasever|' /etc/yum.repos.d/*.repo
-fi
 
 
 egrep "^baseurl" -r /etc/yum.repos.d
@@ -34,3 +31,5 @@ if runon_aliyun;then
 fi
 
 
+sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirror.centos.org/centos/$releasever|' /etc/yum.repos.d/*.repo
+sed -i 's|^#(baseurl=https://download.fedoraproject.org/pub/epel)|\1|' /etc/yum.repos.d/epel*
