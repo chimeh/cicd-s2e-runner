@@ -86,3 +86,5 @@ for p in ${pkg[*]}; do
 done
 
 bash ${SCRIPT_DIR}/scm-tools.sh
+bash ${SCRIPT_DIR}/python.sh
+

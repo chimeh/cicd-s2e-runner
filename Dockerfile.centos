@@ -20,8 +20,7 @@ ARG TCLIST="ansible.sh \
             image-magick.sh \
             java.sh \
             kubernetes-cli.sh \
-            nodejs.sh \
-            python.sh"
+            nodejs.sh"
 
 RUN cd ${INSTALL_SCRIPTS}; \
  for s in ${TCLIST}; \
