@@ -15,7 +15,7 @@ source ${SCRIPT_DIR}/../helpers/cloud.sh
 if runon_tencentcloud;then
   PIP_OPT="--index-url http://mirrors.tencentyun.com/pypi/simple
   --trusted-host mirrors.tencentyun.com"
-elif runon_alicloud;then
+elif runon_aliyun;then
   PIP_OPT="--index-url http://mirrors.cloud.aliyuncs.com/pypi/simple \
   --trusted-host mirrors.cloud.aliyuncs.com"
 else
