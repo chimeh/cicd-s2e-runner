@@ -7,12 +7,12 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 source ${SCRIPT_DIR}/../helpers/document.sh
 
 # Install LTS Node.js and related build tools
-curl -sL https://raw.githubusercontent.com/mklement0/n-install/stable/bin/n-install | bash -s -- -ny -
-~/n/bin/n lts
+curl -L https://git.io/n-install > /usr/local/bin/n-install
+chmod +x /usr/local/bin/n-install
+n-install -q lts
 npm install -g grunt gulp n parcel-bundler typescript
 npm install -g --save-dev webpack webpack-cli
 npm install -g npm
-rm -rf ~/n
 
 # Install Yarn repository and key
 curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo

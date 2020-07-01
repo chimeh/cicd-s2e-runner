@@ -22,8 +22,8 @@ appendEtcEnvironmentPath "/opt/apache-maven-${MAVEN_VERSION}/bin"
 
 #gradle
 GRADLE_VERSION=6.2.2
-mkdir -p /root/ts \
- wget -q -P /root/ts  https://downloads.gradle-dn.com/distributions/gradle-${GRADLE_VERSION}-all.zip
+mkdir -p /root/ts
+wget -q -P /root/ts  https://downloads.gradle-dn.com/distributions/gradle-${GRADLE_VERSION}-all.zip
 cd /root/ts
 mkdir -p /opt/gradle
 unzip  -qq gradle-${GRADLE_VERSION}-all.zip -d /opt/gradle

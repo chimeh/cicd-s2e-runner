@@ -22,7 +22,7 @@ mv aliyun /usr/local/bin
 if runon_tencentcloud;then
   PIP_OPT="--index-url http://mirrors.tencentyun.com/pypi/simple
   --trusted-host mirrors.tencentyun.com"
-elif runon_alicloud
+elif runon_alicloud;then
   PIP_OPT="--index-url http://mirrors.cloud.aliyuncs.com/pypi/simple \
   --trusted-host mirrors.cloud.aliyuncs.com"
 else
