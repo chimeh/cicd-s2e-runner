@@ -42,6 +42,6 @@ RUN cd ${INSTALL_SCRIPTS}; \
  bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  cat ${METADATA_FILE}
 
-RUN ${INSTALL_SCRIPTS}/cleanup.sh; \
+RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
   touch /error.txt; cat /error.txt;
 

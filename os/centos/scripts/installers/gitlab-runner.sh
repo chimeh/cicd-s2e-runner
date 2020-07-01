@@ -3,8 +3,8 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
-source ${SCRIPT_DIR}/document.sh
-source ${SCRIPT_DIR}/cloud.sh
+source ${SCRIPT_DIR}/../helpers/document.sh
+source ${SCRIPT_DIR}/../helpers/cloud.sh
 # Tencent Cloud
 if runon_tencentcloud;then
 echo "on tencent cloud, use gitlab-runner mirror"

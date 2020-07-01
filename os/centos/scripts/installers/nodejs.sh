@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Source the helpers for use with the script
-source $HELPER_SCRIPTS/document.sh
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
+source ${SCRIPT_DIR}/../helpers/document.sh
 
 # Install LTS Node.js and related build tools
 curl -sL https://raw.githubusercontent.com/mklement0/n-install/stable/bin/n-install | bash -s -- -ny -
@@ -32,7 +35,7 @@ DocumentInstalledItem "Node.js/npm"
 DocumentInstalledItemIndent "Node.js ($(node --version))"
 DocumentInstalledItemIndent "Grunt ($(grunt --version))"
 DocumentInstalledItemIndent "Gulp ($(gulp --version))"
-DocumentInstalledItemIndent "npm ($(npm --version))"
+DocumentInstalledItemIndent "n ($(n --version))"
 DocumentInstalledItemIndent "Parcel ($(parcel --version))"
 DocumentInstalledItemIndent "TypeScript ($(tsc --version))"
 DocumentInstalledItemIndent "Webpack ($(webpack --version))"

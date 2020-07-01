@@ -1,13 +1,18 @@
 #!/bin/bash
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
 # Source the helpers for use with the script
-source $HELPER_SCRIPTS/document.sh
-source $HELPER_SCRIPTS/cloud.sh
+source ${SCRIPT_DIR}/../helpers/document.sh
+source ${SCRIPT_DIR}/../helpers/cloud.sh
+
 
 ## Alibaba
 # Install Alibaba Cloud CLI
 URL=$(curl -s https://api.github.com/repos/aliyun/aliyun-cli/releases/latest | jq -r '.assets[].browser_download_url | select(contains("aliyun-cli-linux"))')
 wget -P /tmp $URL
-tar xzvf /tmp/aliyun-cli-linux-*-amd64.tgz
+tar xzvf $(/bin/ls /tmp/aliyun-cli-linux-*-amd64.tgz)
 mv aliyun /usr/local/bin
 
 

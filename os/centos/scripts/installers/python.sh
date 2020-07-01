@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Source the helpers for use with the script
-source $HELPER_SCRIPTS/document.sh
+#!/bin/bash
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+source ${SCRIPT_DIR}/../helpers/document.sh
 
 yum install -y python3-devel python3-pip python3-setuptools  yamllint
 yum install -y python2-devel python2-pip

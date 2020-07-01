@@ -1,8 +1,13 @@
 #!/bin/bash
 
-# Source the helpers for use with the script
-source $HELPER_SCRIPTS/document.sh
-source $HELPER_SCRIPTS/cloud.sh
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
+source ${SCRIPT_DIR}/../helpers/document.sh
+source ${SCRIPT_DIR}/../helpers/cloud.sh
+source ${SCRIPT_DIR}/../helpers/etc-environment.sh
+
 
 GO_VERSION=1.14.1
 wget -q -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz

@@ -2,11 +2,11 @@
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
-source ${SCRIPT_DIR}/document.sh
-
+source ${SCRIPT_DIR}/../helpers/document.sh
+source ${SCRIPT_DIR}/../helpers/etc-environment.sh 
 
 #jdk
-RUN yum install -y java-1.8.0-openjdk-devel
+yum install -y java-1.8.0-openjdk-devel
 
 #maven
 MAVEN_VERSION=3.6.3

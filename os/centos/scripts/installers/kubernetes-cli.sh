@@ -2,8 +2,8 @@
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
-source ${SCRIPT_DIR}/document.sh
-source $HELPER_SCRIPTS/cloud.sh
+source ${SCRIPT_DIR}/../helpers/document.sh
+source $HELPER_SCRIPTS/../helpers/cloud.sh
 
 # kubectl, helm2
 KUBE_VERSION=v1.15.7

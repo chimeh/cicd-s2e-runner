@@ -4,15 +4,18 @@
 ##  Desc:  Installs Gitlab CLI
 ################################################################################
 
-# Source the helpers for use with the script
-source $HELPER_SCRIPTS/document.sh
-source $HELPER_SCRIPTS/apt.sh
-source $HELPER_SCRIPTS/cloud.sh
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
+source ${SCRIPT_DIR}/../helpers/document.sh
+source ${SCRIPT_DIR}/../helpers/cloud.sh
+
 
 if runon_tencentcloud;then
   PIP_OPT="--index-url http://mirrors.tencentyun.com/pypi/simple
   --trusted-host mirrors.tencentyun.com"
-else if runon_alicloud
+elif runon_alicloud
   PIP_OPT="--index-url http://mirrors.cloud.aliyuncs.com/pypi/simple \
   --trusted-host mirrors.cloud.aliyuncs.com"
 else
