@@ -32,4 +32,4 @@ fi
 
 
 sed -i 's|#\(baseurl.*\)mirror.centos.org/centos/$releasever|\1mirror.centos.org/centos/$releasever|' /etc/yum.repos.d/*.repo
-sed -i -e 's|^metalink=|#metalink=|g'  -e's|^#(baseurl.*\)download.fedoraproject.org/pub/epel|\1download.fedoraproject.org/pub/epel|' /etc/yum.repos.d/epel*
+sed -i -e 's|^metalink=|#metalink=|g'  -e's|^#\(baseurl.*\)download.fedoraproject.org/pub/epel|\1download.fedoraproject.org/pub/epel|' /etc/yum.repos.d/epel*
