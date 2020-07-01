@@ -36,3 +36,16 @@ function runon_aliyun ()
     false
   fi
 }
+
+function runon_cn ()
+{
+  set +e
+  scurl --connect-timeout 1 curl http://www.google.com >/dev/null 2>&1
+  rv=$?
+  set -e
+  if [[ ${rv} -eq 0 ]];then
+    true
+  else
+    false
+  fi
+}

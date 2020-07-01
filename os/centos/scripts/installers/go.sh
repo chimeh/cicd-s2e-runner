@@ -9,8 +9,13 @@ source ${SCRIPT_DIR}/../helpers/cloud.sh
 source ${SCRIPT_DIR}/../helpers/etc-environment.sh
 
 
-GO_VERSION=1.14.1
-wget -q -P /root/ts https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz
+GO_VERSION=1.14.4
+if runon_cn;then
+  URL=https://mirror.azure.cn/go/go${GO_VERSION}.linux-amd64.tar.gz
+else
+  URL=https://golang.org/dl/go1.14.4.linux-amd64.tar.gz
+fi
+wget -q -P /root/ts $URL
 tar -xzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt
 rm -rf /root/ts
 
