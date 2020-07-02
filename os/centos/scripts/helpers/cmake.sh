@@ -3,9 +3,12 @@
 ##  File:  cmake.sh
 ##  Desc:  Installs CMake
 ################################################################################
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 # Source the helpers for use with the script
-source $HELPER_SCRIPTS/document.sh
+source ${SCRIPT_DIR}/document.sh
 
 # Test to see if the software in question is already installed, if not install it
 echo "Checking to see if the installer script has already been run"

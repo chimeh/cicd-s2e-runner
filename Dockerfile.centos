@@ -44,10 +44,10 @@ COPY /s2e /
 COPY docker /docker
 
 RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
- && touch /error.txt; cat /error.txt; \
- && yum clean all \
- && rm -rf /var/cache/yum \
- && rm -rf /root/ts \
- && chmod -R +x /docker/ /s2e
+ touch /error.txt; cat /error.txt; \
+ yum clean all; \
+ rm -rf /var/cache/yum; \
+ rm -rf /root/ts; \
+ chmod -R +x /docker/ /s2e;
 
 
