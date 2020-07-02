@@ -58,7 +58,8 @@ function do_docker_build() {
   docker build . --file ${DOCKERFILE} --tag ${IMG_TMP}
   mkdir -p ${ARTIFACT_DIR}
   set +e
-  echo "Docker image size: "$(docker image inspect ${IMG_TMP} --format='{{.Size}}' ) | tee -a ${BUILD_NOTE}
+  echo "Docker image size: "$(docker image inspect ${IMG_TMP} --format='{{.Size}}' ) | tee -a ${ARTIFACT_DIR}/buildnote.md
+
   cid=$(docker create ${IMG_TMP})
   docker cp $cid:/doc_file.txt - > ${DOCKERFILE}.md 2>/dev/null
   docker rm -v $cid
@@ -108,9 +109,9 @@ function do_docker_push() {
 do_compose_gen() {
   mkdir -p ${ARTIFACT_DIR}
   if [[ ${USE_PUSHED_IMG} -gt 0 ]];then
-    IMG=${IMG_TMP}
-  else
     IMG="$(head -n 1 ${ARTIFACT_DIR}/img.txt)"
+  else
+    IMG=${IMG_TMP}
   fi
   echo ${IMG}
   /bin/cp -rf ${SRC_TOP}/deployments/s2erunner   cd ${ARTIFACT_DIR}
