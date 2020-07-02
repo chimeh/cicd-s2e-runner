@@ -1,5 +1,5 @@
 FROM bettercode/scurl:latest as scurl
-FROM centos:7
+FROM centos:7 as runner
 COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
 COPY . /cicd-s2e-runner
 

@@ -8,5 +8,3 @@ docker-centos-dev:
 
 .PHONY: compose-centos-pre
 	bash ${CUR_DIR}/scripts/docker.sh ${CUR_DIR}/Dockerfile.centos pre
-
-
