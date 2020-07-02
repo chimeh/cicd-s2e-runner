@@ -17,6 +17,7 @@ env:
   # TODO: Change variable to your image's name.
   DOCKER_REPO: docker.io
   DOCKER_NS: bettercode
+  GITHUB_TOKEN: '${{ secrets.HUB_TOKEN }}'
 
 jobs:
   # Push image to GitHub Packages.
@@ -43,5 +44,6 @@ jobs:
       - name: Build, Push image
         run: |
           export DOCKER_PASS='${{ secrets.hub_docker_com_pass }}'
+          env
           make docker-centos-dev
 
