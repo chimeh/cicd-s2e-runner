@@ -43,5 +43,5 @@ jobs:
       - name: Build, Push image
         run: |
           export DOCKER_PASS='${{ secrets.hub_docker_com_pass }}'
-          make docker-centos
+          make docker-centos-dev
 
