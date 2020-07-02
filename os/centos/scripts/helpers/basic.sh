@@ -23,6 +23,7 @@ pkg=(
   iproute
   iputils
   jq
+  m4
   nmap-ncat
   openssh-clients
   openssl-devel
