@@ -7,12 +7,20 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 source ${SCRIPT_DIR}/../helpers/document.sh
 
 # Install LTS Node.js and related build tools
-curl -L https://git.io/n-install > /usr/local/bin/n-install
-chmod +x /usr/local/bin/n-install
-n-install -q lts
+cd ~
+git clone  --branch v0.35.3 --depth 1 https://github.com/nvm-sh/nvm.git .nvm
+
+echo 'export NVM_DIR="$HOME/.nvm"' >/etc/profile.d/nvm.sh
+echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm'  >>/etc/profile.d/nvm.sh
+echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >>/etc/profile.d/nvm.sh
+
+. nvm.sh
+nvm install lts/dubnium 
+
 npm install -g grunt gulp n parcel-bundler typescript
 npm install -g --save-dev webpack webpack-cli
 npm install -g npm
+
 
 # Install Yarn repository and key
 curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
