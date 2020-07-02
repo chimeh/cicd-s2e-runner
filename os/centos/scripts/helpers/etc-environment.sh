@@ -8,6 +8,10 @@
 #     values containg slashes (i.e. directory path)
 #     The values containing '%' will break the functions
 
+THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
+#automatic detection TOPDIR
+SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
+
 function getEtcEnvironmentVariable {
     variable_name="$1"
     # remove `variable_name=` and possible quotes from the line
@@ -83,3 +87,33 @@ function  reloadEtcEnvironment {
     export PATH="$PATH:$etc_path"
 }
 
+#refer function pathmunge in /etc/profile
+#pathmunge /your/new/path after ;export PATH 
+function injectpath {
+    source /etc/profile.d/sh.local
+    case ":${PATH}:" in
+        *:"$1":*)
+            ;;
+        *)
+            if [ "$2" = "after" ] ; then
+                PATH=$PATH:$1
+            else
+                PATH=$1:$PATH
+            fi
+    esac
+    export PATH
+    sed -i -e "/\s*PATH\=.*/d" /etc/profile.d/sh.local
+    echo "PATH=${PATH};export PATH" >> /etc/profile.d/sh.local
+}
+
+function injectenv {
+    eval "$1"
+    rv=$?
+    export $1
+    if [[ $rv -ne 0 ]];then
+        sed -i -e "/\s*${1}\=.*/d" /etc/profile.d/sh.local
+        echo "export $1" >> /etc/profile.d/sh.local
+    else
+        echo "syntax error, use envset syntax KEY=Val."
+    fi
+}

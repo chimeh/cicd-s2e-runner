@@ -27,7 +27,7 @@ function runon_tencentcloud()
 function runon_aliyun ()
 {
   set +e
-  scurl --connect-timeout 1 curl http://100.100.100.200 >/dev/null 2>&1
+  scurl --connect-timeout 1 http://100.100.100.200 >/dev/null 2>&1
   rv=$?
   set -e
   if [[ ${rv} -eq 0 ]];then
@@ -40,12 +40,12 @@ function runon_aliyun ()
 function runon_cn ()
 {
   set +e
-  scurl --connect-timeout 1 curl http://www.google.com >/dev/null 2>&1
+  scurl --connect-timeout 1  http://www.google.com >/dev/null 2>&1
   rv=$?
   set -e
   if [[ ${rv} -eq 0 ]];then
-    true
+    false # runon_cn can't visit google
   else
-    false
+    true
   fi
 }

@@ -18,7 +18,7 @@ cp /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml /root/.m2/settings.xml
 ln -sf /root/.m2/settings.xml /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml
 rm -rf /root/ts
 echo "M2_HOME=/opt/apache-maven-${MAVEN_VERSION}" | tee -a /etc/environment
-appendEtcEnvironmentPath "/opt/apache-maven-${MAVEN_VERSION}/bin"
+injectpath "/opt/apache-maven-${MAVEN_VERSION}/bin"
 
 #gradle
 GRADLE_VERSION=6.2.2
@@ -29,7 +29,7 @@ mkdir -p /opt/gradle
 unzip  -qq gradle-${GRADLE_VERSION}-all.zip -d /opt/gradle
 rm -rf /root/ts
 echo "GRADLE_HOME=/opt/gradle/gradle-${GRADLE_VERSION}" | tee -a /etc/environment
-appendEtcEnvironmentPath "/opt/gradle/gradle-${GRADLE_VERSION}/bin"
+injectpath "/opt/gradle/gradle-${GRADLE_VERSION}/bin"
 
 # Run tests to determine that the software installed as expected
 echo "check cmd run ok"

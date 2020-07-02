@@ -19,7 +19,7 @@ wget -q -P /root/ts $URL
 tar -xzf /root/ts/go${GO_VERSION}.linux-amd64.tar.gz -C /opt
 rm -rf /root/ts
 
-appendEtcEnvironmentPath "/opt/go/bin"
+injectpath "/opt/go/bin"
 
 for cmd in go; do
     if ! command -v $cmd; then
