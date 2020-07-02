@@ -45,4 +45,3 @@ jobs:
           export DOCKER_PASS='${{ secrets.hub_docker_com_pass }}'
           make docker-centos
 
-

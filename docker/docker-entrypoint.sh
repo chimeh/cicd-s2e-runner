@@ -33,7 +33,7 @@ RUNNER_TYPE="gitlab-runner"
 if [ $# -gt 0 ];then
 RUNNER_TYPE=$1
 fi
-
+echo "support : gitlab-runner github-runner tailf"
 echo "start ${RUNNER_TYPE}"
 case ${RUNNER_TYPE} in
     gitlab-runner)
@@ -50,8 +50,9 @@ case ${RUNNER_TYPE} in
         echo "not implement!"
         exit 1
         ;;
+    tailf)
+        exec tail -f /dev/null
+        ;;
     *)
         echo "unkown ${RUNNER_TYPE}"
-        echo "current support runner: gitlab-runner github-runner"
-        echo "support runner on futrue: jenkins-slave webssh"
         ;;
