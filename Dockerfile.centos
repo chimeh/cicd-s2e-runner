@@ -4,10 +4,10 @@ COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
 COPY . /cicd-s2e-runner
 
 
-RUN bash ${HELPER_SCRIPTS}/yum.sh
-
+RUN bash /cicd-s2e-runner/os/centos/scripts/helpers/yum.sh
 RUN bash /cicd-s2e-runner/os/centos/scripts/helpers/basic.sh
 
+ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/centos/scripts/installers
 ARG TCLIST="ansible.sh \
             cloud-aliyun-tencent-huawei-cli.sh \
             docker.sh \
