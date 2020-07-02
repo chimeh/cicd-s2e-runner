@@ -40,9 +40,22 @@ RUN cd ${INSTALL_SCRIPTS}; \
 COPY docker /docker
 
 # cicd logic
-RUN mv /cicd-s2e-runner/s2e /; \
- chmod -R +x /docker/ /s2e;
-# runner entrypoint
+RUN mv /cicd-s2e-runner/s2e / ;\
+    chmod -R +x /docker/ /s2e ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/gitlab-runner/config.toml     /etc/gitlab-runner/config.toml ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/profile.d/env.sh              /etc/profile.d/env.sh ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/maven/settings.xml            /root/.m2/settings.xml ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/docker/config.json            /root/.docker/config.json ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/k8s/                          /root/.kube ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/email/mail.rc                  /etc/mail.rc ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/jira/acli.properties           /root/jira/acli.properties ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/rancher/cli2.json              /root/.rancher/cli2.json ;\
+    /bin/cp -rf deployments/s2erunner/runner/secrets/s2ectl/config.yaml             /root/.s2ectl/config.yaml ;\
+    /bin/cp -rf deployments/s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml ;\
+    /bin/cp -rf deployments/s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml ;\
+    /bin/cp -rf deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml ;\
+    /bin/cp -rf deployments/s2emetricd/secrets/logstash                             /etc/logstash ;\
+    /bin/cp -rf deployments/s2emetricd/secrets/nginx/default.conf                   /etc/nginx/default.d/ ;\
 
 RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  touch /error.txt; cat /error.txt; \
@@ -50,4 +63,4 @@ RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  rm -rf /var/cache/yum; \
  rm -rf /root/ts;
 
-
+ENTRYPOINT ["/docker/docker-entrypoint.sh"]
