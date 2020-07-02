@@ -1,11 +1,11 @@
 FROM bettercode/scurl:latest as scurl
 FROM centos:7 as runner
 COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
+COPY docker /docker
 COPY . /s2erunner-src
 
-
-RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh
-RUN bash /s2erunner-src/os/centos/scripts/helpers/basic.sh
+RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ;\
+    bash /s2erunner-src/os/centos/scripts/helpers/basic.sh
 
 ENV INSTALL_SCRIPTS=/s2erunner-src/os/centos/scripts/installers
 ARG TCLIST="ansible.sh \
@@ -37,26 +37,16 @@ RUN cd ${INSTALL_SCRIPTS}; \
      fi; \
  done;
 
-COPY docker /docker
 
 # cicd logic
 RUN mv /s2erunner-src/s2e / ;\
-    chmod -R +x /docker/ /s2e ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/gitlab-runner/config.toml     /etc/gitlab-runner/config.toml ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/profile.d/env.sh              /etc/profile.d/env.sh ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/maven/settings.xml            /root/.m2/settings.xml ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/docker/config.json            /root/.docker/config.json ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/k8s/                          /root/.kube ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/email/mail.rc                  /etc/mail.rc ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/jira/acli.properties           /root/jira/acli.properties ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/rancher/cli2.json              /root/.rancher/cli2.json ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/runner/secrets/s2ectl/config.yaml             /root/.s2ectl/config.yaml ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner/metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2emetricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2emetricd/secrets/logstash                             /etc/logstash ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2emetricd/secrets/nginx/default.conf                   /etc/nginx/default.d/ ;\
+    chmod -R +x /docker/ /s2e ;
 
+# default config from docker-compose secrets
+RUN /s2erunner-src/deployments/s2erunner/compose.sh ;\
+    set +e ;\
+    /bin/cp -f /s2erunner-src/deployments/s2erunner/.tpl/cfgmap-cmd.sh ;\
+    set -e ;
 
 RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  touch /error.txt; cat /error.txt; \

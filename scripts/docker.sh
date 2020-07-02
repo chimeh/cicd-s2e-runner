@@ -62,6 +62,7 @@ function do_docker_build() {
 
   cid=$(docker create ${IMG_TMP})
   docker cp $cid:/doc_file.txt - > ${DOCKERFILE}.md 2>/dev/null
+  docker cp $cid:/doc_file.txt - > ${DOCKERFILE}.md 2>/dev/null
   docker rm -v $cid
   cat ${DOCKERFILE}.md | tee -a {ARTIFACT_DIR}/buildnote.md
   rm -f ${DOCKERFILE}.md
@@ -115,7 +116,9 @@ do_compose_gen() {
   fi
   echo ${IMG}
   /bin/cp -rf ${SRC_TOP}/deployments/s2erunner   cd ${ARTIFACT_DIR}
-  perl -ni -e "s@^([# ]+image:).+@\1 ${IMG}@g;print" ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
+  bash ${ARTIFACT_DIR}/s2erunner/compose.sh
+  /bin/cp -f ${ARTIFACT_DIR}/s2erunner/.tpl/docker-compose.yaml ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
+  cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >> ${ARTIFACT_DIR}/buildnote.md
 }
 
 do_compose_test() {
