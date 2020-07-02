@@ -41,6 +41,6 @@ for cmd in gradle java javac mvn; do
 done
 
 DocumentInstalledItem "Java:"
-DocumentInstalledItemIndent "java jdk: $(java -version | head -n 1)"
-DocumentInstalledItemIndent "maven: $(mvn -version | head -n 1)"
-DocumentInstalledItemIndent "gradle: $(gradle -version | head -n 1)"
+DocumentInstalledItemIndent "java : $(java -version 2>&1| head -n 1)"
+DocumentInstalledItemIndent "maven: $(mvn -version 2>&1| head -n 1)"
+DocumentInstalledItemIndent "gradle: $(gradle -version 2>&1|egrep Gradle| head -n 1)"
