@@ -35,7 +35,7 @@ RUN cd ${INSTALL_SCRIPTS}; \
      else \
          echo "*** not install $s"; \
      fi; \
- done; \
+ done;
 
 COPY docker /docker
 
@@ -56,6 +56,8 @@ RUN mv /cicd-s2e-runner/s2e / ;\
     /bin/cp -rf deployments/s2emetricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml ;\
     /bin/cp -rf deployments/s2emetricd/secrets/logstash                             /etc/logstash ;\
     /bin/cp -rf deployments/s2emetricd/secrets/nginx/default.conf                   /etc/nginx/default.d/ ;\
+
+
 
 RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  touch /error.txt; cat /error.txt; \
