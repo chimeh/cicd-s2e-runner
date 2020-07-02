@@ -39,7 +39,8 @@ RUN cd ${INSTALL_SCRIPTS}; \
  bash ${INSTALL_SCRIPTS}/cleanup.sh;
 
 # cicd logic
-COPY /s2e /
+RUN mv /cicd-s2e-runner/s2e /; \
+ chmod -R +x /docker/ /s2e;
 # runner entrypoint
 COPY docker /docker
 
@@ -47,7 +48,6 @@ RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  touch /error.txt; cat /error.txt; \
  yum clean all; \
  rm -rf /var/cache/yum; \
- rm -rf /root/ts; \
- chmod -R +x /docker/ /s2e;
+ rm -rf /root/ts;
 
 
