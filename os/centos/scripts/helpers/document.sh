@@ -15,17 +15,17 @@ function WriteItem {
 }
 
 function AddTitle {
-    WriteItem "# $1"
+	WriteItem "# $(echo $1 |head -n)"
 }
 
 function AddSubTitle {
-    WriteItem "## $1"
+	WriteItem "## $(echo $1 | head -n 1)"
 }
 
 function DocumentInstalledItem {
-    WriteItem "- $1"
+	WriteItem "- $(echo $1 |head -n 1)"
 }
 
 function DocumentInstalledItemIndent {
-    WriteItem "  - $1"
+	WriteItem "  - $(echo $1 | head -n 1)"
 }
