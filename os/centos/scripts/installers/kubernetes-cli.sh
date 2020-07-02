@@ -31,6 +31,14 @@ make -j2 -C .
 cp /root/ts/helm/bin/helm /usr/local/bin/helm3
 rm -rf /root/ts
 
+echo "check cmd run ok"
+for cmd in kubectl helm helm2 helm3; do
+    if ! command -v $cmd; then
+        echo "$cmd was not installed or found on path"
+        exit 1
+    fi
+done
+
 
 DocumentInstalledItem "Kubernetes Cli:"
 DocumentInstalledItemIndent "kubectl ($(kubectl version --client --short |& head -n 1))"

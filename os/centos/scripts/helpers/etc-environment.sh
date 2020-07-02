@@ -12,6 +12,8 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
+source /etc/profile.d/sh.local
+
 function getEtcEnvironmentVariable {
     variable_name="$1"
     # remove `variable_name=` and possible quotes from the line
@@ -117,3 +119,4 @@ function injectenv {
         echo "syntax error, use envset syntax KEY=Val."
     fi
 }
+

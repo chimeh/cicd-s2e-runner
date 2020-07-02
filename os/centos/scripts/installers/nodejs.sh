@@ -9,7 +9,7 @@ source ${SCRIPT_DIR}/../helpers/document.sh
 # Install LTS Node.js and related build tools
 cd ~
 git clone  --branch v0.35.3 --depth 1 https://github.com/nvm-sh/nvm.git .nvm
-
+cd .nvm
 echo 'export NVM_DIR="$HOME/.nvm"' >/etc/profile.d/nvm.sh
 echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm'  >>/etc/profile.d/nvm.sh
 echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >>/etc/profile.d/nvm.sh
@@ -26,7 +26,7 @@ npm install -g npm
 curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
 
 # Install yarn
-yum install yarn
+yum install -y yarn
 
 # Run tests to determine that the software installed as expected
 echo "Testing to make sure that script performed as expected, and basic scenarios work"

@@ -33,7 +33,7 @@ injectpath "/opt/gradle/gradle-${GRADLE_VERSION}/bin"
 
 # Run tests to determine that the software installed as expected
 echo "check cmd run ok"
-for cmd in gradle java javac mvn ant; do
+for cmd in gradle java javac mvn; do
     if ! command -v $cmd; then
         echo "$cmd was not installed or found on path"
         exit 1
