@@ -7,6 +7,20 @@ volumes:
   runner-gitlab-metric-log-cache: {}
   metricbeat-filebeat-cache: {}
 services:
+  metricbeat:
+    restart: always
+    #    build: .
+    image: harbor.benload.com/bu5/cicd-gitlab-runner-s2e:feature-centos-f12b9b57-1.0.0-g59686-cicd-gitlab-runner-s2e
+    #privileged: true
+    entrypoint: "/docker/docker-entrypoint-metricbeat.sh"
+    env_file:
+      - ./metricbeat/secrets/environment-global
+    volumes:
+      - metricbeat-filebeat-cache:/var/lib/filebeat
+      - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:ro
+      ##########################secrets
+      - ./metricbeat/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
+      - ./metricbeat/secrets/profile.d/env.sh:/etc/profile.d/env.sh
   runner:
     restart: always
     image: harbor.benload.com/bu5/cicd-gitlab-runner-s2e:feature-centos-f12b9b57-1.0.0-g59686-cicd-gitlab-runner-s2e
@@ -19,7 +33,13 @@ services:
       - runner-maven-cache:/root/.m2/repository
       - runner-gitlab-runner-cache:/home/gitlab-runner
       - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:rw
-      ##########################secrets
+      ###########################tools
+      - ./runner/tools:/s2e/custom/tools
+      ###########################template
+      - ./runner/templates:/s2e/custom/templates
+      ###########################demo code
+      - ./runner/democode:/root/democode
+      ###########################secrets
       - ./runner/secrets/android:/etc/android
       - ./runner/secrets/cloud-aliyun:/root/.aliyun
       - ./runner/secrets/cloud-huawei:/root/.huawei
@@ -35,23 +55,3 @@ services:
       - ./runner/secrets/maven/settings.xml:/root/.m2/settings.xml
       - ./runner/secrets/rancher/cli2.json:/root/.rancher/cli2.json
       - ./runner/secrets/s2ectl:/root/.s2ectl
-      ###########################tools
-      - ./runner/tools:/s2e/custom/tools
-      ###########################template
-      - ./runner/templates:/s2e/custom/templates
-      ###########################demo code
-      - ./runner/democode:/root/democode
-#  metricbeat:
-#    restart: always
-#    #    build: .
-#    image: harbor.benload.com/bu5/cicd-gitlab-runner-s2e:feature-centos-f12b9b57-1.0.0-g59686-cicd-gitlab-runner-s2e
-#    #privileged: true
-#    entrypoint: "/docker/docker-entrypoint-metricbeat.sh"
-#    env_file:
-#      - ./metricbeat/secrets/environment-global
-#    volumes:
-#      - metricbeat-filebeat-cache:/var/lib/filebeat
-#      - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:ro
-#      ##########################secrets
-#      - ./metricbeat/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
-#      - ./metricbeat/secrets/profile.d/env.sh:/etc/profile.d/env.sh

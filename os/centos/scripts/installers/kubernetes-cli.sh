@@ -30,6 +30,7 @@ git clone --depth 1 https://gitee.com/chimeh/helm.git
 cd helm; git checkout ${HELM3_VERSION}
 make -j2 -C .
 cp /root/ts/helm/bin/helm /usr/local/bin/helm3
+cd ~
 rm -rf /root/ts
 
 echo "check cmd run ok"
