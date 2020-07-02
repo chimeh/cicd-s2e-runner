@@ -35,10 +35,17 @@ else
     fi
 fi
 
-DOCKERFILE_DIR=$(dirname $(realpath ${DOCKERFILE}))
-IMG_TMP=$(dirname ${DOCKERFILE_DIR})-$(basename ${DOCKERFILE})
+DOCKERFILE_DIR=$(dirname "$(realpath "${DOCKERFILE}")")
+IMG_TMP=$(echo "$(basename ${DOCKERFILE_DIR})-$(basename ${DOCKERFILE})" | tr '[A-Z]' '[a-z]')
 
 docker build . --file ${DOCKERFILE} --tag ${IMG_TMP}
+
+# extra toolset doc_file from img
+set +e
+cid=$(docker create image-name)
+docker cp $cid:/doc_file.txt - > ${DOCKERFILE}.md 2>/dev/null
+docker rm -v $cid
+set -e
 
 DOCKER_REPO=${DOCKER_REPO:-registry-1.docker.io}
 DOCKER_NS=${DOCKER_NS:-bettercode}
@@ -65,8 +72,12 @@ if [[ -n ${DOCKER_PASS} ]];then
   docker push $IMAGE_URL:${TAG}
   docker push $IMAGE_URL:latest
   set +e
-  docker rmi imagex
+  docker rmi ${IMG_TMP}
   docker rmi $IMAGE_URL:${TAG}
   docker rmi $IMAGE_URL:latest
+  set -e
+else
+  set +e
+  docker rmi ${IMG_TMP}
   set -e
 fi

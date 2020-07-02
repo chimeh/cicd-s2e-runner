@@ -1,5 +1,5 @@
 #!/bin/bash
-#@author jimin.huang@nx-engine.com
+#@author jimin.huang@benload.com
 
 set -e
 if [ -f /usr/share/zoneinfo/Asia/Shanghai ];then
@@ -29,4 +29,29 @@ if [ -f /home/github-runner/bin/runsvc.sh ]; then
    . /home/github-runner/bin/runsvc.sh start
   set -e
 fi
-exec gitlab-runner run  --user=root --working-directory=/home/gitlab-runner
+RUNNER_TYPE="gitlab-runner"
+if [ $# -gt 0 ];then
+RUNNER_TYPE=$1
+fi
+
+echo "start ${RUNNER_TYPE}"
+case ${RUNNER_TYPE} in
+    gitlab-runner)
+        exec gitlab-runner run  --user=root --working-directory=/home/gitlab-runner
+        ;;
+    github-runner)
+        exec /home/github-runner/bin/runsvc.sh start
+        ;;
+    jenkins-slave)
+        echo "not implement!"
+        exit 1
+        ;;
+    webssh)
+        echo "not implement!"
+        exit 1
+        ;;
+    *)
+        echo "unkown ${RUNNER_TYPE}"
+        echo "current support runner: gitlab-runner github-runner"
+        echo "support runner on futrue: jenkins-slave webssh"
+        ;;

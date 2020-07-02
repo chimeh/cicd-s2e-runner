@@ -30,8 +30,9 @@ jobs:
 
       - name: Build, Push image
         run: |
-          docker build . --file Dockerfile.ubuntu --tag imagex-ubuntu
-          docker rmi imagex-ubuntu
+          echo "not build"
+          #docker build . --file Dockerfile.ubuntu --tag imagex-ubuntu
+          #docker rmi imagex-ubuntu
   build-centos:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -41,5 +42,7 @@ jobs:
 
       - name: Build, Push image
         run: |
-          docker build . --file Dockerfile.centos --tag imagex-centos
-          docker rmi imagex-centos
+          export DOCKER_PASS='${{ secrets.hub_docker_com_pass }}'
+          make docker-centos
+
+

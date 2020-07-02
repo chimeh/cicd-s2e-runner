@@ -3,8 +3,6 @@ FROM centos:7
 COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
 COPY . /cicd-s2e-runner
 
-ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/centos/scripts/helpers
-ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/centos/scripts/installers
 
 RUN bash ${HELPER_SCRIPTS}/yum.sh
 
@@ -21,7 +19,7 @@ ARG TCLIST="ansible.sh \
             java.sh \
             kubernetes-cli.sh \
             nodejs.sh"
-
+# build time, runtime toolchains
 RUN cd ${INSTALL_SCRIPTS}; \
  for s in ${TCLIST}; \
  do \
@@ -38,9 +36,18 @@ RUN cd ${INSTALL_SCRIPTS}; \
          echo "*** not install $s"; \
      fi; \
  done; \
- bash ${INSTALL_SCRIPTS}/cleanup.sh; \
- cat ${METADATA_FILE}
+ bash ${INSTALL_SCRIPTS}/cleanup.sh;
+
+# cicd logic
+COPY /s2e /
+# runner entrypoint
+COPY docker /docker
 
 RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
-  touch /error.txt; cat /error.txt;
+ && touch /error.txt; cat /error.txt; \
+ && yum clean all \
+ && rm -rf /var/cache/yum \
+ && rm -rf /root/ts \
+ && chmod -R +x /docker/ /s2e
+
 

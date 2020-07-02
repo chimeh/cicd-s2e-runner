@@ -9,6 +9,10 @@ yum clean all
 rm -rf /var/cache/yum
 rm -rf /tmp/*
 
+touch ${DOC_FILE:-/etc/profile.d/sh.local}
+cat ${DOC_FILE}
+cat /etc/profile.d/sh.local
+
 # after cleanup
 after=$(df / -Pm | awk 'NR==2{print $4}')
 
