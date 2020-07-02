@@ -9,17 +9,20 @@ USAGE="
   usage:
   simple docker build script:
   I. build docker:
-  $(basename $(realpath $0)) [/path/to/your-dockerfile] docker
+  $(basename $(realpath $0)) [/path/to/your-dockerfile] docker-build
   II. build docker then push:
   export DOCKER_REPO=
   export DOCKER_NS=
   export DOCKER_USER=
   export DOCKER_PASS=
   $(basename $(realpath $0)) [/path/to/your-dockerfile] docker-push
-
-  $(basename $(realpath $0)) [/path/to/your-dockerfile] compose
-  $(basename $(realpath $0)) [/path/to/your-dockerfile] compose-pre-release
-  $(basename $(realpath $0)) [/path/to/your-dockerfile] compose-release
+  III. genarate docker-compose
+  $(basename $(realpath $0)) [/path/to/your-dockerfile] compose-gen
+  $(basename $(realpath $0)) [/path/to/your-dockerfile] compose-test
+  IV. develment phase 
+  $(basename $(realpath $0)) [/path/to/your-dockerfile] dev
+  $(basename $(realpath $0)) [/path/to/your-dockerfile] pre
+  $(basename $(realpath $0)) [/path/to/your-dockerfile] release
 "
 
 if [[ $# -lt 1 ]];then
@@ -102,7 +105,7 @@ function do_docker_push() {
   fi
 }
 
-do_gen_compose() {
+do_compose_gen() {
   mkdir -p ${ARTIFACT_DIR}
   if [[ ${USE_PUSHED_IMG} -gt 0 ]];then
     IMG=${IMG_TMP}
