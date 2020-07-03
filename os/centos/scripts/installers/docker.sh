@@ -27,5 +27,5 @@ done
 
 echo "Lastly, documenting what we added to the metadata file"
 DocumentInstalledItem "docker"
-DocumentInstalledItemIndent "docker ($(python --version 2>&1))"
+DocumentInstalledItemIndent "docker ($(docker version | egrep Version | head -n 1 ))"
 DocumentInstalledItemIndent "docker-compose ($(docker-compose  version|head -n 1))"
