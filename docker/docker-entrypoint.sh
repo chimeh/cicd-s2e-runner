@@ -50,9 +50,20 @@ case ${RUNNER_TYPE} in
         echo "not implement!"
         exit 1
         ;;
+    metricbeat)
+        /etc/init.d/filebeat start
+        exec tail -f /dev/null
+        ;;
+    metricd)
+        /etc/init.d/kibana start
+        /etc/init.d/elasticsearch start
+        exec /usr/share/logstash/bin/logstash --path.settings /etc/logstash
+        ;;
     tailf)
         exec tail -f /dev/null
         ;;
     *)
         echo "unkown ${RUNNER_TYPE}"
+        exec tail -f /dev/null
         ;;
+esac

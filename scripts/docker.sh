@@ -60,14 +60,17 @@ function do_docker_build() {
   docker build . --file ${DOCKERFILE} --tag ${IMG_TMP}
   mkdir -p ${ARTIFACT_DIR}
   set +e
-  echo "Docker image size: "$(docker image inspect ${IMG_TMP} --format='{{.Size}}' ) | tee -a ${ARTIFACT_DIR}/buildnote.md
-
   cid=$(docker create ${IMG_TMP})
   docker cp $cid:/.buildnote.md ${ARTIFACT_DIR}/buildnote.md
   docker cp $cid:/.s2erunner  ${ARTIFACT_DIR}/s2erunner
   docker rm -v $cid
-  cat ${ARTIFACT_DIR}/.tpl/*.md >>  ${ARTIFACT_DIR}/buildnote.md
+
+  echo "> Docker image size: $(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB" | tee -a ${ARTIFACT_DIR}/buildnote.md
+
+  cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >>  ${ARTIFACT_DIR}/buildnote.md
+  echo "" >> ${ARTIFACT_DIR}/buildnote.md
   set -e
+
   cat ${ARTIFACT_DIR}/buildnote.md
 }
 
@@ -116,8 +119,8 @@ do_compose_gen() {
   else
     IMG=${IMG_TMP}
   fi
-  echo ${IMG}
-  du -a ${ARTIFACT_DIR}/
+  echo "Using Docker Image: ${IMG}"
+  /bin/ls --color ${ARTIFACT_DIR}/*
   /bin/cp -f ${ARTIFACT_DIR}/s2erunner/.tpl/docker-compose.yaml ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
   cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >> ${ARTIFACT_DIR}/buildnote.md
   perl -ni -e "s@^([# ]+image:).+@\1 ${IMG}@g;print" ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
@@ -128,9 +131,12 @@ do_compose_gen() {
 do_compose_test() {
   cd ${ARTIFACT_DIR}/s2erunner
   docker-compose config
-  docker-compose up --force-recreate
+  docker-compose up --force-recreate -d
   sleep 20
-  docker-compose
+  docker-compose ps
+  docker-compose exec -T runner ps aux
+  docker-compose down
+  docker-compose rm -f
 }
 
 do_release_pre() {
