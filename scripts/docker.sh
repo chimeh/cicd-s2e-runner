@@ -49,9 +49,11 @@ else
     ACTION="docker-build"
 fi
 
-DOCKERFILE_DIR=$(dirname "$(realpath "${DOCKERFILE}")")
-IMG_TMP=$(echo "$(basename ${DOCKERFILE_DIR})-$(basename ${DOCKERFILE})" | tr '[A-Z]' '[a-z]')
-ARTIFACT_DIR="${SRC_TOP}/.s2i/"
+REPO_NAME=$(basename ${SRC_TOP})
+DOCKERFILE_DIR=$(dirname "$(realpath "${DOCKERFILE}")" | tr '[A-Z]' '[a-z]')
+DOCKERFILE_NAME=$(basename ${DOCKERFILE} | tr '[A-Z]' '[a-z]')
+IMG_TMP=$(echo "${REPO_NAME}-${DOCKERFILE_NAME}" | tr '[A-Z]' '[a-z]')
+ARTIFACT_DIR="${SRC_TOP}/dist/${DOCKERFILE_NAME}"
 
 function do_docker_build() {
 
@@ -61,11 +63,10 @@ function do_docker_build() {
   echo "Docker image size: "$(docker image inspect ${IMG_TMP} --format='{{.Size}}' ) | tee -a ${ARTIFACT_DIR}/buildnote.md
 
   cid=$(docker create ${IMG_TMP})
-  docker cp $cid:/doc_file.txt - > ${DOCKERFILE}.md 2>/dev/null
-  docker cp $cid:/doc_file.txt - > ${DOCKERFILE}.md 2>/dev/null
+  docker cp $cid:/.buildnote.md - > ${ARTIFACT_DIR}/buildnote.md 2>/dev/null
+  docker cp $cid:/.s2erunner - > ${ARTIFACT_DIR}/s2erunner 2>/dev/null
   docker rm -v $cid
-  cat ${DOCKERFILE}.md | tee -a {ARTIFACT_DIR}/buildnote.md
-  rm -f ${DOCKERFILE}.md
+  cat ${ARTIFACT_DIR}/.tpl/*.md >>  ${ARTIFACT_DIR}/buildnote.md
   set -e
 }
 
@@ -115,15 +116,19 @@ do_compose_gen() {
     IMG=${IMG_TMP}
   fi
   echo ${IMG}
-  /bin/cp -rf ${SRC_TOP}/deployments/s2erunner   cd ${ARTIFACT_DIR}
-  bash ${ARTIFACT_DIR}/s2erunner/compose.sh
   /bin/cp -f ${ARTIFACT_DIR}/s2erunner/.tpl/docker-compose.yaml ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
   cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >> ${ARTIFACT_DIR}/buildnote.md
+  perl -ni -e "s@^([# ]+image:).+@\1 ${IMG}@g;print" ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
+  cd ${ARTIFACT_DIR}/s2erunner/
+  docker-compose config
 }
 
 do_compose_test() {
   cd ${ARTIFACT_DIR}/s2erunner
+  docker-compose config
   docker-compose up --force-recreate
+  sleep 20
+  docker-compose
 }
 
 do_release_pre() {

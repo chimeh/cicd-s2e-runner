@@ -4,7 +4,7 @@
 ##  Desc:  Helper functions for writing information to the metadata document
 ################################################################################
 
-DOC_FILE=${DOC_FILE:-/doc_file.txt}
+DOC_FILE=${DOC_FILE:-/.buildnote.md}
 function WriteItem {
     if [ -z "$DOC_FILE" ]; then
         echo "DOC_FILE environment variable must be set to output to Metadata Document!"

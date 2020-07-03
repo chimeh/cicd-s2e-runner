@@ -12,4 +12,4 @@ yum install -y ImageMagick  ImageMagick-devel
 
 # Document what was added to the image
 echo "Lastly, documenting what we added to the metadata file"
-DocumentInstalledItem "ImageMagick"
+DocumentInstalledItem "ImageMagick $(convert --version | head -n 1)"
