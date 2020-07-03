@@ -5,11 +5,7 @@ on:
     # Publish `master` as Docker `latest` image.
     branches:
       - feature/*
-
-    # Publish `v1.2.3` tags as releases.
-    tags:
-      - v*
-
+      - master
   # Run tests for any PRs.
   pull_request:
 
@@ -43,7 +39,6 @@ jobs:
 
       - name: Build, Push image
         run: |
-          export DOCKER_PASS='${{ secrets.hub_docker_com_pass }}'
           env
           make docker-centos-dev
 
