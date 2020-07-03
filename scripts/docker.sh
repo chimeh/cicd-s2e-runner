@@ -63,8 +63,8 @@ function do_docker_build() {
   echo "Docker image size: "$(docker image inspect ${IMG_TMP} --format='{{.Size}}' ) | tee -a ${ARTIFACT_DIR}/buildnote.md
 
   cid=$(docker create ${IMG_TMP})
-  docker cp $cid:/.buildnote.md - > ${ARTIFACT_DIR}/buildnote.md
-  docker cp $cid:/.s2erunner - > ${ARTIFACT_DIR}/s2erunner
+  docker cp $cid:/.buildnote.md ${ARTIFACT_DIR}/buildnote.md
+  docker cp $cid:/.s2erunner  ${ARTIFACT_DIR}/s2erunner
   docker rm -v $cid
   cat ${ARTIFACT_DIR}/.tpl/*.md >>  ${ARTIFACT_DIR}/buildnote.md
   set -e

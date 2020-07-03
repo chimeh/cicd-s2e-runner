@@ -46,7 +46,8 @@ RUN mv /s2erunner-src/s2e / ;\
 # default config from docker-compose secrets
 RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
     bash /s2erunner-src/deployments/s2erunner/.tpl/*.sh ;\
-    /bin/cp -rf /s2erunner-src/deployments/s2erunner  /.s2erunner ;
+    /bin/cp -rf /s2erunner-src/deployments/s2erunner  /.s2erunner ;\
+    ls /*
 
 RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  touch /error.txt; cat /error.txt; \
