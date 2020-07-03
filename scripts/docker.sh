@@ -175,7 +175,7 @@ do_release() {
   local GITHUB_REPO=${GITHUB_REPO:-${REPO_NAME}}
 
   CUR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-  if [[ ! "${CUR_BRANCH_NAME}" ="release" ]];then
+  if [[ ! "${CUR_BRANCH_NAME}" =~ "release" ]];then
     # branch name not contain `release`, error.
     echo "branch name not contain keyword 'release', error."
     exit 1
@@ -183,9 +183,8 @@ do_release() {
   BRANCH_MARJOR_MINOR=$(echo ${CUR_BRANCH_NAME} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
   SRC_MARJOR_MINOR=$(echo ${SRC_VERSION} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
 
-  if [[ "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
+  if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
 
-  else
     echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
     exit 1
   fi
