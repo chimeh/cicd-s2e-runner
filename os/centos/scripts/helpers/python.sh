@@ -10,6 +10,6 @@ yum install -y python2-devel python2-pip
 echo "Lastly, documenting what we added to the metadata file"
 DocumentInstalledItem "Python"
 DocumentInstalledItemIndent "Python ($(python --version 2>&1))"
-DocumentInstalledItemIndent "pip ($(pip --version))"
+DocumentInstalledItemIndent "pip ($(pip --version | head -n 1 | perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' - )))"
 DocumentInstalledItemIndent "Python3 ($(python3 --version))"
-DocumentInstalledItemIndent "pip3 ($(pip3 --version))"
+DocumentInstalledItemIndent "pip3 ($(pip3 --version | head -n 1 | perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' - ))"

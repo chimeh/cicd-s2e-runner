@@ -12,4 +12,4 @@ yum install -y ImageMagick  ImageMagick-devel
 
 # Document what was added to the image
 echo "Lastly, documenting what we added to the metadata file"
-DocumentInstalledItem "ImageMagick $(convert --version | head -n 1)"
+DocumentInstalledItem "ImageMagick $(convert --version | head -n 1| perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)"

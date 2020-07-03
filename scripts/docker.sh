@@ -24,7 +24,6 @@ USAGE="
   IV. develment phase 
   $(basename $(realpath $0)) [/path/to/your-dockerfile] dev
   $(basename $(realpath $0)) [/path/to/your-dockerfile] pre
-  $(basename $(realpath $0)) [/path/to/your-dockerfile] release
 "
 
 if [[ $# -lt 1 ]];then
@@ -184,7 +183,6 @@ do_release() {
   SRC_MARJOR_MINOR=$(echo ${SRC_VERSION} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
 
   if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
-
     echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
     exit 1
   fi
@@ -228,6 +226,7 @@ do_release() {
 case ${ACTION} in
     dev)
         do_docker_build
+        export USE_PUSHED_IMG=0
         do_compose_gen
         do_compose_test
         ;;
