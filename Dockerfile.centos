@@ -1,0 +1,58 @@
+FROM bettercode/scurl:latest as scurl
+FROM centos:7 as runner
+COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
+COPY docker /docker
+COPY . /s2erunner-src
+
+RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ;\
+    bash /s2erunner-src/os/centos/scripts/helpers/basic.sh
+
+ENV INSTALL_SCRIPTS=/s2erunner-src/os/centos/scripts/installers
+ARG TCLIST="c_c++.sh \
+            go.sh \
+            java.sh \
+            nodejs.sh \
+            github-cli.sh \
+            gitlab-cli.sh \
+            gitlab-runner.sh \
+            image-magick.sh \
+            docker.sh \
+            kubernetes-cli.sh \
+            cloud-aliyun-tencent-huawei-cli.sh \
+            ansible.sh "
+# build time, runtime toolchains
+RUN cd ${INSTALL_SCRIPTS}; \
+ for s in ${TCLIST}; \
+ do \
+     set +e; \
+     ls ${INSTALL_SCRIPTS}/$s >/dev/null 2>&1; \
+     rv=$? ;\
+     set -e; \
+     if [ ${rv} -eq 0 ];then \
+         echo "###${INSTALL_SCRIPTS}/$s"; \
+         bash ${INSTALL_SCRIPTS}/validate-disk-space.sh; \
+         set +e; bash ${INSTALL_SCRIPTS}/$s; ok=$?;set -e; \
+         if [ ${ok} -ne 0 ];then echo $s >> /error.txt;fi \
+     else \
+         echo "*** not install $s"; \
+     fi; \
+ done;
+
+
+# cicd logic
+RUN mv /s2erunner-src/s2e / ;\
+    chmod -R +x /docker/ /s2e ;
+
+# default config from docker-compose secrets
+RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
+    bash /s2erunner-src/deployments/s2erunner/.tpl/*.sh ;\
+    /bin/cp -rf /s2erunner-src/deployments/s2erunner  /.s2erunner ;\
+    ls /*
+
+RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
+ touch /error.txt; cat /error.txt; \
+ yum clean all; \
+ rm -rf /var/cache/yum; \
+ rm -rf /root/ts;
+
+ENTRYPOINT ["/docker/docker-entrypoint.sh"]

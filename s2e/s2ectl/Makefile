@@ -18,6 +18,8 @@ dev: vendor fmtcheck generate
 
 quickdev: vendor fmtcheck generate
 	go install ./...
+	mkdir bin/
+	/bin/cp -f $(shell go env GOPATH)/bin/s2ectl bin/
 
 # Shorthand for building and installing just one plugin for local testing.
 # Run as (for example): make plugin-dev PLUGIN=provider-aws

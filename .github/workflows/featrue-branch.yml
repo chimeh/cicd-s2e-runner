@@ -1,0 +1,44 @@
+name: Docker
+
+on:
+  push:
+    # Publish `master` as Docker `latest` image.
+    branches:
+      - feature/*
+      - master
+  # Run tests for any PRs.
+  pull_request:
+
+env:
+  # TODO: Change variable to your image's name.
+  DOCKER_REPO: docker.io
+  DOCKER_NS: bettercode
+  GITHUB_TOKEN: '${{ secrets.HUB_TOKEN }}'
+
+jobs:
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build, Push image
+        run: |
+          echo "not build"
+          #docker build . --file Dockerfile.ubuntu --tag imagex-ubuntu
+          #docker rmi imagex-ubuntu
+  build-centos:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build, Push image
+        run: |
+          env
+          make docker-centos-dev
+

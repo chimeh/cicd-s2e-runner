@@ -1,0 +1,72 @@
+FROM bettercode/scurl:latest as scurl
+FROM ubuntu:18.04
+COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
+COPY . /cicd-s2e-runner
+
+ENV HELPER_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/helpers
+ENV INSTALL_SCRIPTS=/cicd-s2e-runner/os/ubuntu/scripts/installers
+ARG DEBIAN_FRONTEND=noninteractive
+ARG METADATA_FILE=/cicd-s2e-runner/os/ubuntu/build.txt
+
+RUN bash ${HELPER_SCRIPTS}/apt-init.sh
+
+RUN bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/apt.sh \
+ && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/basic.sh \
+ && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/limits.sh \
+ && bash /cicd-s2e-runner/os/ubuntu/scripts/helpers/repos.sh
+
+
+ARG TCLIST="7-zip.sh \
+ansible.sh \
+aws.sh \
+azcopy.sh \
+azure-cli.sh \
+azure-devops-cli.sh \
+bazel.sh \
+boost.sh \
+build-essential.sh \
+clang.sh \
+cloud-aliyun-cli.sh \
+cloud-huawei-cli.sh \
+cloud-tencent-cli.sh \
+cmake.sh \
+docker-compose.sh \
+docker-moby.sh \
+gcc.sh \
+github-cli.sh \
+go.sh \
+image-magick.sh \
+java-tools.sh \
+kubernetes-tools.sh \
+nodejs.sh \
+nvm.sh \
+packer.sh \
+php.sh \
+pypy.sh \
+python.sh \
+ruby.sh \
+rust.sh \
+swift.sh \
+"
+
+RUN cd ${INSTALL_SCRIPTS}; \
+ for s in ${TCLIST}; \
+ do \
+     set +e; \
+     ls ${INSTALL_SCRIPTS}/$s >/dev/null 2>&1; \
+     rv=$? ;\
+     set -e; \
+     if [ ${rv} -eq 0 ];then \
+         echo "###${INSTALL_SCRIPTS}/$s"; \
+         bash ${INSTALL_SCRIPTS}/validate-disk-space.sh; \
+         set +e; bash ${INSTALL_SCRIPTS}/$s; ok=$?;set -e; \
+         if [ ${ok} -ne 0 ];then echo $s >> /error.txt;fi \
+     else \
+         echo "*** not install $s"; \
+     fi; \
+ done; \
+ bash ${INSTALL_SCRIPTS}/cleanup.sh; \
+ cat ${METADATA_FILE}
+
+RUN ${INSTALL_SCRIPTS}/cleanup.sh; \
+  touch /error.txt; cat /error.txt;

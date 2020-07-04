@@ -33,29 +33,38 @@ cicd-s2e-runner 是二次封装的容器化gitlab runner镜像，集成一系列
 参考 [s2i 实现](./s2e/generic/xxx-generic-chart/templates/ingress-public.yaml)
 * s2i 的 usage
 ```shell
-  s2i usage:
+  usage:
   A cicd tool, from src to artifact, to docker img, deploy into kubernetes:
-  s2i /path/to/srctop [ analysis|artifact|docker|deploy ]
+  I. default do all action(artifact,docker,deploy):
+  s2i /path/to/srctop
 
-    s2i /path/to/srctop analysis
+  II. only do specify action:
+  s2i /path/to/srctop [ analysis|artifact|docker|deploy|deploy-update-blue ]
+
+    1. only do artifact
     s2i /path/to/srctop artifact
-    export DOCKER_REPO=docker.io
-    export DOCKER_NS=bettercode
+
+    2. only do docker build push
+    export DOCKER_REPO=harbor.benload.com
+    export DOCKER_NS=bu5
     s2i /path/to/srctop docker
+
+    3. only do kubernetes deploy
     export K8S_KUBECONFIG=/root/.kube/config
     export K8S_NS_SUFFIX=-dev
     export K8S_NS=default
-    export K8S_DOMAIN_INTERNAL=benload.com
+    export K8S_DOMAIN_INTERNAL=benload.cn
     export K8S_DOMAIN_PUBLIC=bu5-dev.tx
     export INGRESS_INTERNAL_ENABLED=1
     export INGRESS_PUBLIC_ENABLED=1
     export INGRESS_CLASS_INTERNAL=nginx
     export INGRESS_CLASS_PUBLIC=nginx
     s2i /path/to/srctop deploy
-  A exec wrapper:
+
+  III. do exec cmd:
   s2i /path/to/rundir exec wrappercmd [...]
-    #ls on /root
-    s2i /root exec ls
+    1. do ls on /root directory
+    s2i /root ls
 ```
 # 使用
 * 下载 cicd-s2e-runner，解压
