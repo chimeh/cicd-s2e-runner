@@ -120,7 +120,7 @@ function do_docker_push() {
 
 
     readonly IMAGE_URL=$(echo ${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMG}| tr '[A-Z]' '[a-z]')
-    readonly DOCKER_TAG=${SRC_VERSION}-${OS_DIST}-${SRC_SHA}
+    readonly DOCKER_TAG=$(echo ${SRC_VERSION}-${OS_DIST}-${SRC_SHA} |perl -ni -e 's@--@-@;s@(.+)-@\1@;print' -)
     echo IMAGE_URL=$IMAGE_URL
     echo DOCKER_TAG=$DOCKER_TAG
 
