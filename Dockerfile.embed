@@ -21,7 +21,7 @@ RUN bash "${INSTALL_SCRIPTS}/c_c++.sh"
 RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
     bash /s2erunner-src/deployments/s2erunner/.tpl/*.sh ;\
     /bin/cp -rf /s2erunner-src/deployments/s2erunner  /.s2erunner ;\
-    ls /*
+    ls / /opt/*
 
 RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  touch /error.txt; cat /error.txt; \
