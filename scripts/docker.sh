@@ -250,6 +250,7 @@ case ${ACTION} in
         export USE_PUSHED_IMG=1
         do_compose_gen
         do_compose_test
+        do_release
         ;;
     *)
         echo "unkown action"
