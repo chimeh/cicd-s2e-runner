@@ -10,11 +10,11 @@ docker-centos-dev:
 docker-embed-dev:
 	bash ${CUR_DIR}/scripts/docker.sh ${CUR_DIR}/Dockerfile.embed dev
 	
-.PHONY: compose-centos-pre
-compose-centos-pre:
+.PHONY: docker-centos-pre
+docker-centos-pre:
 	bash ${CUR_DIR}/scripts/docker.sh ${CUR_DIR}/Dockerfile.centos pre
 	
 .PHONY: docker-embed-pre
-docker-embed-dev:
+docker-embed-pre:
 	bash ${CUR_DIR}/scripts/docker.sh ${CUR_DIR}/Dockerfile.embed pre
 
