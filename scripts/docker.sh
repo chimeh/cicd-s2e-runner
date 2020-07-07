@@ -57,7 +57,7 @@ readonly IMG_TMP=$(echo "${REPO_NAME}-${DOCKERFILE_NAME}" | tr '[A-Z]' '[a-z]')
 readonly ARTIFACT_DIR="${SRC_TOP}/dist/${DOCKERFILE_NAME}"
 
 readonly SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION)
-readonly SRC_SHA=-$(git rev-parse --short HEAD)
+readonly SRC_SHA=-$(git describe --abbrev=1 --always | perl -n -e 'my @arr=split(/-/,$_); print $arr[-2]')
 readonly OS_DIST=$(echo ${DOCKERFILE_NAME} |cut -d. -f2)
 
 function do_docker_build() {
