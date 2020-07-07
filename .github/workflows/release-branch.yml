@@ -18,6 +18,7 @@ env:
   # TODO: Change variable to your image's name.
   DOCKER_REPO: registry-1.docker.io
   DOCKER_NS: bettercode
+  DOCKER_PASS: '${{ secrets.HUB_DOCKER_COM_PASS }}'
   GITHUB_TOKEN: '${{ secrets.HUB_TOKEN }}'
 
 jobs:
