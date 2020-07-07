@@ -30,7 +30,7 @@ function download()
   echo "try download ${FILE_NAME}"
   SAVE_FILE="${TC_DIR}/${FILE_NAME}"
   if [[ ! -f ${SAVE_FILE} ]];then
-    curl -O ${SAVE_FILE} -L ${URL}
+    curl -O -L ${URL}
   else
     echo "${SAVE_FILE} already download!"
   fi
