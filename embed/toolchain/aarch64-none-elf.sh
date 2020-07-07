@@ -34,11 +34,4 @@ function download()
   fi
 }
 
-case "${1}" in
-  "download")
-    download
-  ;;
-  *)
-    echo ""
-  ;;
-esac
+download
