@@ -174,53 +174,67 @@ do_release() {
   local GITHUB_REPO=${GITHUB_REPO:-${REPO_NAME}}
 
   CUR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-  if [[ ! "${CUR_BRANCH_NAME}" =~ "release" ]];then
-    # branch name not contain `release`, error.
-    echo "branch name not contain keyword 'release', error."
-    exit 1
-  fi
-  BRANCH_MARJOR_MINOR=$(echo ${CUR_BRANCH_NAME} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
-  SRC_MARJOR_MINOR=$(echo ${SRC_VERSION} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
+  LATEST_TAG_NAME=$(git describe --abbrev=0 --tags)
+  if [[ "${CUR_BRANCH_NAME}" =~ "release" ||  "${CUR_BRANCH_NAME}" =~ "master" ]];then
+    # branch name  contain `release` or master.
+    echo "CUR_BRANCH_NAME ${CUR_BRANCH_NAME}"
+    echo "SRC_VERSION ${SRC_VERSION}"
+    echo "LATEST_TAG ${LATEST_TAG_NAME}"
+    BRANCH_MARJOR_MINOR=$(echo ${CUR_BRANCH_NAME} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
+    SRC_MARJOR_MINOR=$(echo ${SRC_VERSION} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
+    TAG_MARJOR_MINOR=$(echo ${LATEST_TAG_NAME}| perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
 
-  if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
-    echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
-    exit 1
-  fi
-  # word 'alpha' 'beta' appear on branch name or commit message, assume that release
-  if [[ "${CUR_BRANCH_NAME}" =~ "alpha" ]];then
-    PRERELEASE_TYPE='alpha'
-  elif [[ "${CUR_BRANCH_NAME}" =~ "beta" ]];then
-    PRERELEASE_TYPE='beta'
-  else
-    PRERELEASE_TYPE='alpha'
-  fi
-
-  if [[ -z ${GITHUB_TOKEN} ]];then
-      echo "GITHUB_TOKEN not set ,exit!"
+    if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
+      echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
       exit 1
-  fi
-  if ! command -v github-release; then
-      echo "github-release cli not found!"
-      go get github.com/github-release/github-release
-  fi
+    elif [[ ! "${TAG_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
+      echo " error. Marjor.Minor should be equal, ${TAG_MARJOR_MINOR} on tag name ${LATEST_TAG_NAME} via ${SRC_MARJOR_MINOR} on src."
+      exit 1
+    fi
+    if [[ "${CUR_BRANCH_NAME}" =~ "master" ]];then
+        PRERELEASE_TYPE='alpha'
+    elif [[ "${CUR_BRANCH_NAME}" =~ "release" ]];then
+      # word 'alpha' 'beta' appear on branch name or commit message, assume that release
+      if [[ "${LATEST_TAG_NAME}" =~ "beta" ]];then
+        PRERELEASE_TYPE='beta'
+      elif [[ $(echo "${LATEST_TAG_NAME}" | egrep '[0-9]+\.[0-9]+\.[0-9]+$' -) ]];then
+        PRERELEASE_TYPE=''
+      else
+        PRERELEASE_TYPE='beta'
+      fi
+    else
+      echo "branch name don't master or release,can't do release "
+      exit 1
+    fi
 
-  RELEASE_TITLE="${SRC_VERSION} ${PRERELEASE_TYPE} release"
- github-release edit \
-    --user ${GITHUB_USER} \
-    --repo ${GITHUB_REPO} \
-    --tag ${SRC_VERSION} \
-    --name "${RELEASE_TITLE}" \
-    --description  < ${ARTIFACT_DIR}/buildnote.md
-  rv=$?
-  if [[ ${rv} -ne 0 ]];then
-    github-release release \
+    if [[ -z ${GITHUB_TOKEN} ]];then
+        echo "GITHUB_TOKEN not set ,exit!"
+        exit 1
+    fi
+    if ! command -v github-release; then
+        echo "github-release cli not found!"
+        go get github.com/github-release/github-release
+    fi
+
+    RELEASE_TITLE="${SRC_VERSION} ${PRERELEASE_TYPE} release"
+   github-release edit \
       --user ${GITHUB_USER} \
       --repo ${GITHUB_REPO} \
-      --tag ${TAG} \
+      --tag ${LATEST_TAG_NAME} \
       --name "${RELEASE_TITLE}" \
-      --description < ${ARTIFACT_DIR}/buildnote.md
-      --pre-release
+      --description  < ${ARTIFACT_DIR}/buildnote.md
+    rv=$?
+    if [[ ${rv} -ne 0 ]];then
+      github-release release \
+        --user ${GITHUB_USER} \
+        --repo ${GITHUB_REPO} \
+        --tag ${LATEST_TAG_NAME} \
+        --name "${RELEASE_TITLE}" \
+        --description < ${ARTIFACT_DIR}/buildnote.md
+        --pre-release
+    fi
   fi
+
 }
 
 case ${ACTION} in

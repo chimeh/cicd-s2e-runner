@@ -14,5 +14,7 @@ docker-embed-dev:
 compose-centos-pre:
 	bash ${CUR_DIR}/scripts/docker.sh ${CUR_DIR}/Dockerfile.centos pre
 	
-
+.PHONY: docker-embed-pre
+docker-embed-dev:
+	bash ${CUR_DIR}/scripts/docker.sh ${CUR_DIR}/Dockerfile.embed pre
 
