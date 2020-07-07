@@ -7,11 +7,11 @@ COPY . /s2erunner-src
 RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ; \
     yum install -y curl;
 
-RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh ;\
-  bash /s2erunner-src/embed/toolchain/aarch64-none-elf.sh ;\
-  bash /s2erunner-src/embed/toolchain/aarch64-none-linux-gnu.sh ;\
-  bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh ;\
-  bash /s2erunner-src/embed/toolchain/msp430-gcc.sh ;\
+RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh download;\
+  bash /s2erunner-src/embed/toolchain/aarch64-none-elf.sh download;\
+  bash /s2erunner-src/embed/toolchain/aarch64-none-linux-gnu.sh download;\
+  bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh download;\
+  bash /s2erunner-src/embed/toolchain/msp430-gcc.sh download;\
   set +e; ls /opt/tcpkg* ;set -e;
 
 RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ;\

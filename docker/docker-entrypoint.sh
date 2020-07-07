@@ -32,7 +32,7 @@ fi
 RUNNER_TYPE="gitlab-runner"
 if [ $# -gt 0 ];then
 RUNNER_TYPE=$1
-elif [[ ! command -v gitlab-runner ]];then
+elif ! command -v gitlab-runner;then
   RUNNER_TYPE="tailf"
 fi
 echo "support : gitlab-runner github-runner tailf"
