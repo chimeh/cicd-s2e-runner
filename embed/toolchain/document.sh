@@ -3,7 +3,7 @@ THIS_SCRIPT="$(realpath "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)"/"$(basena
 #automatic detection TOPDIR
 SCRIPT_DIR="$(dirname "$(realpath "${THIS_SCRIPT}")")"
 
-OTHER_DOC_UTIL="${SCRIPT_DIR}/../../os/centos/helpers/document.sh"
+OTHER_DOC_UTIL="${SCRIPT_DIR}/../../os/centos/scripts/helpers/document.sh"
 if [[ -f "${OTHER_DOC_UTIL}" ]];then
   source"${OTHER_DOC_UTIL}"
 else
