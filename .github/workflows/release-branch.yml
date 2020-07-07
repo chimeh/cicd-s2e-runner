@@ -47,4 +47,14 @@ jobs:
           export GITHUB_TOKEN='${{ secrets.HUB_TOKEN }}'
           env
           make docker-centos-pre
+  build-embed:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
 
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build, Push image
+        run: |
+          env
+          make docker-embed-dev

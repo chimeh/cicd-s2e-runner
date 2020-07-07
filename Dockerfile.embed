@@ -1,0 +1,41 @@
+FROM bettercode/scurl:latest as scurl
+FROM centos:7 as runner
+COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
+COPY docker /docker
+COPY . /s2erunner-src
+
+RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ; \
+    yum install -y curl;
+
+RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh ;\
+  bash /s2erunner-src/embed/toolchain/aarch64-none-elf.sh ;\
+  bash /s2erunner-src/embed/toolchain/aarch64-none-linux-gnu.sh ;\
+  bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh ;\
+  bash /s2erunner-src/embed/toolchain/msp430-gcc.sh ;\
+  set +e; ls /opt/tcpkg* ;set -e;
+
+RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ;\
+    bash /s2erunner-src/os/centos/scripts/helpers/basic.sh
+
+ENV INSTALL_SCRIPTS=/s2erunner-src/os/centos/scripts/installers
+RUN bash "${INSTALL_SCRIPTS}/c_c++.sh"
+
+
+# cicd logic
+RUN mv /s2erunner-src/s2e / ;\
+    chmod -R +x /docker/ /s2e ;
+
+# default config from docker-compose secrets
+RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
+    bash /s2erunner-src/deployments/s2erunner/.tpl/*.sh ;\
+    /bin/cp -rf /s2erunner-src/deployments/s2erunner  /.s2erunner ;\
+    ls /*
+
+RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
+ touch /error.txt; cat /error.txt; \
+ yum clean all; \
+ rm -rf /var/cache/yum; \
+ rm -rf /root/ts;
+
+ENTRYPOINT ["/docker/docker-entrypoint.sh"]
+

@@ -41,4 +41,3 @@ jobs:
         run: |
           env
           make docker-centos-dev
-
