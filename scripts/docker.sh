@@ -13,7 +13,7 @@ USAGE="
   I. build docker:
   $(basename $(realpath $0)) [/path/to/your-dockerfile] docker-build
   II. build docker then push:
-  export DOCKER_HOST=
+  export DOCKER_REPO=
   export DOCKER_NS=
   export DOCKER_USER=
   export DOCKER_PASS=
@@ -109,17 +109,17 @@ function do_validate_ci_version() {
 }
 
 function do_docker_push() {
-  readonly DOCKER_HOST=${DOCKER_HOST:-registry-1.docker.io}
+  readonly DOCKER_REPO=${DOCKER_REPO:-registry-1.docker.io}
   readonly DOCKER_NS=${DOCKER_NS:-bettercode}
   readonly DOCKER_IMG=${REPO_NAME}
   readonly DOCKER_USER=${DOCKER_USER:-bettercode}
   readonly DOCKER_PASS=${DOCKER_PASS}
 
   if [[ -n ${DOCKER_PASS} ]];then
-    docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_HOST}/${DOCKER_NS}
+    docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_REPO}/${DOCKER_NS}
 
 
-    readonly IMAGE_URL=$(echo ${DOCKER_HOST}/${DOCKER_NS}/${DOCKER_IMG}| tr '[A-Z]' '[a-z]')
+    readonly IMAGE_URL=$(echo ${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMG}| tr '[A-Z]' '[a-z]')
     readonly DOCKER_TAG=${SRC_VERSION}-${OS_DIST}-${SRC_SHA}
     echo IMAGE_URL=$IMAGE_URL
     echo DOCKER_TAG=$DOCKER_TAG
