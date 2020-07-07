@@ -58,5 +58,6 @@ jobs:
 
       - name: Build, Push image
         run: |
-          env
+          export DOCKER_PASS='${{ secrets.HUB_DOCKER_COM_PASS }}'
+          export GITHUB_TOKEN='${{ secrets.HUB_TOKEN }}'
           make docker-embed-pre
