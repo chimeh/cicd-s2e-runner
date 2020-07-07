@@ -5,6 +5,7 @@ set -o pipefail
 THIS_SCRIPT="$(realpath "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)"/"$(basename "${BASH_SOURCE:-$0}")")"
 #automatic detection TOPDIR
 SCRIPT_DIR="$(dirname "$(realpath "${THIS_SCRIPT}")")"
+source ${SCRIPT_DIR}/document.sh
 URL='https://developer.arm.com/-/media/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf.tar.xz?revision=ea238776-c7c7-43be-ba0d-40d7f594af1f&la=en&hash=2937ED76D3E6B85BA511BCBD46AE121DBA5268F3'
 
 function get_filename_from_url()
@@ -35,3 +36,5 @@ function download()
 }
 
 download
+
+DocumentInstalledItem "cross toolchain: ${SAVE_FILE}"

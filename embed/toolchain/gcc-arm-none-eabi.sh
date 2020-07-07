@@ -5,6 +5,7 @@ set -o pipefail
 THIS_SCRIPT="$(realpath "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)"/"$(basename "${BASH_SOURCE:-$0}")")"
 #automatic detection TOPDIR
 SCRIPT_DIR="$(dirname "$(realpath "${THIS_SCRIPT}")")"
+source ${SCRIPT_DIR}/document.sh
 URL='https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2'
 
 
@@ -36,3 +37,5 @@ function download()
 }
 
 download
+
+DocumentInstalledItem "cross toolchain: ${SAVE_FILE}"

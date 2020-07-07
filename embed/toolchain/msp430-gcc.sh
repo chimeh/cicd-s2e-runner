@@ -5,6 +5,7 @@ set -o pipefail
 THIS_SCRIPT="$(realpath "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)"/"$(basename "${BASH_SOURCE:-$0}")")"
 #automatic detection TOPDIR
 SCRIPT_DIR="$(dirname "$(realpath "${THIS_SCRIPT}")")"
+source ${SCRIPT_DIR}/document.sh
 URL='http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/9_2_0_0/export/msp430-gcc-9.2.0.50_linux32.tar.bz2'
 
 
@@ -37,3 +38,5 @@ function download()
 }
 
 download
+
+DocumentInstalledItem "cross toolchain: ${SAVE_FILE}"
