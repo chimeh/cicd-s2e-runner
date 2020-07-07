@@ -41,3 +41,14 @@ jobs:
         run: |
           env
           make docker-centos-dev
+  build-embed:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build, Push image
+        run: |
+          env
+          make docker-embed-dev
