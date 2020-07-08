@@ -19,7 +19,7 @@ function get_filename_from_path()
   echo "$fname"
 }
 
-TC_DIR=/opt/tcpkg
+TC_DIR=/opt/embed
 FILE_NAME=$(get_filename_from_url "$URL")
 
 function download()
