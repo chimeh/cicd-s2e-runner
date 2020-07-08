@@ -162,8 +162,9 @@ do_compose_gen() {
   docker-compose config
   # zip
   cd ${ARTIFACT_DIR}/
-  zip -r ${ARTIFACT_DIR}/s2erunner-${DOCKER_TAG}.zip ./s2erunner
-  unzip -tvl ${ARTIFACT_DIR}/s2erunner-${DOCKER_TAG}.zip
+  rm -rf .tpl tpl compose.sh *.sh
+  zip -r ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip ./s2erunner
+  unzip -tvl ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip
 }
 
 do_compose_test() {
@@ -249,7 +250,7 @@ do_release() {
       --repo ${GITHUB_REPO} \
       --tag ${LATEST_TAG_NAME} \
       --name "${RELEASE_TITLE}" \
-      --description
+      --description -
     rv=$?
     if [[ ${rv} -ne 0 ]];then
       cat ${ARTIFACT_DIR}/buildnote.md | github-release release \
@@ -257,10 +258,10 @@ do_release() {
         --repo ${GITHUB_REPO} \
         --tag ${LATEST_TAG_NAME} \
         --name "${RELEASE_TITLE}" \
-        --description \
+        --description - \
         --pre-release
     fi
-    FILE=$(/bin/ls ${ARTIFACT_DIR}/s2erunner-${DOCKER_TAG}.zip)
+    FILE=$(/bin/ls ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip)
     github-release  upload \
         --user ${GITHUB_USER} \
         --repo ${GITHUB_REPO} \
