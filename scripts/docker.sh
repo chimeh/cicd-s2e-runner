@@ -67,18 +67,12 @@ function do_docker_build() {
   mkdir -p ${ARTIFACT_DIR}
   set +e
   cid=$(docker create ${IMG_TMP})
-  docker cp $cid:/.buildnote.md ${ARTIFACT_DIR}/buildnote.md
+  docker cp $cid:/.buildnote.md ${ARTIFACT_DIR}/.buildnote.md
   docker cp $cid:/.s2erunner  ${ARTIFACT_DIR}/s2erunner
   docker rm -v $cid
-
-  echo "> Docker image size: $(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB" | tee -a ${ARTIFACT_DIR}/buildnote.md
-
-  echo -e "\n\n" >> ${ARTIFACT_DIR}/buildnote.md
-  cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >>  ${ARTIFACT_DIR}/buildnote.md
-  echo "\n\n" >> ${ARTIFACT_DIR}/buildnote.md
-  set -e
-
-  cat ${ARTIFACT_DIR}/buildnote.md
+  echo -e "# Buildtime/Runtime CLI:\n" > ${ARTIFACT_DIR}/buildnote.md
+  cat ${ARTIFACT_DIR}/.buildnote.md >> ${ARTIFACT_DIR}/buildnote.md
+  /bin/rm -f ${ARTIFACT_DIR}/.buildnote.md
 }
 
 function do_validate_ci_version() {
@@ -155,7 +149,14 @@ do_compose_gen() {
   echo "Using Docker Image: ${IMG}"
   /bin/ls --color ${ARTIFACT_DIR}/*
   /bin/cp -f ${ARTIFACT_DIR}/s2erunner/.tpl/docker-compose.yaml ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
+
+  echo -e "\n# Docker-Compose:\n" >> ${ARTIFACT_DIR}/buildnote.md
+    echo "${IMG} $(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB" | tee -a ${ARTIFACT_DIR}/buildnote.md
+
+  echo -e "\nconfig file:\n" >> ${ARTIFACT_DIR}/buildnote.md
   cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >> ${ARTIFACT_DIR}/buildnote.md
+  echo "\n\n" >> ${ARTIFACT_DIR}/buildnote.md
+  set -e
   perl -ni -e "s@^([# ]+image:).+@\1 ${IMG}@g;print" ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
   /bin/cp -f ${ARTIFACT_DIR}/buildnote.md  ${ARTIFACT_DIR}/s2erunner/
   cd ${ARTIFACT_DIR}/s2erunner/
@@ -244,7 +245,7 @@ do_release() {
         export PATH=${PATH}:$(realpath ./)
     fi
 
-    RELEASE_TITLE="${SRC_VERSION} ${PRERELEASE_TYPE} release"
+    RELEASE_TITLE="${PRERELEASE_TYPE} release"
     cat ${ARTIFACT_DIR}/buildnote.md | github-release edit \
       --user ${GITHUB_USER} \
       --repo ${GITHUB_REPO} \
