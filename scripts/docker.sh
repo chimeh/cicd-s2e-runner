@@ -151,7 +151,7 @@ do_compose_gen() {
   /bin/cp -f ${ARTIFACT_DIR}/s2erunner/.tpl/docker-compose.yaml ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
 
   echo -e "\n# Docker-Compose:\n" >> ${ARTIFACT_DIR}/buildnote.md
-    echo "${IMG} $(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB" | tee -a ${ARTIFACT_DIR}/buildnote.md
+    echo "${IMG} $(($(docker inspect ${IMG} --format='{{.Size}}')/1000/1000))MB" | tee -a ${ARTIFACT_DIR}/buildnote.md
 
   echo -e "\nconfig file:\n" >> ${ARTIFACT_DIR}/buildnote.md
   cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >> ${ARTIFACT_DIR}/buildnote.md
