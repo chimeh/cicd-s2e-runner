@@ -197,16 +197,20 @@ do_release() {
     echo "${BRANCH_MARJOR_MINOR}"
     echo "${SRC_MARJOR_MINOR}"
     echo "${TAG_MARJOR_MINOR}"
-    if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
-      echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
-      exit 1
-    elif [[ ! "${TAG_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
-      echo " error. Marjor.Minor should be equal, ${TAG_MARJOR_MINOR} on tag name ${LATEST_TAG_NAME} via ${SRC_MARJOR_MINOR} on src."
-      exit 1
-    fi
     if [[ "${CUR_BRANCH_NAME}" =~ "master" ]];then
+        if [[ ! "${TAG_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
+          echo " error. Marjor.Minor should be equal, ${TAG_MARJOR_MINOR} on tag name ${LATEST_TAG_NAME} via ${SRC_MARJOR_MINOR} on src."
+          exit 1
+        fi
         PRERELEASE_TYPE='alpha'
     elif [[ "${CUR_BRANCH_NAME}" =~ "release" ]];then
+      if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
+        echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
+        exit 1
+      elif [[ ! "${TAG_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
+        echo " error. Marjor.Minor should be equal, ${TAG_MARJOR_MINOR} on tag name ${LATEST_TAG_NAME} via ${SRC_MARJOR_MINOR} on src."
+        exit 1
+      fi
       # word 'alpha' 'beta' appear on branch name or commit message, assume that release
       if [[ "${LATEST_TAG_NAME}" =~ "beta" ]];then
         PRERELEASE_TYPE='beta'
