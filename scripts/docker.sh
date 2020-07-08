@@ -184,12 +184,12 @@ do_release() {
   fi
   git fetch --tags
   CUR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-  LATEST_TAG_NAME=$(git describe --abbrev=0 --tags --always)
+  LATEST_TAG_NAME=$(git describe --abbrev=0 --tags)
   if [[ "${CUR_BRANCH_NAME}" =~ "release" ||  "${CUR_BRANCH_NAME}" =~ "master" ]];then
     # branch name  contain `release` or master.
     echo "CUR_BRANCH_NAME ${CUR_BRANCH_NAME}"
     echo "SRC_VERSION ${SRC_VERSION}"
-    echo "LATEST_TAG ${LATEST_TAG_NAME}"
+    echo "LATEST_TAG_NAME ${LATEST_TAG_NAME}"
     BRANCH_MARJOR_MINOR=$(echo ${CUR_BRANCH_NAME} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
     SRC_MARJOR_MINOR=$(echo ${SRC_VERSION} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
     TAG_MARJOR_MINOR=$(echo ${LATEST_TAG_NAME}| perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
