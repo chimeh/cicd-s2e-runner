@@ -15,7 +15,8 @@ RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh ;\
   bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh ;\
   bash /s2erunner-src/embed/toolchain/msp430-gcc.sh ;\
   bash /s2erunner-src/embed/toolchain/andriod.sh ;\
-  set +e; ls /opt/embed* ;set -e;
+  set +e; ls /opt/embed* ;set -e; \
+  /bin/rm -f /opt/embed/*tar*;
 
 
 

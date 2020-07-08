@@ -23,6 +23,7 @@ function get_filename_from_path()
 
 TC_DIR=/opt/embed
 FILE_NAME=$(get_filename_from_url "$URL")
+SAVE_FILE="${TC_DIR}/${FILE_NAME}"
 
 function download()
 {
@@ -37,6 +38,12 @@ function download()
   fi
 }
 
+function extra-tc()
+{
+  tar -xf ${SAVE_FILE} -d ${TC_DIR}
+}
+
 download
+extra-tc
 
 DocumentInstalledItem "Cross toolchain: ${FILE_NAME}"
