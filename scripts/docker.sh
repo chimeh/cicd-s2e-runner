@@ -182,7 +182,6 @@ do_release() {
     echo "not a git repo, no perform release."
     return
   fi
-  git pull --tags
   CUR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
   LATEST_TAG_NAME=$(git describe --abbrev=0 --tags)
   if [[ "${CUR_BRANCH_NAME}" =~ "release" ||  "${CUR_BRANCH_NAME}" =~ "master" ]];then
@@ -194,9 +193,9 @@ do_release() {
     SRC_MARJOR_MINOR=$(echo ${SRC_VERSION} |  perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
     TAG_MARJOR_MINOR=$(echo ${LATEST_TAG_NAME}| perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
 
-    echo "${BRANCH_MARJOR_MINOR}"
-    echo "${SRC_MARJOR_MINOR}"
-    echo "${TAG_MARJOR_MINOR}"
+    echo "BRANCH_MARJOR_MINOR ${BRANCH_MARJOR_MINOR}"
+    echo "SRC_MARJOR_MINOR ${SRC_MARJOR_MINOR}"
+    echo "TAG_MARJOR_MINOR ${TAG_MARJOR_MINOR}"
     if [[ "${CUR_BRANCH_NAME}" =~ "master" ]];then
         if [[ ! "${TAG_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
           echo " error. Marjor.Minor should be equal, ${TAG_MARJOR_MINOR} on tag name ${LATEST_TAG_NAME} via ${SRC_MARJOR_MINOR} on src."

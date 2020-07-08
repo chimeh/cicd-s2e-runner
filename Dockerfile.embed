@@ -6,6 +6,9 @@ COPY . /s2erunner-src
 
 RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ;\
     bash /s2erunner-src/os/centos/scripts/helpers/basic.sh
+
+RUN bash "/s2erunner-src/os/centos/scripts/installers/c_c++.sh"
+
 RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh download;\
   bash /s2erunner-src/embed/toolchain/aarch64-none-elf.sh download;\
   bash /s2erunner-src/embed/toolchain/aarch64-none-linux-gnu.sh download;\
@@ -13,8 +16,6 @@ RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh download;\
   bash /s2erunner-src/embed/toolchain/msp430-gcc.sh download;\
   set +e; ls /opt/tcpkg* ;set -e;
 
-ENV INSTALL_SCRIPTS=/s2erunner-src/os/centos/scripts/installers
-RUN bash "${INSTALL_SCRIPTS}/c_c++.sh"
 
 
 # default config from docker-compose secrets
