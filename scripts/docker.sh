@@ -176,8 +176,15 @@ do_release() {
   local GITHUB_USER=${GITHUB_USER:-chimeh}
   local GITHUB_REPO=${GITHUB_REPO:-${REPO_NAME}}
 
+  set +e
+  git rev-parse --show-toplevel >/dev/null 2>&1
+  if [[ $? -ne 0 ]];then
+    echo "not a git repo, no perform release."
+    return
+  fi
+  git fetch --tags
   CUR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-  LATEST_TAG_NAME=$(git describe --abbrev=0 --tags)
+  LATEST_TAG_NAME=$(git describe --abbrev=0 --tags --always)
   if [[ "${CUR_BRANCH_NAME}" =~ "release" ||  "${CUR_BRANCH_NAME}" =~ "master" ]];then
     # branch name  contain `release` or master.
     echo "CUR_BRANCH_NAME ${CUR_BRANCH_NAME}"

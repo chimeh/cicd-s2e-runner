@@ -1,4 +1,4 @@
-name: Docker
+name: featrue-cicd
 
 on:
   push:
