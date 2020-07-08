@@ -1,4 +1,4 @@
-name: release-cicd
+name: ci-lab
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
         run: |
           set +e
           env
+          which -a go
           go get github.com/github-release/github-release
-          echo '${PATH}'
           which github-release
 
