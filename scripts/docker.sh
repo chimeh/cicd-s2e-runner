@@ -59,6 +59,7 @@ readonly ARTIFACT_DIR="${SRC_TOP}/dist/${DOCKERFILE_NAME}"
 readonly SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION)
 readonly SRC_SHA=-$(git describe --abbrev=1 --always | perl -n -e 'my @arr=split(/-/,$_); print $arr[-2]')
 readonly OS_DIST=$(echo ${DOCKERFILE_NAME} |cut -d. -f2)
+readonly DOCKER_TAG=$(echo ${SRC_VERSION}-${OS_DIST}-${SRC_SHA} |perl -ni -e 's@--@-@;s@(.+)-$@\1@;print' )
 
 function do_docker_build() {
 
@@ -120,7 +121,6 @@ function do_docker_push() {
 
 
     readonly IMAGE_URL=$(echo ${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMG}| tr '[A-Z]' '[a-z]')
-    readonly DOCKER_TAG=$(echo ${SRC_VERSION}-${OS_DIST}-${SRC_SHA} |perl -ni -e 's@--@-@;s@(.+)-$@\1@;print' )
     echo IMAGE_URL=$IMAGE_URL
     echo DOCKER_TAG=$DOCKER_TAG
 
@@ -202,7 +202,7 @@ do_release() {
           echo " error. Marjor.Minor should be equal, ${TAG_MARJOR_MINOR} on tag name ${LATEST_TAG_NAME} via ${SRC_MARJOR_MINOR} on src."
           exit 1
         fi
-        PRERELEASE_TYPE='alpha'
+        PRERELEASE_TYPE='${DOCKER_TAG}-alpha'
     elif [[ "${CUR_BRANCH_NAME}" =~ "release" ]];then
       if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
         echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
@@ -213,11 +213,11 @@ do_release() {
       fi
       # word 'alpha' 'beta' appear on branch name or commit message, assume that release
       if [[ "${LATEST_TAG_NAME}" =~ "beta" ]];then
-        PRERELEASE_TYPE='beta'
+        PRERELEASE_TYPE='${DOCKER_TAG}-beta'
       elif [[ $(echo "${LATEST_TAG_NAME}" | egrep '[0-9]+\.[0-9]+\.[0-9]+$' -) ]];then
         PRERELEASE_TYPE=''
       else
-        PRERELEASE_TYPE='beta'
+        PRERELEASE_TYPE='${DOCKER_TAG}-beta'
       fi
     else
       echo "branch name don't master or release,can't do release "
