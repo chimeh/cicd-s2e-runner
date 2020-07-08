@@ -38,4 +38,4 @@ function download()
 
 download
 
-DocumentInstalledItem "cross toolchain: ${FILE_NAME}"
+DocumentInstalledItem "Cross toolchain: ${FILE_NAME}"
