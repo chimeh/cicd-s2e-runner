@@ -26,7 +26,7 @@ function download()
 {
   mkdir -p "${TC_DIR}"
   echo "try download ${FILE_NAME}"
-  SAVE_FILE="${TC_DIR}/${FILE_NAME}"
+  local SAVE_FILE="${TC_DIR}/${FILE_NAME}"
   if [[ ! -f ${SAVE_FILE} ]];then
     curl -o ${SAVE_FILE} -L ${URL}
     ls ${TC_DIR}
@@ -37,4 +37,4 @@ function download()
 
 download
 
-DocumentInstalledItem "cross toolchain: ${SAVE_FILE}"
+DocumentInstalledItem "cross toolchain: ${FILE_NAME}"
