@@ -157,8 +157,12 @@ do_compose_gen() {
   /bin/cp -f ${ARTIFACT_DIR}/s2erunner/.tpl/docker-compose.yaml ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
   cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >> ${ARTIFACT_DIR}/buildnote.md
   perl -ni -e "s@^([# ]+image:).+@\1 ${IMG}@g;print" ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
-  cd ${ARTIFACT_DIR}/s2erunner/
+  /bin/cp -f ${ARTIFACT_DIR}/buildnote.md  ${ARTIFACT_DIR}/s2erunner/
   docker-compose config
+  # zip
+  cd ${ARTIFACT_DIR}/
+  zip -r ${ARTIFACT_DIR}/s2erunner-${DOCKER_TAG}.zip ./s2erunner
+  unzip -tvl ${ARTIFACT_DIR}/s2erunner-${DOCKER_TAG}.zip
 }
 
 do_compose_test() {
@@ -201,7 +205,7 @@ do_release() {
           echo " error. Marjor.Minor should be equal, ${TAG_MARJOR_MINOR} on tag name ${LATEST_TAG_NAME} via ${SRC_MARJOR_MINOR} on src."
           exit 1
         fi
-        PRERELEASE_TYPE='${DOCKER_TAG}-alpha'
+        PRERELEASE_TYPE="${DOCKER_TAG}-alpha"
     elif [[ "${CUR_BRANCH_NAME}" =~ "release" ]];then
       if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
         echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
@@ -212,11 +216,11 @@ do_release() {
       fi
       # word 'alpha' 'beta' appear on branch name or commit message, assume that release
       if [[ "${LATEST_TAG_NAME}" =~ "beta" ]];then
-        PRERELEASE_TYPE='${DOCKER_TAG}-beta'
+        PRERELEASE_TYPE="${DOCKER_TAG}-beta"
       elif [[ $(echo "${LATEST_TAG_NAME}" | egrep '[0-9]+\.[0-9]+\.[0-9]+$' -) ]];then
         PRERELEASE_TYPE=''
       else
-        PRERELEASE_TYPE='${DOCKER_TAG}-beta'
+        PRERELEASE_TYPE="${DOCKER_TAG}-beta"
       fi
     else
       echo "branch name don't master or release,can't do release "
@@ -239,22 +243,30 @@ do_release() {
     fi
 
     RELEASE_TITLE="${SRC_VERSION} ${PRERELEASE_TYPE} release"
-   github-release edit \
+    cat ${ARTIFACT_DIR}/buildnote.md | github-release edit \
       --user ${GITHUB_USER} \
       --repo ${GITHUB_REPO} \
       --tag ${LATEST_TAG_NAME} \
       --name "${RELEASE_TITLE}" \
-      --description  < ${ARTIFACT_DIR}/buildnote.md
+      --description
     rv=$?
     if [[ ${rv} -ne 0 ]];then
-      github-release release \
+      cat ${ARTIFACT_DIR}/buildnote.md | github-release release \
         --user ${GITHUB_USER} \
         --repo ${GITHUB_REPO} \
         --tag ${LATEST_TAG_NAME} \
         --name "${RELEASE_TITLE}" \
-        --description < ${ARTIFACT_DIR}/buildnote.md \
+        --description \
         --pre-release
     fi
+    FILE=$(/bin/ls ${ARTIFACT_DIR}/s2erunner-${DOCKER_TAG}.zip)
+    github-release  upload \
+        --user ${GITHUB_USER} \
+        --repo ${GITHUB_REPO} \
+        --tag ${LATEST_TAG_NAME} \
+        --name "$(basename ${FILE})" \
+        --file ${FILE} \
+        --replace
   fi
 
 }
