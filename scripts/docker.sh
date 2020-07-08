@@ -229,7 +229,13 @@ do_release() {
     fi
     if ! command -v github-release; then
         echo "github-release cli not found!"
-        go get github.com/github-release/github-release
+        rm -rf bld/github-release
+        git clone https://github.com/github-release/github-release.git bld/github-release
+        mkdir -p bld/gopath/bin
+        cd bld/github-release
+        git checkout -f v0.8.1
+        env GOPATH="$(realpath ../gopath)" GO111MODULE='off' make
+        export PATH=${PATH}:$(realpath ../gopath/bin)
     fi
 
     RELEASE_TITLE="${SRC_VERSION} ${PRERELEASE_TYPE} release"
