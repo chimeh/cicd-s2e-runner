@@ -24,25 +24,16 @@ env:
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
-  build-ubuntu:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Build, Push image
-        run: |
-          echo "not build"
-          #docker build . --file Dockerfile.ubuntu --tag imagex-ubuntu
-          #docker rmi imagex-ubuntu
   build-centos:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
     steps:
-      - uses: actions/checkout@v2
-
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+        
       - name: Build, Push image
         run: |
           export DOCKER_PASS='${{ secrets.HUB_DOCKER_COM_PASS }}'
@@ -54,7 +45,10 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Build, Push image
         run: |
