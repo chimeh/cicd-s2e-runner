@@ -46,24 +46,24 @@ pkg=(
 )
 
 cmd_test=(
-  curl
-  file
-  ftp
-  jq
-  nc
-  ssh
-  parallel
-  rsync
-  shellcheck
-  sudo
-  telnet
-  time
-  unzip
-  zip
-  wget
-  m4
-  bison
-  flex
+bash
+curl
+find
+ftp
+jq
+nslookup
+ping
+rsync
+scp
+shellcheck
+ssh
+sshpass
+sudo
+tree
+unzip
+vim
+wget
+zip
 )
 for p in ${pkg[*]}; do
   echo "Install $p"
@@ -81,8 +81,8 @@ done
 
 # Document what was added to the image
 echo "Lastly, documenting what we added to the metadata file"
-DocumentInstalledItem "Basic packages:"
-for p in ${pkg[*]}; do
+DocumentInstalledItem "Basic shell cli, such as:"
+for p in $(sort ${cmd_test[*]}); do
   DocumentInstalledItemIndent $p
 done
 
