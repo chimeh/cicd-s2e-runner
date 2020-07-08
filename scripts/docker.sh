@@ -158,6 +158,7 @@ do_compose_gen() {
   cat ${ARTIFACT_DIR}/s2erunner/.tpl/*.md >> ${ARTIFACT_DIR}/buildnote.md
   perl -ni -e "s@^([# ]+image:).+@\1 ${IMG}@g;print" ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
   /bin/cp -f ${ARTIFACT_DIR}/buildnote.md  ${ARTIFACT_DIR}/s2erunner/
+  cd ${ARTIFACT_DIR}/s2erunner/
   docker-compose config
   # zip
   cd ${ARTIFACT_DIR}/
