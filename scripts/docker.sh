@@ -190,10 +190,13 @@ do_release() {
     echo "CUR_BRANCH_NAME ${CUR_BRANCH_NAME}"
     echo "SRC_VERSION ${SRC_VERSION}"
     echo "LATEST_TAG_NAME ${LATEST_TAG_NAME}"
-    BRANCH_MARJOR_MINOR=$(echo ${CUR_BRANCH_NAME} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
-    SRC_MARJOR_MINOR=$(echo ${SRC_VERSION} |  perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
-    TAG_MARJOR_MINOR=$(echo ${LATEST_TAG_NAME}| perl -ne '$_ =~ /\b((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
+    BRANCH_MARJOR_MINOR=$(echo ${CUR_BRANCH_NAME} |  perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
+    SRC_MARJOR_MINOR=$(echo ${SRC_VERSION} |  perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
+    TAG_MARJOR_MINOR=$(echo ${LATEST_TAG_NAME}| perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*))/;print $1' -)
 
+    echo "${BRANCH_MARJOR_MINOR}"
+    echo "${SRC_MARJOR_MINOR}"
+    echo "${TAG_MARJOR_MINOR}"
     if [[ ! "${BRANCH_MARJOR_MINOR}" =~ "${SRC_MARJOR_MINOR}" ]];then
       echo " error. Marjor.Minor should be equal, ${BRANCH_MARJOR_MINOR} on branch name ${CUR_BRANCH_NAME} via ${SRC_MARJOR_MINOR} on src."
       exit 1
