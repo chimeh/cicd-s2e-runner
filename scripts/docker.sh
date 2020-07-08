@@ -235,7 +235,7 @@ do_release() {
         cd bld/github-release
         git checkout -f v0.8.1
         env GOPATH="$(realpath ../gopath)" GO111MODULE='off' make
-        export PATH=${PATH}:$(realpath ../gopath/bin)
+        export PATH=${PATH}:$(realpath ./)
     fi
 
     RELEASE_TITLE="${SRC_VERSION} ${PRERELEASE_TYPE} release"
@@ -252,7 +252,7 @@ do_release() {
         --repo ${GITHUB_REPO} \
         --tag ${LATEST_TAG_NAME} \
         --name "${RELEASE_TITLE}" \
-        --description < ${ARTIFACT_DIR}/buildnote.md
+        --description < ${ARTIFACT_DIR}/buildnote.md \
         --pre-release
     fi
   fi
