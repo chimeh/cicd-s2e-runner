@@ -126,14 +126,17 @@ function do_docker_push() {
 
     docker tag ${IMG_TMP} $IMAGE_URL:${DOCKER_TAG}
     docker tag ${IMG_TMP} $IMAGE_URL:latest
+    docker tag ${IMG_TMP} $IMAGE_URL:latest-${OS_DIST}
     docker push $IMAGE_URL:${DOCKER_TAG}
     docker push $IMAGE_URL:latest
+    docker push $IMAGE_URL:latest-${OS_DIST}
     echo $IMAGE_URL:${DOCKER_TAG} | tee -a ${ARTIFACT_DIR}/img.txt
 
     set +e
     docker rmi ${IMG_TMP}
     docker rmi $IMAGE_URL:${DOCKER_TAG}
     docker rmi $IMAGE_URL:latest
+    docker rmi $IMAGE_URL:latest-${OS_DIST}
     set -e
   else
     set +e
