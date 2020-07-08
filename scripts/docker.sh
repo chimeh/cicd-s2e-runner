@@ -182,7 +182,7 @@ do_release() {
     echo "not a git repo, no perform release."
     return
   fi
-  git fetch --tags
+  git pull --tags
   CUR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
   LATEST_TAG_NAME=$(git describe --abbrev=0 --tags)
   if [[ "${CUR_BRANCH_NAME}" =~ "release" ||  "${CUR_BRANCH_NAME}" =~ "master" ]];then
