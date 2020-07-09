@@ -51,8 +51,6 @@ curl
 find
 ftp
 jq
-nslookup
-ping
 rsync
 scp
 shellcheck
@@ -61,7 +59,6 @@ sshpass
 sudo
 tree
 unzip
-vim
 wget
 zip
 )
@@ -72,7 +69,7 @@ done
 
 # Run tests to determine that the software installed as expected
 echo "Testing to make sure that script performed as expected, and basic scenarios work"
-for cmd in ${cmd_test[*]}; do
+for cmd in ${cmd_test[@]}; do
   if ! command -v $cmd; then
     echo "$cmd was not installed"
     exit 1
@@ -82,10 +79,27 @@ done
 # Document what was added to the image
 echo "Lastly, documenting what we added to the metadata file"
 DocumentInstalledItem "Basic shell cli, such as:"
-for p in $(sort ${cmd_test[*]}); do
-  DocumentInstalledItemIndent $p
+cmd_test_sort=($(echo ${cmd_test[*]} | tr ' ' '\n' | sort))
+cmd_test_sort_len=${#cmd_test[@]}
+line=""
+for ((i=0;i<=${cmd_test_sort_len};i++));do
+  if [[ $i -eq ${cmd_test_sort_len} ]];then
+    DocumentInstalledItem $line
+    break
+  fi
+  if [[ $i -gt 0 ]];then
+    if [[ $(($i % 8)) -eq 0 ]];then
+      DocumentInstalledItem $line
+      line=""
+    else
+      line="$line ${cmd_test_sort[i]}"
+    fi
+  else
+      line="$line ${cmd_test_sort[i]}"
+  fi
 done
 
+bash ${SCRIPT_DIR}/make.sh
 bash ${SCRIPT_DIR}/scm-tools.sh
 bash ${SCRIPT_DIR}/python.sh
 

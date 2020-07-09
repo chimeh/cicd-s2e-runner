@@ -73,10 +73,6 @@ function do_docker_build() {
   echo -e "# Buildtime/Runtime CLI:\n" > ${ARTIFACT_DIR}/buildnote.md
   cat ${ARTIFACT_DIR}/.buildnote.md >> ${ARTIFACT_DIR}/buildnote.md
   /bin/rm -f ${ARTIFACT_DIR}/.buildnote.md
-
-  echo "\nDocker Img:\n" >> ${ARTIFACT_DIR}/buildnote.md
-  echo -e "\n${IMG_TMP} $(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB\n" | tee -a ${ARTIFACT_DIR}/buildnote.md
-
 }
 
 function do_validate_ci_version() {
@@ -129,6 +125,9 @@ function do_docker_push() {
     docker push $IMAGE_URL:latest
     docker push $IMAGE_URL:latest-${OS_DIST}
     echo $IMAGE_URL:${DOCKER_TAG} | tee -a ${ARTIFACT_DIR}/img.txt
+
+    echo "\n# Docker Img:\n" >> ${ARTIFACT_DIR}/buildnote.md
+    echo -e "\n${IMG_TMP} $(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB\n" | tee -a ${ARTIFACT_DIR}/buildnote.md
 
     set +e
     docker rmi ${IMG_TMP}
