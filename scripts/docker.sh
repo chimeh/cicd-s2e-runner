@@ -61,6 +61,7 @@ readonly SRC_SHA=-$(git describe --abbrev=1 --always | perl -n -e 'my @arr=split
 readonly OS_DIST=$(echo ${DOCKERFILE_NAME} |cut -d. -f2)
 readonly DOCKER_TAG=$(echo ${SRC_VERSION}-${OS_DIST}-${SRC_SHA} |perl -ni -e 's@--@-@;s@(.+)-$@\1@;print' )
 
+
 function do_docker_build() {
 
   docker build . --file ${DOCKERFILE} --tag ${IMG_TMP}
@@ -102,7 +103,17 @@ function do_validate_ci_version() {
   # shellcheck disable=SC2034
   VERSION_COMMITS="${BASH_REMATCH[7]}"
 }
-
+function do_docker_mirror()
+{
+  readonly MIRROR_DOCKER_USER=${MIRROR_DOCKER_USER:-100006292077}
+  readonly MIRROR_DOCKER_REPO=${MIRROR_DOCKER_REPO:-ccr.ccs.tencentyun.com}
+  readonly MIRROR_DOCKER_NS=${MIRROR_DOCKER_REPO:-bldyun}
+  readonly MIRROR_DOCKER_PASS=${MIRROR_DOCKER_PASS:-bldyun}
+  docker login -u "${MIRROR_DOCKER_USER}" -p  "${MIRROR_DOCKER_PASS}" ${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}
+  docker tag "$i" ${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}/${REPO_NAME}:$DOCKER_TAG
+  docker push ${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}/${REPO_NAME}:$DOCKER_TAG
+  docker rmi ${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}/${REPO_NAME}:$DOCKER_TAG
+}
 function do_docker_push() {
   readonly DOCKER_REPO=${DOCKER_REPO:-registry-1.docker.io}
   readonly DOCKER_NS=${DOCKER_NS:-bettercode}
@@ -129,6 +140,9 @@ function do_docker_push() {
     echo "\n# Docker Img:\n" >> ${ARTIFACT_DIR}/buildnote.md
     echo -e "\n${IMG_TMP} $(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB\n" | tee -a ${ARTIFACT_DIR}/buildnote.md
 
+    if [[ -n ${MIRROR_DOCKER_PASS} ]];then
+      do_docker_mirror "$IMAGE_URL:${DOCKER_TAG}"
+    fi
     set +e
     docker rmi ${IMG_TMP}
     docker rmi $IMAGE_URL:${DOCKER_TAG}
