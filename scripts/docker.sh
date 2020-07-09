@@ -107,7 +107,7 @@ function do_docker_mirror()
 {
   readonly MIRROR_DOCKER_USER=${MIRROR_DOCKER_USER:-100006292077}
   readonly MIRROR_DOCKER_REPO=${MIRROR_DOCKER_REPO:-ccr.ccs.tencentyun.com}
-  readonly MIRROR_DOCKER_NS=${MIRROR_DOCKER_REPO:-bldyun}
+  readonly MIRROR_DOCKER_NS=${MIRROR_DOCKER_NS:-bldyun}
   readonly MIRROR_DOCKER_PASS=${MIRROR_DOCKER_PASS:-bldyun}
   docker login -u "${MIRROR_DOCKER_USER}" -p  "${MIRROR_DOCKER_PASS}" ${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}
   docker tag "$i" ${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}/${REPO_NAME}:$DOCKER_TAG
