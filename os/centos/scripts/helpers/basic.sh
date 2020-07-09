@@ -79,17 +79,17 @@ done
 # Document what was added to the image
 echo "Lastly, documenting what we added to the metadata file"
 DocumentInstalledItem "Basic shell cli, such as:"
-cmd_test_sort=($(echo ${cmd_test[*]} | tr ' ' '\n' | sort))
+cmd_test_sort=($(echo ${cmd_test[@]} | tr ' ' '\n' | sort))
 cmd_test_sort_len=${#cmd_test[@]}
 line=""
 for ((i=0;i<=${cmd_test_sort_len};i++));do
   if [[ $i -eq ${cmd_test_sort_len} ]];then
-    DocumentInstalledItem $line
+    DocumentInstalledItem "$line"
     break
   fi
   if [[ $i -gt 0 ]];then
     if [[ $(($i % 8)) -eq 0 ]];then
-      DocumentInstalledItem $line
+      DocumentInstalledItem "$line"
       line=""
     else
       line="$line ${cmd_test_sort[i]}"
