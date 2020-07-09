@@ -164,7 +164,7 @@ do_compose_gen() {
   docker-compose config
   # zip
   cd ${ARTIFACT_DIR}/
-  rm -rf .tpl tpl compose.sh *.sh
+  rm -rf "./s2erunner/.tpl" "./s2erunner/tpl" "./s2erunner/*.sh"
   zip -r ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip ./s2erunner
   unzip -tvl ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip
 }
