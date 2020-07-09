@@ -37,14 +37,5 @@ jobs:
 
       - name: Build, Push image
         run: |
-          set +e
-          set -x
-          set -v
-          env
-          which -a go
-          export GOPATH=~/gopath
-          mkdir -p ${GOPATH}/bin
-          go get github.com/github-release/github-release
-          bin/cp -f ${GOPATH}/bin/github-release /usr/local/bin
-          which github-release
+          echo hello
 
