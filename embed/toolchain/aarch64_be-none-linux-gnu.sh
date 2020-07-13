@@ -42,6 +42,6 @@ function extra-tc()
 }
 
 download
-extra-tc
+#extra-tc
 
 DocumentInstalledItem "Cross toolchain: ${FILE_NAME}"
