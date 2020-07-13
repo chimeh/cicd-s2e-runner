@@ -84,12 +84,12 @@ cmd_test_sort_len=${#cmd_test[@]}
 line=""
 for ((i=0;i<=${cmd_test_sort_len};i++));do
   if [[ $i -eq ${cmd_test_sort_len} ]];then
-    DocumentInstalledItem "$line"
+    DocumentInstalledItemIndent "$line"
     break
   fi
   if [[ $i -gt 0 ]];then
     if [[ $(($i % 8)) -eq 0 ]];then
-      DocumentInstalledItem "$line"
+      DocumentInstalledItemIndent "$line"
       line=""
     else
       line="$line ${cmd_test_sort[i]}"
