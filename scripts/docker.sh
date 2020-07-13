@@ -139,7 +139,8 @@ function do_docker_push() {
     echo $IMAGE_URL:${DOCKER_TAG} | tee -a ${ARTIFACT_DIR}/img.txt
 
     echo -e "\n# Docker Img:\n" >> ${ARTIFACT_DIR}/buildnote.md
-    echo -e "\n$IMAGE_URL:${DOCKER_TAG}$(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB\n" | tee -a ${ARTIFACT_DIR}/buildnote.md
+    echo -e "\n$IMAGE_URL:${DOCKER_TAG}\n" | tee -a ${ARTIFACT_DIR}/buildnote.md
+    echo -e "\n$(($(docker inspect ${IMG_TMP} --format='{{.Size}}')/1000/1000))MB\n" | tee -a ${ARTIFACT_DIR}/buildnote.md
 
     if [[ -n ${MIRROR_DOCKER_PASS} ]];then
       do_docker_mirror "$IMAGE_URL:${DOCKER_TAG}"
