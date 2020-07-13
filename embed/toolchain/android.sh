@@ -46,58 +46,17 @@ echo "y" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager \
     "platform-tools" \
     "platforms;android-30" \
     "platforms;android-29" \
-    "platforms;android-28" \
-    "platforms;android-27" \
-    "platforms;android-26" \
-    "platforms;android-25" \
-    "platforms;android-24" \
-    "platforms;android-23" \
-    "platforms;android-22" \
-    "platforms;android-21" \
-    "platforms;android-19" \
-    "platforms;android-17" \
     "build-tools;30.0.0" \
     "build-tools;29.0.3" \
     "build-tools;29.0.2" \
     "build-tools;29.0.0" \
-    "build-tools;28.0.3" \
-    "build-tools;28.0.2" \
-    "build-tools;28.0.1" \
-    "build-tools;28.0.0" \
-    "build-tools;27.0.3" \
-    "build-tools;27.0.2" \
-    "build-tools;27.0.1" \
-    "build-tools;27.0.0" \
-    "build-tools;26.0.3" \
-    "build-tools;26.0.2" \
-    "build-tools;26.0.1" \
-    "build-tools;26.0.0" \
-    "build-tools;25.0.3" \
-    "build-tools;25.0.2" \
-    "build-tools;25.0.1" \
-    "build-tools;25.0.0" \
-    "build-tools;24.0.3" \
-    "build-tools;24.0.2" \
-    "build-tools;24.0.1" \
-    "build-tools;24.0.0" \
-    "build-tools;23.0.3" \
-    "build-tools;23.0.2" \
-    "build-tools;23.0.1" \
-    "build-tools;22.0.1" \
-    "build-tools;21.1.2" \
-    "build-tools;20.0.0" \
-    "build-tools;19.1.0" \
-    "build-tools;17.0.0" \
     "extras;android;m2repository" \
     "extras;google;m2repository" \
     "extras;google;google_play_services" \
-    "add-ons;addon-google_apis-google-24" \
-    "add-ons;addon-google_apis-google-23" \
-    "add-ons;addon-google_apis-google-22" \
     "add-ons;addon-google_apis-google-21" \
     "cmake;3.6.4111459" \
     "cmake;3.10.2.4988404" \
-    "patcher;v4"
+    "patcher;v4" > /tmp/sdkmanager.log
 
 # Document what was added to the image
 DocumentInstalledItem "Android:"
