@@ -109,10 +109,17 @@ function do_docker_mirror()
   readonly MIRROR_DOCKER_REPO=${MIRROR_DOCKER_REPO:-ccr.ccs.tencentyun.com}
   readonly MIRROR_DOCKER_NS=${MIRROR_DOCKER_NS:-bldyun}
   readonly MIRROR_DOCKER_PASS=${MIRROR_DOCKER_PASS:-bldyun}
-  docker login -u "${MIRROR_DOCKER_USER}" -p  "${MIRROR_DOCKER_PASS}" ${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}
   local IMG_DST=${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}/${REPO_NAME}:$DOCKER_TAG
   docker tag "$1" ${IMG_DST}
+  set +e
+  echo "try push"
   docker push ${IMG_DST}
+  rv=$?
+  set -e
+  if [[ ${rv} -ne 0 ]];then
+    docker login -u "${MIRROR_DOCKER_USER}" -p  "${MIRROR_DOCKER_PASS}" ${MIRROR_DOCKER_REPO}/${MIRROR_DOCKER_NS}
+    docker push ${IMG_DST}
+  fi
   docker rmi ${IMG_DST}
 }
 function do_docker_push() {
@@ -123,9 +130,6 @@ function do_docker_push() {
   readonly DOCKER_PASS=${DOCKER_PASS}
 
   if [[ -n ${DOCKER_PASS} ]];then
-    docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_REPO}/${DOCKER_NS}
-
-
     readonly IMAGE_URL=$(echo ${DOCKER_REPO}/${DOCKER_NS}/${DOCKER_IMG}| tr '[A-Z]' '[a-z]')
     echo IMAGE_URL=$IMAGE_URL
     echo DOCKER_TAG=$DOCKER_TAG
@@ -133,7 +137,16 @@ function do_docker_push() {
     docker tag ${IMG_TMP} $IMAGE_URL:${DOCKER_TAG}
     docker tag ${IMG_TMP} $IMAGE_URL:latest
     docker tag ${IMG_TMP} $IMAGE_URL:latest-${OS_DIST}
+    # maybe already login,try push
+    set +e
     docker push $IMAGE_URL:${DOCKER_TAG}
+    rv=$?
+    set -e
+    # failed ,maybe not login, try login
+    if [[ ${rv} -ne 0 ]];then
+      docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_REPO}/${DOCKER_NS}
+      docker push $IMAGE_URL:${DOCKER_TAG}
+    fi
     docker push $IMAGE_URL:latest
     docker push $IMAGE_URL:latest-${OS_DIST}
     echo $IMAGE_URL:${DOCKER_TAG} | tee -a ${ARTIFACT_DIR}/img.txt
