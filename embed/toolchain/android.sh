@@ -39,25 +39,37 @@ else
     echo "Android SDK manager was not installed"
     exit 1
 fi
+function  basic_install() {
+  # Install the following SDKs and build tools, passing in "y" to accept licenses.
+  echo "y" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager \
+      "platform-tools" \
+      "build-tools;30.0.0" \
+      "cmake;3.6.4111459" \
+      "cmake;3.10.2.4988404" > /tmp/sdkmanager.log
+}
+function  full_install() {
+  echo "y" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager \
+     "ndk-bundle" \
+     "platform-tools" \
+     "platforms;android-30" \
+     "platforms;android-29" \
+     "build-tools;30.0.0" \
+     "build-tools;29.0.3" \
+     "build-tools;29.0.2" \
+     "build-tools;29.0.0" \
+     "extras;android;m2repository" \
+     "extras;google;m2repository" \
+     "extras;google;google_play_services" \
+     "add-ons;addon-google_apis-google-21" \
+     "cmake;3.6.4111459" \
+     "cmake;3.10.2.4988404" \
+     "patcher;v4" > /tmp/sdkmanager.log
 
-# Install the following SDKs and build tools, passing in "y" to accept licenses.
-echo "y" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager \
-    "ndk-bundle" \
-    "platform-tools" \
-    "platforms;android-30" \
-    "platforms;android-29" \
-    "build-tools;30.0.0" \
-    "build-tools;29.0.3" \
-    "build-tools;29.0.2" \
-    "build-tools;29.0.0" \
-    "extras;android;m2repository" \
-    "extras;google;m2repository" \
-    "extras;google;google_play_services" \
-    "add-ons;addon-google_apis-google-21" \
-    "cmake;3.6.4111459" \
-    "cmake;3.10.2.4988404" \
-    "patcher;v4" > /tmp/sdkmanager.log
+}
 
+basic_install
+
+set +e
 # Document what was added to the image
 DocumentInstalledItem "Android:"
 DocumentInstalledItemIndent "Android SDK Platform 30/29/28/27/26/25/24/23/22/21/19/17"
@@ -70,4 +82,4 @@ DocumentInstalledItemIndent "Google Play services $(cat ${ANDROID_SDK_ROOT}/extr
 DocumentInstalledItemIndent "Google APIs 24/23/22/21"
 DocumentInstalledItemIndent "Google Repository $(cat ${ANDROID_SDK_ROOT}/extras/google/m2repository/source.properties 2>&1 | grep Pkg.Revision | cut -d '=' -f 2)"
 DocumentInstalledItemIndent "CMake $(ls ${ANDROID_SDK_ROOT}/cmake 2>&1)"
-
+set -e
