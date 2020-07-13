@@ -4,7 +4,7 @@ stages:
 s2i:
   stage: s2i
   script:
-    - export DOCKER_PASS}="fakepass"
+    - export DOCKER_PASS="fakepass"
     - make docker-centos-pre
   except:
     - tags
