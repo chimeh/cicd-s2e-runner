@@ -39,19 +39,19 @@ jobs:
           export MIRROR_DOCKER_PASS='${{ secrets.MIRROR_DOCKER_PASS }}'
           env
           make docker-centos-pre
-  build-embed:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Build, Push image
-        run: |
-          export DOCKER_PASS='${{ secrets.HUB_DOCKER_COM_PASS }}'
-          export GITHUB_TOKEN='${{ secrets.HUB_TOKEN }}'
-          export MIRROR_DOCKER_PASS='${{ secrets.MIRROR_DOCKER_PASS }}'
-          make docker-embed-pre
+#  build-embed:
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'push'
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Build, Push image
+#        run: |
+#          export DOCKER_PASS='${{ secrets.HUB_DOCKER_COM_PASS }}'
+#          export GITHUB_TOKEN='${{ secrets.HUB_TOKEN }}'
+#          export MIRROR_DOCKER_PASS='${{ secrets.MIRROR_DOCKER_PASS }}'
+#          make docker-embed-pre

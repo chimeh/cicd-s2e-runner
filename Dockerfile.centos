@@ -38,6 +38,15 @@ RUN cd ${INSTALL_SCRIPTS}; \
      fi; \
  done;
 
+# mcu-embed/android toolchain
+RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh ;\
+  bash /s2erunner-src/embed/toolchain/aarch64-none-elf.sh ;\
+  bash /s2erunner-src/embed/toolchain/aarch64-none-linux-gnu.sh ;\
+  bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh ;\
+  bash /s2erunner-src/embed/toolchain/msp430-gcc.sh ;\
+  bash /s2erunner-src/embed/toolchain/android.sh ;\
+  set +e; ls /opt/embed* ;set -e; \
+  /bin/rm -f /opt/embed/*tar*;
 
 # cicd logic
 RUN mv /s2erunner-src/s2e / ;\

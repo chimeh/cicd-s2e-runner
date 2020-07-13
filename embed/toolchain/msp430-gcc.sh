@@ -40,7 +40,7 @@ function download()
 
 function extra-tc()
 {
-  tar -xf ${SAVE_FILE} -d ${TC_DIR}
+  tar -xf ${SAVE_FILE} -C ${TC_DIR}
 }
 
 download
