@@ -41,7 +41,11 @@ function extra-tc()
   tar -xf ${SAVE_FILE} -C ${TC_DIR}
 }
 
-download
-#extra-tc
+
+if [[ $# -gt 0 ]];then
+  download
+  extra-tc
+fi
 
 DocumentInstalledItem "Cross toolchain: ${FILE_NAME}"
+DocumentInstalledItemIndent "run ${THIS_SCRIPT})"

@@ -6,6 +6,8 @@ THIS_SCRIPT="$(realpath "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)"/"$(basena
 #automatic detection TOPDIR
 SCRIPT_DIR="$(dirname "$(realpath "${THIS_SCRIPT}")")"
 source ${SCRIPT_DIR}/document.sh
+source ${SCRIPT_DIR}/injectenv.sh
+
 URL='https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip'
 
 
@@ -68,10 +70,16 @@ function  full_install() {
 }
 
 basic_install
+if [[ $# -gt 0 ]];then
+  full_install
+fi
+
+injectpath "${ANDROID_SDK_ROOT}/tools/bin"
 
 set +e
 # Document what was added to the image
 DocumentInstalledItem "Android:"
+DocumentInstalledItemIndent "run ${THIS_SCRIPT})"
 DocumentInstalledItemIndent "Android SDK Platform 30/29/28/27/26/25/24/23/22/21/19/17"
 DocumentInstalledItemIndent "Android SDK Build-Tools 30/29/28/27/26/25/24/23/22/21/19/17"
 DocumentInstalledItemIndent "Android SDK Platform-Tools $(cat ${ANDROID_SDK_ROOT}/platform-tools/source.properties 2>&1 | grep Pkg.Revision | cut -d '=' -f 2)"

@@ -36,7 +36,6 @@ jobs:
         run: |
           export DOCKER_PASS='${{ secrets.HUB_DOCKER_COM_PASS }}'
           export GITHUB_TOKEN='${{ secrets.HUB_TOKEN }}'
-#          export MIRROR_DOCKER_PASS='${{ secrets.MIRROR_DOCKER_PASS }}'
           env
           make docker-centos-pre
 #  build-embed:

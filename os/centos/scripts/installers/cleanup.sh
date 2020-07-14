@@ -20,7 +20,10 @@ cat ${DOC_FILE}
 cat /etc/profile.d/sh.local
 
 set +e;
-ls /opt/embed* ;
+ls /opt/embed*;
+go clean -cache
+npm cache clean --force
+/bin/rm -rf ~/go/*
 set -e;
 /bin/rm -f /opt/embed/*tar*;
 

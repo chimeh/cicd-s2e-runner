@@ -5,20 +5,8 @@ volumes:
   runner-root-cache: {}
   runner-filebeat-cache: {}
   runner-gitlab-metric-log-cache: {}
-  metricbeat-filebeat-cache: {}
+  runner-filebeat-cache: {}
 services:
-  metricbeat:
-    restart: always
-    image: harbor.benload.com/bu5/cicd-gitlab-runner-s2e:feature-centos-f12b9b57-1.0.0-g59686-cicd-gitlab-runner-s2e
-    command: ["metricbeat"]
-    env_file:
-      - ./metricbeat/secrets/environment-global
-    volumes:
-      - metricbeat-filebeat-cache:/var/lib/filebeat
-      - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:ro
-      ##########################secrets
-      - ./metricbeat/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
-      - ./metricbeat/secrets/profile.d/env.sh:/etc/profile.d/env.sh
   runner:
     restart: always
     image: harbor.benload.com/bu5/cicd-gitlab-runner-s2e:feature-centos-f12b9b57-1.0.0-g59686-cicd-gitlab-runner-s2e
@@ -31,6 +19,7 @@ services:
       - runner-maven-cache:/root/.m2/repository
       - runner-gitlab-runner-cache:/home/gitlab-runner
       - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:rw
+      - runner-filebeat-cache:/var/lib/filebeat
       ###########################tools
       - ./runner/tools:/s2e/custom/tools
       ###########################template

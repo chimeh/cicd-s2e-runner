@@ -120,8 +120,14 @@ function injectenv {
     fi
 }
 
-EMBED_TC_PATH=$(find /opt/embed -name "*-gcc" |egrep bin | tr -s '\n' |while read i;do F=$(realpath $i);P=$(dirname $F);echo $P;done | tr '\n' ':')
+function autoinject_path() {
+  # embed tool
+  EMBED_TC_PATH=$(find /opt/embed -name "*-gcc" |egrep bin | tr -s '\n' |while read i;do F=$(realpath $i);P=$(dirname $F);echo $P;done | tr '\n' ':')
+  injectpath "${EMBED_TC_PATH}"
 
-echo ${EMBED_TC_PATH}
+}
 
-injectpath "${EMBED_TC_PATH}"
+set +e
+autoinject_path
+set -e
+
