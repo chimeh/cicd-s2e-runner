@@ -25,5 +25,5 @@ services:
       ###########################template
       - ./runner/templates:/s2e/custom/templates
       ###########################demo code
-      - ./runner/democode:/root/democode
+      - ./democode:/root/democode
       ###########################secrets

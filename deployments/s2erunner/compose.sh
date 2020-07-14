@@ -85,8 +85,8 @@ function compose-gen()
   do-cfgmapping runner/secrets/jira/acli.properties           /root/.jira/acli.properties
   do-cfgmapping runner/secrets/rancher/cli2.json              /root/.rancher/cli2.json
   do-cfgmapping runner/secrets/s2ectl/config.yaml             /root/.s2ectl/config.yaml
-  do-cfgmapping metricbeat/secrets/filebeat/filebeat.yml      /etc/filebeat/filebeat.yml
-  do-cfgmapping metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
+  do-cfgmapping runner/secrets/filebeat/filebeat.yml          /etc/filebeat/filebeat.yml
+#  do-cfgmapping metricd/secrets/elasticsearch/elasticsearch.yml      /etc/elasticsearch/elasticsearch.yml
 #  do-cfgmapping metricd/secrets/kibana/kibana.yml                    /etc/kibana/kibana.yml
 #  do-cfgmapping metricd/secrets/logstash                             /etc/logstash
 #  do-cfgmapping metricd/secrets/nginx/default.conf                   /etc/nginx/default.d/
