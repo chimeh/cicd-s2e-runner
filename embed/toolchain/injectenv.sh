@@ -122,8 +122,13 @@ function injectenv {
 
 function autoinject_path() {
   # embed tool
-  EMBED_TC_PATH=$(find /opt/embed -name "*-gcc" |egrep bin | tr -s '\n' |while read i;do F=$(realpath $i);P=$(dirname $F);echo $P;done | tr '\n' ':')
-  injectpath "${EMBED_TC_PATH}"
+  EMBED_TC_PATH=$(realpath -e /opt/*/*/bin | tr -s '\n' )
+  EMBED_TC_PATH=$(realpath -e /opt/android/*/*/bin | tr -s '\n' )
+  for i in ${EMBED_TC_PATH};do
+    injectpath "${i}" after
+  done
+
+  grep -qF '. /etc/profile' /root/.bashrc || sed -i '1i . /etc/profile' /root/.bashrc
 
 }
 
