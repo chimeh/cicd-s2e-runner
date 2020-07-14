@@ -49,7 +49,7 @@ function download()
 
 function extra-tc()
 {
-  rpm -vi filebeat-7.8.0-x86_64.rpm ${SAVE_FILE}
+  rpm -vi ${SAVE_FILE}
   set +e
   /bin/rm -f ${SAVE_FILE}
   set -e

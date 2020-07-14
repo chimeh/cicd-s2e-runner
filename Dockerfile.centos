@@ -49,7 +49,7 @@ RUN mv /s2erunner-src/s2e / ;\
 RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
     bash /s2erunner-src/deployments/s2erunner/.tpl/*.sh ;\
     /bin/cp -rf /s2erunner-src/deployments/s2erunner  /.s2erunner ;\
-    ls / /opt/*
+    ls / /opt
 
 # mcu-embed/android toolchain
 RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh ;\
