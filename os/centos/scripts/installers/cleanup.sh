@@ -19,6 +19,11 @@ touch ${DOC_FILE:-/etc/profile.d/sh.local}
 cat ${DOC_FILE}
 cat /etc/profile.d/sh.local
 
+set +e;
+ls /opt/embed* ;
+set -e;
+/bin/rm -f /opt/embed/*tar*;
+
 # after cleanup
 after=$(df / -Pm | awk 'NR==2{print $4}')
 

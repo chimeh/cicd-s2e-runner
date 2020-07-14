@@ -4,6 +4,8 @@ COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
 COPY docker /docker
 COPY . /s2erunner-src
 
+VOLUME ["/root", "/home/gitlab-runner", "/opt"]
+
 RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ;\
     bash /s2erunner-src/os/centos/scripts/helpers/basic.sh
 
@@ -55,9 +57,7 @@ RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh ;\
   bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh ;\
   bash /s2erunner-src/embed/toolchain/msp430-gcc.sh ;\
   bash /s2erunner-src/embed/toolchain/android.sh ;\
-  bash /s2erunner-src/embed/toolchain/injectpath.sh ;\
-  set +e; ls /opt/embed* ;set -e; \
-  /bin/rm -f /opt/embed/*tar*;
+  bash /s2erunner-src/embed/toolchain/injectenv.sh ;
 RUN bash ${INSTALL_SCRIPTS}/cleanup.sh; \
  touch /error.txt; cat /error.txt; \
  yum clean all; \
