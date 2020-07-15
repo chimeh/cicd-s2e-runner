@@ -53,15 +53,16 @@ RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
 
 # mcu-embed/android toolchain
 RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh ;\
-  bash /s2erunner-src/embed/toolchain/aarch64-none-elf.sh ;\
+  bash /s2erunner-src/embed/toolchain/aarch64-none-elf.sh install;\
   bash /s2erunner-src/embed/toolchain/aarch64-none-linux-gnu.sh ;\
-  bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh ;\
-  bash /s2erunner-src/embed/toolchain/msp430-gcc.sh ;\
+  bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh install;\
+  bash /s2erunner-src/embed/toolchain/msp430-gcc.sh install;\
+  bash /s2erunner-src/embed/toolchain/riscv-none-elf-gcc.sh install;\
   bash /s2erunner-src/embed/toolchain/android.sh ;\
   bash /s2erunner-src/embed/toolchain/injectenv.sh ;
 
 RUN bash /s2erunner-src/os/centos/scripts/installers/cleanup.sh; \
- touch /error.txt; cat /error.txt; /bin/rm /error \
+ touch /error.txt; cat /error.txt; /bin/rm /error.txt; \
  yum clean all; \
  /bin/rm -rf /var/cache/yum; \
  /bin/rm -rf /root/ts;
