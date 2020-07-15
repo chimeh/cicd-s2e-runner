@@ -17,7 +17,7 @@ on:
 env:
   DOCKER_PASS: '${{ secrets.HUB_DOCKER_COM_PASS }}'
   GITHUB_TOKEN: '${{ secrets.HUB_TOKEN }}'
-  MIRROR_DOCKER_PASS: '${{ secrets.MIRROR_DOCKER_PASS }}'
+#  MIRROR_DOCKER_PASS: '${{ secrets.MIRROR_DOCKER_PASS }}'
 
 jobs:
   # Push image to GitHub Packages.
