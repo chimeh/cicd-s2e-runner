@@ -18,14 +18,16 @@ fi
 touch ${DOC_FILE:-/etc/profile.d/sh.local}
 cat ${DOC_FILE}
 cat /etc/profile.d/sh.local
+source /etc/profile.d/sh.local
 
 set +e;
-ls /opt/embed*;
+ls /opt/embed/*;
 go clean -cache
 npm cache clean --force
 /bin/rm -rf ~/go/*
-set -e;
 /bin/rm -f /opt/embed/*tar*;
+/bin/rm -rf /tmp/*
+set -e;
 
 # after cleanup
 after=$(df / -Pm | awk 'NR==2{print $4}')

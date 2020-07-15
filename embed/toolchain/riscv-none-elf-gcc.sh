@@ -21,7 +21,7 @@ function build() {
   cd ${DIR}
   mkdir -p ${TC_DIR}/riscv
   ./configure --prefix=${TC_DIR}/riscv
-  make install
+  make
 
 }
 function download()
