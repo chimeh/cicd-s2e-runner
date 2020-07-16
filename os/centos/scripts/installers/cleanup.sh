@@ -18,7 +18,7 @@ fi
 touch ${DOC_FILE:-/etc/profile.d/sh.local}
 cat ${DOC_FILE}
 cat /etc/profile.d/sh.local
-source /etc/profile.d/sh.local
+source /etc/profile
 
 set +e;
 yum clean all
