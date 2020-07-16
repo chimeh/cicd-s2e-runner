@@ -20,7 +20,7 @@ function build() {
   git clone --depth 1 --recursive https://github.com/riscv/riscv-gnu-toolchain ${DIR}
   cd ${DIR}
   mkdir -p ${TC_DIR}/riscv
-  ./configure --prefix=${TC_DIR}/riscv
+  ./configure --prefix=${TC_DIR}/riscv --enable-multilib --target=riscv64-multilib-elf
   make  -j $(nproc --all)
   /bin/rm -rf ${DIR}
 
