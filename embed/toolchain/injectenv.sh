@@ -92,7 +92,7 @@ function  reloadEtcEnvironment {
 #refer function pathmunge in /etc/profile
 #pathmunge /your/new/path after ;export PATH 
 function injectpath {
-    source /etc/profile.d/sh.local
+    source /etc/profile
     case ":${PATH}:" in
         *:"$1":*)
             ;;
@@ -124,13 +124,12 @@ function autoinject_path() {
   # embed tool
   EMBED_TC_PATH1=$(realpath -e /opt/*/*/bin 2>/dev/null | tr -s '\n' )
   EMBED_TC_PATH2=$(realpath -e /opt/android/*/*/bin 2>/dev/null | tr -s '\n' )
-  NEW_PATH=(${EMBED_TC_PATH} ${EMBED_TC_PATH2})
-  for i in ${NEW_PATH[*]};do
+  for i in ${EMBED_TC_PATH1} ${EMBED_TC_PATH2};do
     injectpath "${i}" after
   done
 
   grep -qF '. /etc/profile' /root/.bashrc || sed -i '1i . /etc/profile' /root/.bashrc
-  source /etc/profile.d/sh.local
+  source /etc/profile
 }
 
 set +e

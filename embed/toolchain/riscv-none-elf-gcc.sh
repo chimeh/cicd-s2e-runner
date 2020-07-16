@@ -17,11 +17,11 @@ function build() {
   yum install -y mpfr-devel gmp-devel gawk  bison flex
   yum install -y texinfo patchutils gcc gcc-c++ zlib-devel expat-devel
   DIR=$(mktemp -d /tmp/riscv.XXX)
-  git clone --recursive https://github.com/riscv/riscv-gnu-toolchain ${DIR}
+  git clone --depth 1 --recursive https://github.com/riscv/riscv-gnu-toolchain ${DIR}
   cd ${DIR}
   mkdir -p ${TC_DIR}/riscv
   ./configure --prefix=${TC_DIR}/riscv
-  make
+  make  -j $(nproc --all)
   /bin/rm -rf ${DIR}
 
 }

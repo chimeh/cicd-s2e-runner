@@ -30,7 +30,7 @@ TCLIST=(
 
 # build time, runtime toolchains
 cd ${TC_DIR}
-for s in ${TCLIST}
+for s in ${TCLIST[*]}
 do
    set +e; ls ${TC_DIR}/$s >/dev/null 2>&1; rv=$? ; set -e
    if [ ${rv} -eq 0 ];then
@@ -54,7 +54,7 @@ bash ${TCEB_DIR}/android.sh  2>> /error.txt;
 bash ${TCEB_DIR}/injectenv.sh  2>> /error.txt;
 set -e
 
-touch /error.txt; cat /error.txt; /bin/rm /error.txt;
 
 bash /s2erunner-src/os/centos/scripts/installers/cleanup.sh;
+touch /error.txt; cat /error.txt; /bin/rm /error.txt;
 
