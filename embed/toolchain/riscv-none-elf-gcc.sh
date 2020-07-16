@@ -21,7 +21,7 @@ function build() {
   cd ${DIR}
   mkdir -p ${TC_DIR}/riscv
   ./configure --prefix=${TC_DIR}/riscv --enable-multilib --target=riscv64-multilib-elf
-  make  -j $(nproc --all)
+  make  -j $(nproc --all) --silent
   /bin/rm -rf ${DIR}
 
 }
