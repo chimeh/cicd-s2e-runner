@@ -122,14 +122,15 @@ function injectenv {
 
 function autoinject_path() {
   # embed tool
-  EMBED_TC_PATH=$(realpath -e /opt/*/*/bin | tr -s '\n' )
-  EMBED_TC_PATH=$(realpath -e /opt/android/*/*/bin | tr -s '\n' )
-  for i in ${EMBED_TC_PATH};do
+  EMBED_TC_PATH1=$(realpath -e /opt/*/*/bin 2>/dev/null | tr -s '\n' )
+  EMBED_TC_PATH2=$(realpath -e /opt/android/*/*/bin 2>/dev/null | tr -s '\n' )
+  NEW_PATH=(${EMBED_TC_PATH} ${EMBED_TC_PATH2})
+  for i in ${NEW_PATH[*]};do
     injectpath "${i}" after
   done
 
   grep -qF '. /etc/profile' /root/.bashrc || sed -i '1i . /etc/profile' /root/.bashrc
-
+  source /etc/profile.d/sh.local
 }
 
 set +e

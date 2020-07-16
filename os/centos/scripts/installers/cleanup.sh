@@ -21,11 +21,14 @@ cat /etc/profile.d/sh.local
 source /etc/profile.d/sh.local
 
 set +e;
-ls /opt/embed/*;
+yum clean all
+/bin/rm -rf /var/cache/yum
+/bin/rm -rf /root/ts
+ls /opt/embed/*
 go clean -cache
 npm cache clean --force
 /bin/rm -rf ~/go/*
-/bin/rm -f /opt/embed/*tar*;
+/bin/rm -f /opt/embed/*tar*
 /bin/rm -rf /tmp/*
 set -e;
 

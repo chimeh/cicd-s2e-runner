@@ -4,46 +4,10 @@ COPY --from=scurl /usr/local/bin/scurl /usr/local/bin/scurl
 COPY docker /docker
 COPY . /s2erunner-src
 
-VOLUME ["/root", "/home/gitlab-runner", "/opt"]
 
-RUN bash /s2erunner-src/os/centos/scripts/helpers/yum.sh ;\
-    bash /s2erunner-src/os/centos/scripts/helpers/basic.sh
+# # build time, runtime toolchains/cli
+RUN bash /s2erunner-src/os/centos/mk-runner-centos.sh
 
-ENV INSTALL_SCRIPTS=/s2erunner-src/os/centos/scripts/installers
-ARG TCLIST="c_c++.sh \
-            go.sh \
-            java.sh \
-            nodejs.sh \
-            github-cli.sh \
-            gitlab-cli.sh \
-            gitlab-runner.sh \
-            image-magick.sh \
-            docker.sh \
-            kubernetes-cli.sh \
-            cloud-aliyun-tencent-huawei-cli.sh \
-            filebeat.sh \
-            ansible.sh "
-# build time, runtime toolchains
-RUN cd /s2erunner-src/os/centos/scripts/installers; \
- for s in ${TCLIST}; \
- do \
-     set +e; \
-     ls /s2erunner-src/os/centos/scripts/installers/$s >/dev/null 2>&1; \
-     rv=$? ;\
-     set -e; \
-     if [ ${rv} -eq 0 ];then \
-         echo "###/s2erunner-src/os/centos/scripts/installers/$s"; \
-         bash /s2erunner-src/os/centos/scripts/installers/validate-disk-space.sh; \
-         set +e; bash /s2erunner-src/os/centos/scripts/installers/$s; ok=$?;set -e; \
-         if [ ${ok} -ne 0 ];then echo $s >> /error.txt;fi \
-     else \
-         echo "*** not install $s"; \
-     fi; \
- done;
-
-# cicd logic
-RUN mv /s2erunner-src/s2e / ;\
-    chmod -R +x /docker/ /s2e ;
 
 # default config from docker-compose secrets
 RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
@@ -51,23 +15,17 @@ RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
     /bin/cp -rf /s2erunner-src/deployments/s2erunner  /.s2erunner ;\
     ls / /opt
 
-# mcu-embed/android toolchain
-RUN bash /s2erunner-src/embed/toolchain/aarch64_be-none-linux-gnu.sh ;\
-  bash /s2erunner-src/embed/toolchain/aarch64-none-elf.sh install;\
-  bash /s2erunner-src/embed/toolchain/aarch64-none-linux-gnu.sh ;\
-  bash /s2erunner-src/embed/toolchain/gcc-arm-none-eabi.sh install;\
-  bash /s2erunner-src/embed/toolchain/msp430-gcc.sh install;\
-  bash /s2erunner-src/embed/toolchain/riscv-none-elf-gcc.sh install;\
-  bash /s2erunner-src/embed/toolchain/android.sh ;\
-  bash /s2erunner-src/embed/toolchain/injectenv.sh ;
-
-RUN bash /s2erunner-src/os/centos/scripts/installers/cleanup.sh; \
- touch /error.txt; cat /error.txt; /bin/rm /error.txt; \
- yum clean all; \
- /bin/rm -rf /var/cache/yum; \
- /bin/rm -rf /root/ts;
-
 # let docker exec always source /etc/profile
-RUN sed -i '1i . /etc/profile' /root/.bashrc
+RUN sed -i '1i . /etc/profile' /root/.bashrc; \
+    bash /s2erunner-src/os/centos/scripts/installers/cleanup.sh; \
+    yum clean all; \
+    /bin/rm -rf /var/cache/yum; \
+    /bin/rm -rf /root/ts;
+
+# cicd logic
+RUN mv /s2erunner-src/s2e / ;\
+    chmod -R +x /docker/ /s2e ;
+
+VOLUME ["/root", "/home/gitlab-runner", "/opt"]
 
 ENTRYPOINT ["/docker/docker-entrypoint.sh"]

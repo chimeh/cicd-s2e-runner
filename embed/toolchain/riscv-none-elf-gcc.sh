@@ -22,6 +22,7 @@ function build() {
   mkdir -p ${TC_DIR}/riscv
   ./configure --prefix=${TC_DIR}/riscv
   make
+  /bin/rm -rf ${DIR}
 
 }
 function download()
