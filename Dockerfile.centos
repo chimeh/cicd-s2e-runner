@@ -6,7 +6,7 @@ COPY . /s2erunner-src
 
 
 # # build time, runtime toolchains/cli
-RUN bash /s2erunner-src/os/centos/mk-runner-centos.sh
+RUN bash /s2erunner-src/os/centos/mk-runner-cloud.sh
 
 
 # default config from docker-compose secrets
