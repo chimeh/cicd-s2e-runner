@@ -44,14 +44,23 @@ do
 done
 
 set +e
+bash ${TC_DIR}/validate-disk-space.sh
 bash ${TCEB_DIR}/aarch64_be-none-linux-gnu.sh  2>> /error.txt;
+bash ${TC_DIR}/validate-disk-space.sh
 bash ${TCEB_DIR}/aarch64-none-elf.sh install 2>> /error.txt;
+bash ${TC_DIR}/validate-disk-space.sh
 bash ${TCEB_DIR}/aarch64-none-linux-gnu.sh  2>> /error.txt;
+bash ${TC_DIR}/validate-disk-space.sh
 bash ${TCEB_DIR}/gcc-arm-none-eabi.sh install 2>> /error.txt;
+bash ${TC_DIR}/validate-disk-space.sh
 bash ${TCEB_DIR}/msp430-gcc.sh install 2>> /error.txt;
+bash ${TC_DIR}/validate-disk-space.sh
 bash ${TCEB_DIR}/riscv-none-elf-gcc.sh install 2>> /error.txt;
+bash ${TC_DIR}/validate-disk-space.sh
 bash ${TCEB_DIR}/android.sh  2>> /error.txt;
+bash ${TC_DIR}/validate-disk-space.sh
 bash ${TCEB_DIR}/injectenv.sh  2>> /error.txt;
+bash ${TC_DIR}/validate-disk-space.sh
 set -e
 
 
