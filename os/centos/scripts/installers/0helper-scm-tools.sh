@@ -3,7 +3,7 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
-source ${SCRIPT_DIR}/document.sh
+source ${SCRIPT_DIR}/0helper-document.sh
 
 DocumentInstalledItem "Scm Tools:"
 ##################################################git

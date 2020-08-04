@@ -8,7 +8,7 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 # Source the helpers for use with the script
-source ${SCRIPT_DIR}/document.sh
+source ${SCRIPT_DIR}/0helper-document.sh
 
 if ! command -v make; then
     yum install -y make

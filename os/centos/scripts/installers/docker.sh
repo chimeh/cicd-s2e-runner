@@ -4,8 +4,8 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
-source ${SCRIPT_DIR}/../helpers/document.sh
-source ${SCRIPT_DIR}/../helpers/cloud.sh
+source ${SCRIPT_DIR}/0helper-document.sh
+source ${SCRIPT_DIR}/0helper-cloud.sh
 
 #yum install -y yum-utils device-mapper-persistent-data lvm2
 yum-config-manager --add-repo  http://download.docker.com/linux/centos/docker-ce.repo

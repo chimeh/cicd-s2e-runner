@@ -4,8 +4,8 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 # Source the helpers for use with the script
-source ${SCRIPT_DIR}/../helpers/document.sh
-source ${SCRIPT_DIR}/../helpers/cloud.sh
+source ${SCRIPT_DIR}/0helper-document.sh
+source ${SCRIPT_DIR}/0helper-cloud.sh
 
 
 ## Alibaba

@@ -16,8 +16,7 @@ RUN bash /s2erunner-src/deployments/s2erunner/compose.sh ;\
     ls / /opt
 
 # let docker exec always source /etc/profile
-RUN sed -i '1i . /etc/profile' /root/.bashrc; \
-    bash /s2erunner-src/os/centos/scripts/installers/cleanup.sh; \
+RUN bash /s2erunner-src/os/centos/scripts/installers/cleanup.sh; \
     yum clean all; \
     /bin/rm -rf /var/cache/yum; \
     /bin/rm -rf /root/ts;

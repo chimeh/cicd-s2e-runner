@@ -12,7 +12,8 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
-source /etc/profile.d/sh.local
+PATH_FILE="~/.bashrc"
+. ${PATH_FILE}
 
 function getEtcEnvironmentVariable {
     variable_name="$1"
@@ -92,29 +93,29 @@ function  reloadEtcEnvironment {
 #refer function pathmunge in /etc/profile
 #pathmunge /your/new/path after ;export PATH 
 function injectpath {
-    source /etc/profile.d/sh.local
+   . ${PATH_FILE}
     case ":${PATH}:" in
         *:"$1":*)
             ;;
         *)
             if [ "$2" = "after" ] ; then
-                PATH=$PATH:$1
+                echo "export PATH="'$PATH'":$1" >> ${PATH_FILE}
             else
-                PATH=$1:$PATH
+                echo "export PATH=$1:"'$PATH'  >> ${PATH_FILE}
             fi
     esac
+    . ${PATH_FILE}
     export PATH
-    sed -i -e "/\s*PATH\=.*/d" /etc/profile.d/sh.local
-    echo "PATH=${PATH};export PATH" >> /etc/profile.d/sh.local
 }
 
 function injectenv {
+   . ${PATH_FILE}
     eval "$1"
     rv=$?
     export $1
     if [[ $rv -ne 0 ]];then
-        sed -i -e "/\s*${1}\=.*/d" /etc/profile.d/sh.local
-        echo "export $1" >> /etc/profile.d/sh.local
+        sed -i -e "export ${1}\=.*/d ## auto inject" ${PATH_FILE}
+        echo "export $1 ## auto inject" >> ${PATH_FILE}
     else
         echo "syntax error, use envset syntax KEY=Val."
     fi

@@ -9,8 +9,8 @@ SCRIPT_DIR="$(dirname "$(realpath "${THIS_SCRIPT}")")"
 TC_DIR=/s2erunner-src/os/centos/scripts/installers
 TCEB_DIR=/s2erunner-src/embed/toolchain
 
-bash /s2erunner-src/os/centos/scripts/helpers/yum.sh
-bash /s2erunner-src/os/centos/scripts/helpers/basic.sh
+bash /s2erunner-src/os/centos/scripts/0helper-yum.sh
+bash /s2erunner-src/os/centos/scripts/0helper-basic.sh
 
 TCLIST=(
   c_c++.sh

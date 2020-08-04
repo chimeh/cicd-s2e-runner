@@ -4,7 +4,7 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
-source ${SCRIPT_DIR}/../helpers/document.sh
+source ${SCRIPT_DIR}/0helper-document.sh
 
 # Install LTS Node.js and related build tools
 cd ~
