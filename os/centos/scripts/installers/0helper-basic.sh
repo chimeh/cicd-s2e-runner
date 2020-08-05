@@ -99,7 +99,7 @@ for ((i=0;i<=${cmd_test_sort_len};i++));do
   fi
 done
 
-bash ${SCRIPT_DIR}/make.sh
-bash ${SCRIPT_DIR}/scm-tools.sh
-bash ${SCRIPT_DIR}/python.sh
+bash ${SCRIPT_DIR}/0helper-make.sh
+bash ${SCRIPT_DIR}/0helper-scm-tools.sh
+bash ${SCRIPT_DIR}/0helper-python.sh
 
