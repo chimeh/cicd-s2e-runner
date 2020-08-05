@@ -2,7 +2,7 @@
 THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename ${BASH_SOURCE:-$0}))
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
-source ${SCRIPT_DIR}/../helpers/etc-environment.sh
+source ${SCRIPT_DIR}/0helper-etc-environment.sh
 # before cleanup
 before=$(df / -Pm | awk 'NR==2{print $4}')
 

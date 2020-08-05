@@ -4,7 +4,7 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 source ${SCRIPT_DIR}/0helper-document.sh
 source ${SCRIPT_DIR}/0helper-cloud.sh
-source ${SCRIPT_DIR}/../helpers/etc-environment.sh
+source ${SCRIPT_DIR}/0helper-etc-environment.sh
 
 # kubectl, helm2
 KUBE_VERSION=v1.15.7

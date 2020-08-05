@@ -6,7 +6,7 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 source ${SCRIPT_DIR}/0helper-document.sh
 source ${SCRIPT_DIR}/0helper-cloud.sh
-source ${SCRIPT_DIR}/../helpers/etc-environment.sh
+source ${SCRIPT_DIR}/0helper-etc-environment.sh
 
 
 
