@@ -12,7 +12,7 @@ THIS_SCRIPT=$(realpath $(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/$(basename $
 #automatic detection TOPDIR
 SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
-PATH_FILE="~/.bashrc"
+PATH_FILE="/root/.bashrc"
 . ${PATH_FILE}
 
 function getEtcEnvironmentVariable {
