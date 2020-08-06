@@ -5,6 +5,7 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 
 source ${SCRIPT_DIR}/0helper-document.sh
 
+yum makecache
 yum groupinstall -y 'Development Tools' 'Legacy UNIX Compatibility'
 
 pkg=(

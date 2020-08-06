@@ -104,6 +104,7 @@ function injectpath {
                 echo "export PATH=$1:"'$PATH'  >> ${PATH_FILE}
             fi
     esac
+    echo "PATH=${PATH}"
     . ${PATH_FILE}
     export PATH
 }
