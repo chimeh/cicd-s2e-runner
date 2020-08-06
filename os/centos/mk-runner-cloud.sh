@@ -12,6 +12,7 @@ bash ${TC_DIR}/0helper-yum.sh
 bash ${TC_DIR}/0helper-basic.sh
 
 TCLIST=(
+  s2e.sh
   c_c++.sh
   go.sh
   java.sh
