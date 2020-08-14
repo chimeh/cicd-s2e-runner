@@ -23,13 +23,8 @@ else
     echo "/etc/profile.d/env.sh not found!"
 fi
 
-#nginx
-if [ -f /home/github-runner/bin/runsvc.sh ]; then
-  set +e;
-   . /home/github-runner/bin/runsvc.sh start
-  set -e
-fi
-RUNNER_TYPE="gitlab-runner"
+
+RUNNER_TYPE="default"
 if [ $# -gt 0 ];then
 RUNNER_TYPE=$1
 elif ! command -v gitlab-runner;then
@@ -38,11 +33,15 @@ fi
 echo "support : gitlab-runner github-runner tailf"
 echo "start ${RUNNER_TYPE}"
 case ${RUNNER_TYPE} in
+    default)
+        exec supervisord --nodaemon --configuration /docker/supervisord.conf
+        ;;
     gitlab-runner)
         exec gitlab-runner run  --user=root --working-directory=/home/gitlab-runner
         ;;
     github-runner)
-        exec /home/github-runner/bin/runsvc.sh start
+        bash /home/github-runner/bin/run.sh start
+        exec tail -f /dev/null
         ;;
     jenkins-slave)
         echo "not implement!"

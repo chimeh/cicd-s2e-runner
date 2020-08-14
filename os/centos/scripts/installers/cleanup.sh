@@ -20,13 +20,13 @@ fi
 set +e;
 yum clean all
 /bin/rm -rf /var/cache/yum
-/bin/rm -rf /root/ts
-ls /opt/embed/*
-go clean -cache
-npm cache clean --force
-/bin/rm -rf ~/go/*
-/bin/rm -f /opt/embed/*tar*
-/bin/rm -rf /tmp/*
+/bin/rm -rf /root/ts >/dev/null 2>&1
+ls /opt/embed/* >/dev/null 2>&1
+go clean -cache >/dev/null 2>&1
+npm cache clean --force >/dev/null 2>&1
+/bin/rm -rf ~/go/* >/dev/null 2>&1
+/bin/rm -f /opt/embed/*tar* >/dev/null 2>&1
+/bin/rm -rf /tmp/* >/dev/null 2>&1
 set -e;
 
 # after cleanup

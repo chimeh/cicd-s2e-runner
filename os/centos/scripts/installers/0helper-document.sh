@@ -5,6 +5,7 @@
 ################################################################################
 
 DOC_FILE=${DOC_FILE:-/.buildnote.md}
+
 function WriteItem {
     if [ -z "$DOC_FILE" ]; then
         echo "DOC_FILE environment variable must be set to output to Metadata Document!"
@@ -29,3 +30,7 @@ function DocumentInstalledItem {
 function DocumentInstalledItemIndent {
 	WriteItem "  - $(echo $1 | head -n 1)"
 }
+
+if [[ ! -f ${DOC_FILE} ]];then
+  AddTitle"Buildtime/Runtime CLI"
+fi

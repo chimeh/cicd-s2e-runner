@@ -68,12 +68,9 @@ function do_docker_build() {
   mkdir -p ${ARTIFACT_DIR}
   set +e
   cid=$(docker create ${IMG_TMP})
-  docker cp $cid:/.buildnote.md ${ARTIFACT_DIR}/.buildnote.md
+  docker cp $cid:/.buildnote.md ${ARTIFACT_DIR}/buildnote.md
   docker cp $cid:/.s2erunner  ${ARTIFACT_DIR}/s2erunner
   docker rm -v $cid
-  echo -e "# Buildtime/Runtime CLI:\n" > ${ARTIFACT_DIR}/buildnote.md
-  cat ${ARTIFACT_DIR}/.buildnote.md >> ${ARTIFACT_DIR}/buildnote.md
-  /bin/rm -f ${ARTIFACT_DIR}/.buildnote.md
 }
 
 function do_validate_ci_version() {
@@ -190,7 +187,7 @@ do_compose_gen() {
   docker-compose config
   # zip
   cd ${ARTIFACT_DIR}/
-  rm -rf "./s2erunner/.tpl" "./s2erunner/tpl" "./s2erunner/*.sh"
+  rm -rf "./s2erunner/.tpl" "./s2erunner/tpl" ./s2erunner/*.sh
   zip -r ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip ./s2erunner
   unzip -tvl ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip
 }

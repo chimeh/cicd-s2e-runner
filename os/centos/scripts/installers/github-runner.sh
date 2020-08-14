@@ -6,12 +6,10 @@ SCRIPT_DIR=$(dirname $(realpath ${THIS_SCRIPT}))
 source ${SCRIPT_DIR}/0helper-document.sh
 source ${SCRIPT_DIR}/0helper-cloud.sh
 
-# Create a folder
-mkdir -p github-runner && cd actions-runner
-# Download the latest runner package
-curl -O -L https://github.com/actions/runner/releases/download/v2.267.1/actions-runner-linux-x64-2.267.1.tar.gz
-# Extract the installer
-tar xzf ./actions-runner-linux-x64-2.267.1.tar.gz
-
-
-DocumentInstalledItem "github-runner(action): v2.267.1 "
+set +e
+mkdir /home/actions-runner && cd /home/actions-runner
+curl -O -L https://github.com/actions/runner/releases/download/v2.272.0/actions-runner-linux-x64-2.272.0.tar.gz
+tar xzf /home/actions-runner/actions-runner-linux-x64-2.272.0.tar.gz -C /home/actions-runner
+/bin/rm -f /home/actions-runner/actions-runner-linux-x64-2.272.0.tar.gz
+DocumentInstalledItem "github-runner(action): linux-x64-2.272.0 "
+set -e
