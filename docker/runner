@@ -1,0 +1,9 @@
+{
+  "agentId": 7,
+  "agentName": "xxxx",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelines.actions.githubusercontent.com/xxx",
+  "gitHubUrl": "https://github.com/xxx",
+  "workFolder": "/home/action-runner/_work"
+}

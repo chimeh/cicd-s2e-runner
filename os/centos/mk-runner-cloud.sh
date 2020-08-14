@@ -26,6 +26,7 @@ TCLIST=(
   cloud-aliyun-tencent-huawei-cli.sh
   filebeat.sh
   ansible.sh
+  supervisor
 )
 
 # build time, runtime toolchains
