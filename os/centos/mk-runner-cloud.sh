@@ -20,6 +20,7 @@ TCLIST=(
   github-cli.sh
   gitlab-cli.sh
   gitlab-runner.sh
+  github-runner.sh
   image-magick.sh
   docker.sh
   kubernetes-cli.sh

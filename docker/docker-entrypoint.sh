@@ -30,21 +30,21 @@ RUNNER_TYPE=$1
 elif ! command -v gitlab-runner;then
   RUNNER_TYPE="tailf"
 fi
-echo "support : gitlab-runner action-runner tailf"
+echo "support : gitlab-runner github-runner tailf"
 echo "start ${RUNNER_TYPE}"
 case ${RUNNER_TYPE} in
     default)
         mkdir -p /home/gitlab-runner
-        mkdir -p /home/action-runner
+        mkdir -p /home/github-runner
         exec supervisord --nodaemon --configuration /docker/supervisord.conf
         ;;
     gitlab-runner)
         mkdir -p /home/gitlab-runner
         exec gitlab-runner run  --user=root --working-directory=/home/gitlab-runner
         ;;
-    action-runner)
-        mkdir -p /home/action-runner
-        exec /home/action-runner/bin/run.sh
+    github-runner)
+        mkdir -p /home/github-runner
+        exec /home/github-runner/bin/run.sh
         ;;
     jenkins-slave)
         echo "not implement!"

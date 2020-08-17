@@ -25,6 +25,6 @@ RUN bash /s2erunner-src/os/centos/scripts/installers/cleanup.sh; \
 RUN mv /s2erunner-src/s2e / ;\
     chmod -R +x /docker/ /s2e ;
 
-VOLUME ["/root", "/home/gitlab-runner", "/home/action-runner", "/opt"]
+VOLUME ["/root", "/home/gitlab-runner", "/home/github-runner", "/opt"]
 
 ENTRYPOINT ["/docker/docker-entrypoint.sh"]
