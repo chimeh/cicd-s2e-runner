@@ -85,6 +85,7 @@ echo "CI_PROJECT_PATH=${CI_PROJECT_PATH}"
 echo "DEFAULT_NS=${DEFAULT_NS}"
 S2I_REPORT_DIR=$(git rev-parse --show-toplevel)/.s2i
 mkdir -p ${S2I_REPORT_DIR}
+RUNNER_HOME=$(eval echo ~$USER)
 
 cd ${SRC_TOP}
 function do_src_get_srctype_by_topdir()
@@ -319,7 +320,13 @@ function do_docker_get_imgurl_by_dockerfile()
     else
         DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}
     fi
-    DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
+    DOCKER_TAG_METHOD=${DOCKER_TAG_METHOD:-1} #default compatibility
+    if [[ ${DOCKER_TAG_METHOD} -eq 1 ]];then
+        DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
+    elif [[ ${DOCKER_TAG_METHOD} -eq 2 ]];then
+        # all img push to test with diff tag, because should have testing, then retag after tested
+        DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/test:${SRC_REPO_NAME}-${DOCKER_IMG_TAG}
+    fi
     DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKER_THIS_DOCKERFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
     
     if [[ -z ${DOCKER_SVC_PORTS} ]];then
@@ -524,7 +531,7 @@ function s2i_metric()
   which metric-util-lib >/dev/null 2>&1
   rv=$?
   if [[ ${rv} -eq 0 ]];then
-    set -o allexport; source metric-util-lib >/dev/null;set +o allexport
+    set -o allexport; source metric-util-lib >/dev/null 2>&1;set +o allexport
   fi
 
   set -e
@@ -548,9 +555,9 @@ RV=$?
 set -e
 
 if [[ ${RV} -ne 0 ]];then
-  if [[ -d /root ]];then
+  if [[ -d ${RUNNER_HOME} ]];then
 # gitlab cli config file not exist
-cat > /root/.python-gitlab.cfg <<EOF
+cat > ${RUNNER_HOME}/.python-gitlab.cfg <<EOF
 [global]
 default = default
 ssl_verify = true
@@ -561,8 +568,8 @@ url = ${CI_SERVER_URL}
 private_token = ${CI_PRIVATE_TOKEN}
 api_version = 4
 EOF
-perl -ni -e "s#url.+#url = ${CI_SERVER_URL}#g;print" /root/.python-gitlab.cfg
-perl -ni -e "s#private_token.+#private_token = ${CI_PRIVATE_TOKEN}#g;print" /root/.python-gitlab.cfg
+perl -ni -e "s#url.+#url = ${CI_SERVER_URL}#g;print" ${RUNNER_HOME}/.python-gitlab.cfg
+perl -ni -e "s#private_token.+#private_token = ${CI_PRIVATE_TOKEN}#g;print" ${RUNNER_HOME}/.python-gitlab.cfg
   fi
 fi
 

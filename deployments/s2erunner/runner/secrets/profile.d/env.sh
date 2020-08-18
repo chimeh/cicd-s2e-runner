@@ -1,7 +1,8 @@
 export ENABLE_SONAR=0
-export DOCKER_REPO=docker.io
-export DOCKER_NS=bettercode
-
+export DOCKER_REPO=registry-1.docker.io
+export DOCKER_NS=bldyun
+export DOCKER_TAG_METHOD=2
+export RUNNER_ALLOW_RUNASROOT=1
 
 # speed up docker build when run on tencent cloud, see https://mirrors.cloud.tencent.com/
 # let http://mirrors.cloud.tencent.com resolve to http://mirrors.tencentyun.com when docker build

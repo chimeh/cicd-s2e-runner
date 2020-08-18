@@ -8,6 +8,8 @@ source ${SCRIPT_DIR}/0helper-document.sh
 source ${SCRIPT_DIR}/0helper-cloud.sh
 source ${SCRIPT_DIR}/0helper-etc-environment.sh
 
+set +e
+chmod -R 777 /var/log/gitlab-job-metric
 
 
 injectpath "/s2e"

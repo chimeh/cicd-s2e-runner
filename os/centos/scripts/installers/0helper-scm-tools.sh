@@ -9,6 +9,7 @@ DocumentInstalledItem "Scm Tools:"
 ##################################################git
 GIT_VERSION=2.24.1
 ## Install git
+yum erase -y git
 mkdir -p /root/ts
 yum install -y  openssl-devel zlib-devel curl-devel expat-devel gettext-devel
 wget -q -P /root/ts "http://mirrors.ustc.edu.cn/kernel.org/software/scm/git/git-${GIT_VERSION}.tar.gz"
