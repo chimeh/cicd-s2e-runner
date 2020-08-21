@@ -156,6 +156,11 @@ function do_src_get_reponame()
         SRC_BRANCHER_NAME=${CI_COMMIT_REF_SLUG}
         SRC_REPO_NAME="${CI_PROJECT_NAME}"
         BUILD_COUNTER="g${CI_PIPELINE_ID}"
+    elif [[ -n ${GITHUB_ACTIONS} ]];then
+        echo "GITHUB CICD"
+        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
+        SRC_REPO_NAME=$(basename $(realpath ${CI_PROJECT_PATH}))
+        BUILD_COUNTER="$(date +%Y%m%d)"
     else
         echo "manual CICD"
         SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)   
@@ -163,8 +168,9 @@ function do_src_get_reponame()
         BUILD_COUNTER="c1"
     fi
     if [[ -f ${SRC_TOP}/VERSION ]]; then
-        SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION | awk '{print $1}')
+        SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION | perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*).?(0|[1-9][0-9]*)*)/;print $1')
     else
+        echo "warn, you can place version into VERSION file. eg. echo 1.0.0 > ${SRC_TOP}/VERSION"
         SRC_VERSION=1.0.0
     fi
     if [[ -n ${CI_COMMIT_SHORT_SHA} ]];then
@@ -172,12 +178,12 @@ function do_src_get_reponame()
     else
       SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
     fi
-    echo "SRC_TOP=${SRC_TOP}"
-    echo "SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
-    echo "SRC_VERSION=${SRC_VERSION}"
-    echo "SRC_REPO_NAME=${SRC_REPO_NAME}"
-    echo "SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
-    echo "BUILD_COUNTER=${BUILD_COUNTER}"
+    echo "# SRC_TOP=${SRC_TOP}"
+    echo "# SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
+    echo "# SRC_VERSION=${SRC_VERSION}"
+    echo "# SRC_REPO_NAME=${SRC_REPO_NAME}"
+    echo "# SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
+    echo "# BUILD_COUNTER=${BUILD_COUNTER}"
 }
 
 function do_src_analysis_nodejs()
@@ -283,11 +289,6 @@ function do_docker_get_imgurl_by_dockerfile()
       echo ".git" > .dockerignore
     fi
     DOCKER_THIS_DOCKERFILE=$(realpath $1)
-    if [[ $# -gt 1 ]];then
-        MY_SLOT=$2
-     else
-        MY_SLOT=0
-    fi
     
     echo "DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
     if [[ -z ${DOCKER_THIS_DOCKERFILE} ]];then
@@ -296,9 +297,6 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     DOCKFILE_DIR=$(dirname ${DOCKER_THIS_DOCKERFILE})
 
-#    DOCKER_THIS_NS=$(perl -e "@DOCKERNS = split(/\s+/, \$ENV{DOCKER_NS});\$NS=\$DOCKERNS[$MY_SLOT];\$NS =~ s/[\p{Pi}\p{Pf}'\"]//g;print STDOUT \$NS")
-#    DOCKER_THIS_NS=${DEFAULT_NS}
-    K8S_THIS_NS=$(perl -e "@K8SNS = split(/\s+/, \$ENV{K8S_NS});print STDOUT \$K8SNS[$MY_SLOT];")
 
     if [[ "" == "${DOCKER_REPO}" ]];then
         DOCKER_REPO=${DOCKER_REPO:-harbor.benload.com}
@@ -309,23 +307,30 @@ function do_docker_get_imgurl_by_dockerfile()
     if [[ "" == "${DOCKER_NS}" ]];then
     DOCKER_NS="default"
     fi
-    if [[ "" == "${DOCKER_THIS_NS}" ]];then
-    DOCKER_THIS_NS=${DOCKER_NS}
-    fi
     do_src_get_reponame
-    
+
     DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
-    if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
-        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}
+
+    if [[ "${DOCKER_THIS_DOCKERFILE}" =~ "." ]];then
+      # get bld if dockerfile name is /path/to/Dockerfile.bld
+      DOCKER_TAG_SUFFIX=$(echo "${DOCKER_THIS_DOCKERFILE}" | tr '[A-Z]' '[a-z]' | perl -ni -e 's/dockerfile.?(.*)/\1/g;print')
     else
-        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}
+      DOCKER_TAG_SUFFIX=""
     fi
-    DOCKER_TAG_METHOD=${DOCKER_TAG_METHOD:-1} #default compatibility
-    if [[ ${DOCKER_TAG_METHOD} -eq 1 ]];then
-        DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
-    elif [[ ${DOCKER_TAG_METHOD} -eq 2 ]];then
-        # all img push to test with diff tag, because should have testing, then retag after tested
-        DOCKER_URL=${DOCKER_REPO}/${DOCKER_THIS_NS}/test:${SRC_REPO_NAME}-${DOCKER_IMG_TAG}
+
+    if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
+        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+    else
+        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}${DOCKER_TAG_SUFFIX}
+    fi
+    DOCKER_URL_1=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
+    # all img push to test with diff tag, because should have testing, then retag after tested
+    DOCKER_URL_2=${DOCKER_REPO}/${DOCKER_NS}/test:${SRC_REPO_NAME}-${DOCKER_IMG_TAG}
+    DOCKER_URL_METHOD=${DOCKER_URL_METHOD:-${DOCKER_URL_METHOD:-1}} #default compatibility
+    if [[ ${DOCKER_URL_METHOD} -eq 1 ]];then
+      DOCKER_URL=${DOCKER_URL_1}
+    elif [[ ${DOCKER_URL_METHOD} -eq 2 ]];then
+      DOCKER_URL=${DOCKER_URL_2}
     fi
     DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKER_THIS_DOCKERFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
     
@@ -333,19 +338,62 @@ function do_docker_get_imgurl_by_dockerfile()
         echo "NO EXPOSE in ${DOCKFILE}"
         DOCKER_SVC_PORTS=""
     fi
-    echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
-    echo "DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
-    echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
-    echo "DOCKER_REPO=${DOCKER_REPO}"
-    echo "DOCKER_NS=${DOCKER_NS}"
-    echo "DOCKER_THIS_NS=${DOCKER_THIS_NS}"
-    echo "DOCKER_SUBDIR_NAME=${DOCKER_SUBDIR_NAME}"
-    echo "DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
-    echo "DOCKER_URL=${DOCKER_URL}"
-    echo "K8S_THIS_NS=${K8S_THIS_NS}"
+    DOCKER_URL_LATEST=$(echo ${DOCKER_URL} |perl -ni -e '{s|(.+):.+|\1:latest|;print}')
+
+    echo "# DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
+    echo "# DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
+    echo "# DOCKFILE_DIR=${DOCKFILE_DIR}"
+    echo "# DOCKER_REPO=${DOCKER_REPO}"
+    echo "# DOCKER_NS=${DOCKER_NS}"
+    echo "# DOCKER_SUBDIR_NAME=${DOCKER_SUBDIR_NAME}"
+    echo "# DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
+
+    echo "# DOCKER_URL_1=${DOCKER_URL_1}"
+    echo "# DOCKER_URL_2=${DOCKER_URL_2}"
+    echo "# DOCKER_URL_METHOD=${DOCKER_URL_METHOD}"
+    echo "# DOCKER_URL=${DOCKER_URL}"
+    echo "# DOCKER_URL_LATEST=${DOCKER_URL_LATEST}"
+    echo "##########################################"
 }
 
+function do_docker_build_by_dockerfile()
+{
+  if [[ $# -eq 0 ]];then
+      echo "Error, do_docker_build_by_dockerfile /path/to/dockerfile "
+      exit 1
+  fi
+  local DOCKERFILE="${1}"
+  do_docker_get_imgurl_by_dockerfile ${DOCKERFILE}
 
+  docker build ${S2I_DOCKER_OPT} --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
+  docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
+
+  docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER}
+  docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
+  set +e
+  docker push ${DOCKER_URL}
+  rv=$?
+  set -e
+  # failed ,maybe not login, try login
+  if [[ ${rv} -ne 0 ]];then
+    echo "try docker login ${DOCKER_URL}"
+    docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_REPO}/${DOCKER_NS}
+    docker push ${DOCKER_URL}
+  fi
+  docker push ${DOCKER_URL_LATEST}
+  set +e
+  docker rmi ${DOCKER_URL}
+  docker rmi ${DOCKER_URL_LATEST}
+  set -e
+
+  #report
+  echo ${DOCKER_URL} > ${S2I_REPORT_DIR}/s2i.${CI_JOB_STAGE}.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
+
+  set +e
+  docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
+  set -e
+  echo -e "\n\n"
+}
 
 function do_docker_build()
 {
@@ -356,16 +404,18 @@ function do_docker_build()
     if [[ ${DOCKER_BUILD} -eq 0 ]];then
         echo "DOCKER_BUILD=${DOCKER_BUILD}, exit 0"
         exit 0
-    else
-        echo "start docker build"
     fi
     
     echo "detect Dockerfile"
-    DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
+    #DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
+    if [[ ${S2I_MUTI_DOCKERFILE} -gt 0 ]];then
+      DETECT_DOCKERFILE="find ${SRC_TOP} -maxdepth 1 -type f  -regextype posix-egrep -iregex '.*Dockerfile.*'"
+    else
+      DETECT_DOCKERFILE="find ${SRC_TOP} -maxdepth 1 -type f  -regextype posix-egrep -iregex '.*Dockerfile'"
+    fi
     eval ${DETECT_DOCKERFILE}
     eval ${DETECT_DOCKERFILE} | while read d;do
         if [[ -n $(eval ${DETECT_DOCKERFILE}) ]];then
-            #DOCKFILE=$(realpath `echo $(eval ${DETECT_DOCKERFILE})| head -n 1`)
             DOCKFILE=$(realpath `echo ${d} | head -n 1`)
             DOCKFILE_DIR=$(dirname ${DOCKFILE})
         else
@@ -373,66 +423,8 @@ function do_docker_build()
             exit 0
         fi
 
-        
-        DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
-        
-        if [[ -z ${DOCKER_SVC_PORTS} ]];then
-            echo "warn, no EXPOSE in ${DOCKFILE}"
-            DOCKER_SVC_PORTS=80
-        fi
-        
-        do_docker_get_imgurl_by_dockerfile ${d} 0
         echo "########################################## ${ACTION_STAGE}"
-        echo "build docker image"
-        echo "DOCKFILE=${DOCKFILE}"
-        echo "DOCKFILE_DIR=${DOCKFILE_DIR}"
-        echo "DOCKER_BUILD=${DOCKER_BUILD}"
-        echo "DOCKER_REPO=${DOCKER_REPO}"
-        echo "DOCKER_NS=${DOCKER_NS}"
-        echo "DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
-        echo "DOCKER_URL=${DOCKER_URL}"
-        echo "DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
-        echo "##########################################"
-        docker build ${S2I_DOCKER_OPT} --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
-        docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
-
-        slot=0
-        echo ${DOCKER_NS}
-        echo ${DOCKER_NS} | perl -ne '@ns=split /\s+/, $_;foreach(@ns){print "$_\n"} '  |
-        while read ns;do
-            if [[ ${slot} -gt 0 ]];then
-                do_docker_get_imgurl_by_dockerfile ${d} ${slot}
-            fi
-            DOCKER_URL_LATEST=(echo ${DOCKER_URL} |perl -ni -e '{s|(.+):.+|\1:latest|;print}')
-            echo "DOCKER_URL=${DOCKER_URL}"
-            echo "DOCKER_URL_LATEST=${DOCKER_URL_LATEST}"
-            docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER}
-            docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
-            set +e
-            docker push ${DOCKER_URL}
-            rv=$?
-            set -e
-            # failed ,maybe not login, try login
-            if [[ ${rv} -ne 0 ]];then
-              echo "try docker login ${DOCKER_URL}"
-              docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_REPO}/${DOCKER_THIS_NS}
-              docker push ${DOCKER_URL}
-            fi
-            docker push ${DOCKER_URL_LATEST}
-            set +e
-            docker rmi ${DOCKER_URL}
-            docker rmi ${DOCKER_URL_LATEST}
-            set -e
-            slot=$((${slot} + 1))
-
-            #report
-            echo ${DOCKER_URL} > ${S2I_REPORT_DIR}/s2i.${CI_JOB_STAGE}.${SRC_REPO_NAME}.${DOCKER_SUBDIR_NAME}.${DOCKER_SVC_PORTS}.img.txt
-        done
-        
-        set +e
-        docker rmi ${SRC_REPO_NAME}:x${BUILD_COUNTER}
-        set -e
-        echo -e "\n\n"
+        do_docker_build_by_dockerfile ${d}
     done
 }
 
@@ -522,15 +514,13 @@ function do_deploy_k8s()
         fi
         
         if [ ${K8S_AUTOCD} -gt 0 ];then
-          slot=0
           for MY_K8S_NS in ${K8S_NS};do
             echo "$i##########################################${DOCKFILE}"
-            do_docker_get_imgurl_by_dockerfile ${d} $slot
+            do_docker_get_imgurl_by_dockerfile ${d}
             for SVCNAME in ${K8S_SVCNAMES};do
                 bash ${SCRIPT_DIR}/k8s-app-import ${DOCKER_URL} ${SVCNAME} ${MY_K8S_NS} "${DOCKER_SVC_PORTS}" ${K8S_AUTOCD} ${K8S_DOMAIN_INTERNAL} ${K8S_DOMAIN_PUBLIC}
                 #report
             done
-            slot=$(( $slot + 1 ))
           done
         fi
     done
@@ -594,6 +584,9 @@ case ${ACTION_STAGE} in
         ;;
     docker)
         do_docker_build
+        ;;
+    docker-rc)
+        do_docker_rc
         ;;
     deploy)
         export DEPLOYMENT_UPDATE_IMG=1
