@@ -406,7 +406,16 @@ function do_docker_build()
             echo "DOCKER_URL=${DOCKER_URL}"
             docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
             docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
+            set +e
             docker push ${DOCKER_URL}
+            rv=$?
+            set -e
+            # failed ,maybe not login, try login
+            if [[ ${rv} -ne 0 ]];then
+              echo "try docker login ${DOCKER_URL}"
+              docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_REPO}/${DOCKER_THIS_NS}
+              docker push ${DOCKER_URL}
+            fi
             docker push ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
             set +e
             docker rmi ${DOCKER_URL}
