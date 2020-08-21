@@ -403,8 +403,10 @@ function do_docker_build()
             if [[ ${slot} -gt 0 ]];then
                 do_docker_get_imgurl_by_dockerfile ${d} ${slot}
             fi
+            DOCKER_URL_LATEST=(echo ${DOCKER_URL} |perl -ni -e '{s|(.+):.+|\1:latest|;print}')
             echo "DOCKER_URL=${DOCKER_URL}"
-            docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
+            echo "DOCKER_URL_LATEST=${DOCKER_URL_LATEST}"
+            docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER}
             docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
             set +e
             docker push ${DOCKER_URL}
@@ -416,10 +418,10 @@ function do_docker_build()
               docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_REPO}/${DOCKER_THIS_NS}
               docker push ${DOCKER_URL}
             fi
-            docker push ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
+            docker push ${DOCKER_URL_LATEST}
             set +e
             docker rmi ${DOCKER_URL}
-            docker rmi ${DOCKER_REPO}/${DOCKER_THIS_NS}/${SRC_REPO_NAME}:latest
+            docker rmi ${DOCKER_URL_LATEST}
             set -e
             slot=$((${slot} + 1))
 
