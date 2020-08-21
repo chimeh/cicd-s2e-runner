@@ -189,6 +189,7 @@ do_compose_gen() {
   cd ${ARTIFACT_DIR}/
   rm -rf "./s2erunner/.tpl" "./s2erunner/tpl" ./s2erunner/*.sh
   zip -r ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip ./s2erunner
+  tar -czf ${ARTIFACT_DIR}/s2e-${DOCKER_TAG}.tar.gz -C  ${SRC_TOP} s2e/
   unzip -tvl ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip
 }
 
@@ -286,14 +287,19 @@ do_release() {
         --description - \
         --pre-release
     fi
-    FILE=$(/bin/ls ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip)
-    github-release  upload \
-        --user ${GITHUB_USER} \
-        --repo ${GITHUB_REPO} \
-        --tag ${LATEST_TAG_NAME} \
-        --name "$(basename ${FILE})" \
-        --file ${FILE} \
-        --replace
+    FILE=(
+	    $(/bin/ls ${ARTIFACT_DIR}/compose-s2erunner-${DOCKER_TAG}.zip)
+	    $(/bin/ls ${ARTIFACT_DIR}/s2e-${DOCKER_TAG}.zip)
+    )
+    for f in ${FILE[@]}; do
+      github-release  upload \
+          --user ${GITHUB_USER} \
+          --repo ${GITHUB_REPO} \
+          --tag ${LATEST_TAG_NAME} \
+          --name "$(basename ${FILE})" \
+          --file ${FILE} \
+          --replace
+    done
   fi
 
 }
