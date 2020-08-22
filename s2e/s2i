@@ -366,10 +366,9 @@ function do_docker_build_by_dockerfile()
   do_docker_get_imgurl_by_dockerfile ${DOCKERFILE}
 
   docker build ${S2I_DOCKER_OPT} --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
-  docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
 
-  docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER}
   docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
+  docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL_LATEST}
   set +e
   docker push ${DOCKER_URL}
   rv=$?
