@@ -23,13 +23,16 @@ if ! command -v go; then
     echo "to build helm3, go must install first"
     exit 1
 fi
-if runon_tencentcloud;then
-  echo "on tencent cloud, use tencent mirror"
-  export GOPROXY="http://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"
-fi
 mkdir -p /root/ts
 cd /root/ts
-git clone --depth 1 https://gitee.com/chimeh/helm.git
+if runon_cn;then
+  echo "on tencent cloud, use tencent mirror"
+  export GOPROXY="http://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"
+  git clone --depth 1 https://gitee.com/chimeh/helm.git
+else
+  git clone --depth 1 https://gitee.com/helm/helm.git
+fi
+
 cd helm; git checkout ${HELM3_VERSION}
 make -j2 -C .
 cp /root/ts/helm/bin/helm /usr/local/bin/helm3
