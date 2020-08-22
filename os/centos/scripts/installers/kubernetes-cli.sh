@@ -30,7 +30,7 @@ if runon_cn;then
   export GOPROXY="http://mirrors.cloud.tencent.com/go/,https://goproxy.cn,direct"
   git clone --depth 1 https://gitee.com/chimeh/helm.git
 else
-  git clone --depth 1 https://gitee.com/helm/helm.git
+  git clone --depth 1 https://github.com/helm/helm.git
 fi
 
 cd helm; git checkout ${HELM3_VERSION}

@@ -58,7 +58,7 @@ function runon_cn ()
   rv=$?
   set -e
   if [[ ${rv} -eq 0 ]];then
-    false # runon_cn can't visit google
+    false # can visit google, is not in cn
   else
     true
   fi
