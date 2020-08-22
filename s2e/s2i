@@ -312,17 +312,18 @@ function do_docker_get_imgurl_by_dockerfile()
     DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
 
     if [[ "${DOCKER_THIS_DOCKERFILE}" =~ "." ]];then
-      # get bld if dockerfile name is /path/to/Dockerfile.bld
+      # got bld if dockerfile name is /path/to/Dockerfile.bld
       DOCKER_TAG_SUFFIX=$(echo "${DOCKER_THIS_DOCKERFILE}" | tr '[A-Z]' '[a-z]' | perl -ni -e 's/dockerfile.?(.*)/\1/g;print')
+      DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${DOCKER_TAG_SUFFIX}
     else
       DOCKER_TAG_SUFFIX=""
+      if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
+          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+      else
+          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}${DOCKER_TAG_SUFFIX}
+      fi
     fi
 
-    if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
-        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
-    else
-        DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}${DOCKER_TAG_SUFFIX}
-    fi
     DOCKER_URL_1=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
     # all img push to test with diff tag, because should have testing, then retag after tested
     DOCKER_URL_2=${DOCKER_REPO}/${DOCKER_NS}/test:${SRC_REPO_NAME}-${DOCKER_IMG_TAG}
