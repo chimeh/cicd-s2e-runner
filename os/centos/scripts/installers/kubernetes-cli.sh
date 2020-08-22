@@ -16,6 +16,9 @@ chmod +x /usr/local/bin/helm2
 ln -sf /usr/local/bin/helm2 /usr/local/bin/helm
 
 # helm3
+set +e
+reloadpath
+set -e
 if ! command -v go; then
     echo "to build helm3, go must install first"
     exit 1

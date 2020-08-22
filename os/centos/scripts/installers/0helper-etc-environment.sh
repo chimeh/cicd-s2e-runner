@@ -11,6 +11,10 @@ function injectpath {
     echo "pathmunge $1" >> ${S2EPATH_FILE}
     . /etc/profile
 }
+function reloadpath {
+    . /etc/profile
+    echo "PATH=${PATH}"
+}
 
 function injectenv {
    . ${S2EPATH_FILE}

@@ -13,4 +13,6 @@ chmod -R 777 /var/log/gitlab-job-metric
 
 
 injectpath "/s2e"
+injectpath "/s2e/custom/tools"
+injectpath "/s2e/tools"
 
