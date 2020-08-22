@@ -314,7 +314,8 @@ function do_docker_get_imgurl_by_dockerfile()
     if [[ "${DOCKER_THIS_DOCKERFILE}" =~ "." ]];then
       # got bld if dockerfile name is /path/to/Dockerfile.bld
       DOCKER_TAG_SUFFIX=$(echo "${DOCKER_THIS_DOCKERFILE}" | tr '[A-Z]' '[a-z]' | perl -ni -e 's/dockerfile.?(.*)/\1/g;print')
-      DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${DOCKER_TAG_SUFFIX}
+      DOCKER_TAG_DIGIST=$(sha256sum ${DOCKER_THIS_DOCKERFILE} | cut -c -5)
+      DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${DOCKER_TAG_SUFFIX}-${DOCKER_TAG_DIGIST}
     else
       DOCKER_TAG_SUFFIX=""
       if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
@@ -365,6 +366,20 @@ function do_docker_build_by_dockerfile()
   fi
   local DOCKERFILE="${1}"
   do_docker_get_imgurl_by_dockerfile ${DOCKERFILE}
+
+  DOCKER_IMG_EXIST_CHK=${DOCKER_IMG_EXIST_CHK:-0}
+  if [[  ${DOCKER_IMG_EXIST_CHK} -ne 0 ]];then
+    set +e
+    echo "# check img existing for ${DOCKER_URL}, will not do docker build if existed"
+    docker pull ${DOCKER_URL}
+    rv=$?
+    set -e
+    if [[ ${rv} -eq 0 ]];then
+      echo "# ${DOCKER_URL} check exist!, ignore docker build "
+      echo "# export DOCKER_IMG_EXIST_CHK=0 to disable check "
+      return
+    fi
+  fi
 
   docker build ${S2I_DOCKER_OPT} --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
 
@@ -584,9 +599,6 @@ case ${ACTION_STAGE} in
         ;;
     docker)
         do_docker_build
-        ;;
-    docker-rc)
-        do_docker_rc
         ;;
     deploy)
         export DEPLOYMENT_UPDATE_IMG=1
