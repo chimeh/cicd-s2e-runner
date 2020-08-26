@@ -491,9 +491,9 @@ function do_deploy_k8s()
         echo "default kubeconfig"
     fi
 
-    if [[ ! -f ${KUBECONFIG} ]] && [[ -n ${K8S_KUBECONFIG_RAW} ]];then
+    if [[ ! -f ${KUBECONFIG} ]] && [[ -n ${K8S_KUBECONFIG_BASE64} ]];then
       mkdir -p $(dirname ${KUBECONFIG})
-      printf %s ${K8S_KUBECONFIG_RAW} > ${KUBECONFIG} 2>/dev/null
+      echo ${K8S_KUBECONFIG_BASE64} |base64 --ignore-garbage --decode > ${KUBECONFIG} 2>/dev/null
     fi
 
     echo "K8S_AUTOCD=${K8S_AUTOCD}"
