@@ -481,12 +481,21 @@ function do_deploy_k8s()
         K8S_SVCNAMES=${SRC_REPO_NAME}
     fi
     if [[ -n ${K8S_KUBECONFIG} ]];then
-        echo "custom kubeconfig"
+        echo "custom kubeconfig, get from K8S_KUBECONFIG"
         export KUBECONFIG=${K8S_KUBECONFIG}
+    elif [[ -n ${KUBECONFIG} ]];then
+        echo "custom kubeconfig, get from KUBECONFIG"
+        export KUBECONFIG=${KUBECONFIG}
     else
-        K8S_KUBECONFIG="${HOME}/.kube/config"
+        export KUBECONFIG="${HOME}/.kube/config"
         echo "default kubeconfig"
     fi
+
+    if [[ ! -f ${KUBECONFIG} ]] && [[ -n ${K8S_KUBECONFIG_RAW} ]];then
+      mkdir -p $(dirname ${KUBECONFIG})
+      printf %s ${K8S_KUBECONFIG_RAW} > ${KUBECONFIG} 2>/dev/null
+    fi
+
     echo "K8S_AUTOCD=${K8S_AUTOCD}"
     echo "K8S_NS=${K8S_NS}"
     echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
@@ -504,14 +513,14 @@ function do_deploy_k8s()
         exit 0
     fi
     kubectl get node
-    kubectl  cluster-info
+    kubectl cluster-info
     ### ensure ns exists
     set +e
-    kubectl --kubeconfig ${K8S_KUBECONFIG} get ns ${K8S_NS}
+    kubectl get ns ${K8S_NS}
     rv=$?
     set -e
     if [[ ${rv} -ne 0 ]];then
-        kubectl --kubeconfig ${K8S_KUBECONFIG} create  namespace ${K8S_NS}
+        kubectl create  namespace ${K8S_NS}
     fi
     i=0
     eval ${DETECT_DOCKERFILE} | while read d;do

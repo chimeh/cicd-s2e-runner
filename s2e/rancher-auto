@@ -88,12 +88,12 @@ function do_rancher_auto() {
   done
 }
 
-################same as s2i
-
-set +e
-rancher cluster
-rv=$?
-if [[ ${rv} -eq 0 ]]; then
-  do_rancher_auto
+if ! command -v rancher; then
+  set +e
+  rancher cluster
+  rv=$?
+  if [[ ${rv} -eq 0 ]]; then
+    do_rancher_auto
+  fi
+  set -e
 fi
-set -e
