@@ -88,7 +88,7 @@ function do_rancher_auto() {
   done
 }
 
-if ! command -v rancher; then
+if command -v rancher; then
   set +e
   rancher cluster
   rv=$?
