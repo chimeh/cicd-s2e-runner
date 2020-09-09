@@ -58,7 +58,7 @@ else
     ACTION_STAGE="ACTION_ALL"
 fi
 if [[ -z ${CI_PROJECT_PATH} ]];then
-  CI_PROJECT_PATH="$(git rev-parse --show-toplevel)/"
+  CI_PROJECT_PATH="$(git rev-parse --show-toplevel)"
 fi
 if [[ -z ${CI_PROJECT_PATH} ]];then
 CUR_DIR=$(pwd)
@@ -148,8 +148,8 @@ function do_src_get_reponame()
         BUILD_COUNTER="t${BUILD_NUMBER}"
     elif [[ -n ${JENKINS_URL} ]];then
         echo "Jenkins CICD"
-        SRC_BRANCHER_NAME=$(git branch | grep \* | cut -d ' ' -f2)
-        SRC_REPO_NAME="${JOB_NAME}"
+        SRC_BRANCHER_NAME=${BRANCH_NAME}
+        SRC_REPO_NAME=$(git config remote.origin.url | perl -n -e 'm/.+\/([-_\w]+).git/g;print $1')
         BUILD_COUNTER="j${BUILD_NUMBER}"
     elif [[ -n ${GITLAB_CI} ]];then
         echo "GITLAB CICD"
@@ -295,7 +295,7 @@ function do_docker_get_imgurl_by_dockerfile()
         echo "can't detect Dockerfile"
         exit 1
     fi
-    DOCKFILE_DIR=$(dirname ${DOCKER_THIS_DOCKERFILE})
+    DOCKFILE_DIR=$(realpath $(dirname ${DOCKER_THIS_DOCKERFILE}))
 
 
     if [[ "" == "${DOCKER_REPO}" ]];then
@@ -309,7 +309,7 @@ function do_docker_get_imgurl_by_dockerfile()
     fi
     do_src_get_reponame
 
-    DOCKER_SUBDIR_NAME=$(basename $(realpath  ${DOCKFILE_DIR}))
+
 
     if [[ "${DOCKER_THIS_DOCKERFILE}" =~ "." ]];then
       # got bld if dockerfile name is /path/to/Dockerfile.bld
@@ -321,7 +321,8 @@ function do_docker_get_imgurl_by_dockerfile()
       if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
           DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
       else
-          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}-${DOCKER_SUBDIR_NAME}${DOCKER_TAG_SUFFIX}
+          ${DOCKER_TAG_SUFFIX}=${DOCKFILE_DIR#$CI_PROJECT_PATH}
+          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
       fi
     fi
 
@@ -347,7 +348,7 @@ function do_docker_get_imgurl_by_dockerfile()
     echo "# DOCKFILE_DIR=${DOCKFILE_DIR}"
     echo "# DOCKER_REPO=${DOCKER_REPO}"
     echo "# DOCKER_NS=${DOCKER_NS}"
-    echo "# DOCKER_SUBDIR_NAME=${DOCKER_SUBDIR_NAME}"
+    echo "# DOCKER_TAG_SUFFIX=${DOCKER_TAG_SUFFIX}"
     echo "# DOCKER_IMG_TAG=${DOCKER_IMG_TAG}"
 
     echo "# DOCKER_URL_1=${DOCKER_URL_1}"
