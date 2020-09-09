@@ -26,6 +26,10 @@ services:
       - ./runner/templates:/s2e/custom/templates
       ###########################demo code
       - ./runner/democode:/root/democode
+      ###########################jenkins-agent
+      - ./runner/secrets/jenkins-agent:/home/jenkins-agent
+      ###########################gitlab-runner
+      - ./runner/secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
       ###########################secrets
       - ./runner/secrets/android:/etc/android
       - ./runner/secrets/cloud-aliyun:/root/.aliyun
@@ -35,7 +39,6 @@ services:
       - ./runner/secrets/email/mail.rc:/etc/mail.rc
       - ./runner/secrets/filebeat/filebeat.yml:/etc/filebeat/filebeat.yml
       - ./runner/secrets/gitlab/.python-gitlab.cfg:/root/.python-gitlab.cfg
-      - ./runner/secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
       - ./runner/secrets/profile.d/env.sh:/etc/profile.d/env.sh
       - ./runner/secrets/jira:/root/jira
       - ./runner/secrets/k8s/.kube:/root/.kube
