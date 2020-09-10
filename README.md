@@ -1,6 +1,6 @@
 # 简介
 
-cicd-s2e-runner 是二次封装的容器化gitlab runner镜像，集成一系列命令行工具，包括原生 CI 工具，原生CD工具，云平台工具，以及s2i CD 工具。
+cicd-s2e-runner 是二次封装的容器化gitlab-runner/action-runner/jenkins-agent镜像，集成一系列命令行工具，包括原生 CI 工具，原生CD工具，云平台工具，以及s2i CD 工具。
 
 # 特性
 - 基于CentOS；

@@ -255,6 +255,7 @@ done
   kubectl get pod --all-namespaces |egrep tiller >/dev/null 2>&1
   rv=$?
   set -e
+  set -x
   if [[ ${rv} -eq 0 ]];then
      # helm 2.x
      helm2 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME}
@@ -262,10 +263,12 @@ done
      # helm 3.x
      helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME} --disable-openapi-validation
   fi
+  set +x
   rm -rf ${APPNAME}
 }
 
 function do_update_deploy_img() {
+    set +x
     if [[ ${DEPLOYMENT_DEFAULT} -ne 0 ]];then
       DEFUALT_IMG=${IMG}
       set +e
@@ -300,6 +303,7 @@ function do_update_deploy_img() {
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
       fi
     fi
+    set -x
 }
 
 set +e
@@ -343,19 +347,12 @@ fi
 
 if [[ ${K8S_AUTOCD} -gt 0 ]];then
   echo "#auto deploy"
-  set -x
   if [[ ${SERVICE_EXIST} -eq 0 ]];then
     # service not exist
     do_first_helm_deploy
   else
     do_update_deploy_img
   fi
-  set +x
 
 fi
 
-set +e
-if [[ -f ${SCRIPT_DIR}/rancher-auto ]];then
-  source  ${SCRIPT_DIR}/rancher-auto
-fi
-set -e
