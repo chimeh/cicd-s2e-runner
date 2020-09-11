@@ -162,7 +162,7 @@ function do_src_get_reponame()
     if [[ -f ${SRC_TOP}/VERSION ]]; then
         SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION | perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*).?(0|[1-9][0-9]*)*)/;print $1')
     else
-        SRC_VERSION=1.0.0
+        SRC_VERSION=$(date +%Y%m%d)
     fi
     if [[ -n ${CI_COMMIT_SHORT_SHA} ]];then
       SRC_GIT_COMMIT_ID=${CI_COMMIT_SHORT_SHA}
@@ -241,6 +241,19 @@ function do_artifact_build_java()
     else
         mvn clean package ${SONAR_OPT} ${S2I_MVN_OPT}
     fi
+    set +e
+    mvn dependency:tree -DoutputFile=java-dependency-tree.txt
+    echo -e "\n\n\n"
+    cat java-dependency-tree.txt
+    egrep spring-boot-actuator java-dependency-tree.txt >/dev/null 2>&1
+    rv=$?
+    if [[ ${rv} -eq 0 ]];then
+      export SPRING_BOOT_ACTUATOR=1
+    else
+      export SPRING_BOOT_ACTUATOR=0
+      echo "Cant find actuator on dependency, Please enable spring-boot-actuator!"
+    fi
+    set -e
 }
 function do_artifact_build()
 {
@@ -288,7 +301,7 @@ function do_docker_get_imgurl_by_dockerfile()
         echo "can't detect Dockerfile"
         exit 1
     fi
-    DOCKFILE_DIR=$(realpath $(dirname ${DOCKER_THIS_DOCKERFILE}))
+    DOCKERFILE_DIR=$(realpath $(dirname ${DOCKER_THIS_DOCKERFILE}))
 
 
     if [[ "" == "${DOCKER_REPO}" ]];then
@@ -311,11 +324,11 @@ function do_docker_get_imgurl_by_dockerfile()
       DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${DOCKER_TAG_SUFFIX}-${DOCKER_TAG_DIGIST}
     else
       DOCKER_TAG_SUFFIX=""
-      if [[ "${DOCKFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
-          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+      if [[ "${DOCKERFILE_DIR}" == "${SRC_TOP}" ]];then
+          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_VERSION}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
       else
-          ${DOCKER_TAG_SUFFIX}=${DOCKFILE_DIR#$CI_PROJECT_PATH}
-          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${SRC_VERSION}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+          DOCKER_TAG_SUFFIX=$(basename ${DOCKERFILE_DIR})
+          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_VERSION}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
       fi
     fi
 
@@ -331,14 +344,14 @@ function do_docker_get_imgurl_by_dockerfile()
     DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKER_THIS_DOCKERFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
     
     if [[ -z ${DOCKER_SVC_PORTS} ]];then
-        echo "NO EXPOSE in ${DOCKFILE}"
+        echo "NO EXPOSE in ${DOCKERFILE}"
         DOCKER_SVC_PORTS=""
     fi
     DOCKER_URL_LATEST=$(echo ${DOCKER_URL} |perl -ni -e '{s|(.+):.+|\1:latest|;print}')
 
     echo "# DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
     echo "# DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
-    echo "# DOCKFILE_DIR=${DOCKFILE_DIR}"
+    echo "# DOCKERFILE_DIR=${DOCKERFILE_DIR}"
     echo "# DOCKER_REPO=${DOCKER_REPO}"
     echo "# DOCKER_NS=${DOCKER_NS}"
     echo "# DOCKER_TAG_SUFFIX=${DOCKER_TAG_SUFFIX}"
@@ -357,6 +370,9 @@ function do_docker_build_by_dockerfile()
   if [[ $# -eq 0 ]];then
       echo "Error, do_docker_build_by_dockerfile /path/to/dockerfile "
       exit 1
+  fi
+  if [[ -z ${DOCKER_BUILD} ]];then
+      DOCKER_BUILD=1
   fi
   if [[ ${DOCKER_BUILD:-0} -eq 0 ]];then
       echo "DOCKER_BUILD=${DOCKER_BUILD}, exit 0"
@@ -379,7 +395,7 @@ function do_docker_build_by_dockerfile()
     fi
   fi
 
-  docker build ${S2I_DOCKER_OPT} --pull -f ${DOCKFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKFILE_DIR}
+  docker build ${S2I_DOCKER_OPT} --pull -f ${DOCKERFILE} -t ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKERFILE_DIR}
 
   docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
   docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL_LATEST}
@@ -516,6 +532,10 @@ function do_docker_action()
             deploy)
                 do_deploy_k8s_by_dockerfile ${DOCKERFILE}
                 ;;
+            ACTION_ALL)
+                do_docker_build_by_dockerfile ${DOCKERFILE}
+                do_deploy_k8s_by_dockerfile ${DOCKERFILE}
+                ;;
             *)
                 ;;
         esac
@@ -582,9 +602,8 @@ case ${ACTION_STAGE} in
         do_docker_action
         ;;
     ACTION_ALL*)
-        echo "自动检测源码类型，并做artifact 构建，docker 构建"
+        echo "自动检测源码类型，并做artifact 构建，docker 构建, k8s 部署"
         do_artifact_build
-        do_docker_build
         export DEPLOYMENT_UPDATE_IMG=1
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
