@@ -47,15 +47,39 @@ spec:
       - image:   {{ index .Values (include "xxxxxx.name" .) "blue-image" }}
         imagePullPolicy: IfNotPresent
         name: {{ template "xxxxxx.name" . }}
+        {{- if  (index .Values (include "xxxxxx.name" .) "service")  }}
+        {{- if  (index .Values (include "xxxxxx.name" .) "service" "ports")  }}
         {{- if (index .Values "global") }}
         {{- if (index .Values "global" "containers") }}
         {{- if (index .Values "global" "containers" "livenessProbe") }}
         livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - if [[ -f /tmp/healthy.sh ]];then . /tmp/healthy.sh;fi
+          failureThreshold: 10
+          httpGet:
+            httpHeaders:
+              - name: User-Agent
+                value: s2i-health-check
+            path: /actuator/health
+            port: {{ first (index .Values (include "xxxxxx.name" .) "service" "ports") }}
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        readinessProbe:
+          failureThreshold: 20
+          httpGet:
+            httpHeaders:
+              - name: User-Agent
+                value: s2i-health-check
+            path: /actuator/health
+            port: {{ first (index .Values (include "xxxxxx.name" .) "service" "ports") }}
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        {{- end }}
+        {{- end }}
         {{- end }}
         {{- end }}
         {{- end }}
@@ -73,28 +97,6 @@ spec:
         {{- end}}
         {{- end}}
         {{- end}}
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - if [ -f /docker/liveness.sh ] ; then chmod +x /docker/liveness.sh; exec /docker/liveness.sh ; fi
-          failureThreshold: 16
-          initialDelaySeconds: 15
-          periodSeconds: 15
-          successThreshold: 1
-          timeoutSeconds: 3
-        readinessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - if [ -f /docker/ready.sh ] ; then chmod +x /docker/ready.sh; exec /docker/ready.sh ; fi
-          failureThreshold: 24
-          initialDelaySeconds: 15
-          periodSeconds: 10
-          successThreshold: 2
-          timeoutSeconds: 3
         resources:
           {{ if  (index .Values (include "xxxxxx.name" .) "resources")  }}
 {{ toYaml .Values (include "xxxxxx.name" .) "resources" | indent 10 }}

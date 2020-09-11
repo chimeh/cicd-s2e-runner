@@ -204,6 +204,7 @@ global:
   containers:
     securityContext:
       privileged: true
+    livenessProbe: ${SPRING_BOOT_ACTUATOR:-0}
 EOF
 
 
