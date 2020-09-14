@@ -18,10 +18,12 @@ services:
       - runner-maven-cache:/root/.m2/repository
       - runner-gitlab-runner-cache:/home/gitlab-runner
       - runner-gitlab-metric-log-cache:/var/log/gitlab-job-metric:rw
-      ###########################tools
-      - ./runner/tools:/s2e/custom/tools
-      ###########################template
-      - ./runner/templates:/s2e/custom/templates
+      ###########################s2e tools &template
+      - cicd-s2e-runner/s2e:/s2e
       ###########################demo code
       - ./democode:/root/democode
+      ###########################jenkins-agent
+      - ./runner/secrets/jenkins-agent:/home/jenkins-agent
+      ###########################gitlab-runner
+      - ./runner/secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
       ###########################secrets

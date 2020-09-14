@@ -184,6 +184,11 @@ do_compose_gen() {
   perl -ni -e "s@^([# ]+image:).+@\1 ${IMG}@g;print" ${ARTIFACT_DIR}/s2erunner/docker-compose.yaml
   /bin/cp -f ${ARTIFACT_DIR}/buildnote.md  ${ARTIFACT_DIR}/s2erunner/
   cd ${ARTIFACT_DIR}/s2erunner/
+  rm -rf cicd-s2e-runner
+  mkdir -p cicd-s2e-runner
+  /bin/cp -rf "$(git rev-parse --show-toplevel)/.git" cicd-s2e-runner/
+  cd cicd-s2e-runner; git checkout -f HEAD;
+  cd ${ARTIFACT_DIR}/s2erunner/
   docker-compose config
   # zip
   cd ${ARTIFACT_DIR}/
