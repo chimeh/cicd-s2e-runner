@@ -348,6 +348,7 @@ function do_docker_get_imgurl_by_dockerfile()
         DOCKER_SVC_PORTS=""
     fi
     DOCKER_URL_LATEST=$(echo ${DOCKER_URL} |perl -ni -e '{s|(.+):.+|\1:latest|;print}')
+    DOCKER_URL_LATEST_BRANCH=$(echo ${DOCKER_URL} |perl -ni -e "{s|(.+):.+|\1:latest-${SRC_BRANCHER_NAME}|;print}")
 
     echo "# DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
     echo "# DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
@@ -399,6 +400,7 @@ function do_docker_build_by_dockerfile()
 
   docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL}
   docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL_LATEST}
+  docker tag ${SRC_REPO_NAME}:x${BUILD_COUNTER} ${DOCKER_URL_LATEST_BRANCH}
   set +e
   docker push ${DOCKER_URL}
   rv=$?
@@ -411,8 +413,10 @@ function do_docker_build_by_dockerfile()
   fi
   docker push ${DOCKER_URL_LATEST}
   set +e
+  docker push ${DOCKER_URL_LATEST_BRANCH}
   docker rmi ${DOCKER_URL}
   docker rmi ${DOCKER_URL_LATEST}
+  docker rmi ${DOCKER_URL_LATEST_BRANCH}
   set -e
 
   #report
