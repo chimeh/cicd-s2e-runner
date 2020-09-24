@@ -24,6 +24,4 @@ services:
       - ./democode:/root/democode
       ###########################jenkins-agent
       - ./runner/secrets/jenkins-agent:/home/jenkins-agent
-      ###########################gitlab-runner
-      - ./runner/secrets/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
       ###########################secrets

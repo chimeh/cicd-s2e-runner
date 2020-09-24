@@ -79,7 +79,7 @@ function compose-gen()
   do-cfgmapping runner/secrets/gitlab-runner/config.toml     /etc/gitlab-runner/config.toml
   do-cfgmapping runner/secrets/profile.d/env.sh              /etc/profile.d/env.sh
   do-cfgmapping runner/secrets/maven/settings.xml            /root/.m2/settings.xml
-  do-cfgmapping runner/secrets/docker/config.json            /root/.docker/config.json
+  do-cfgmapping runner/secrets/docker                        /root/.docker
   do-cfgmapping runner/secrets/k8s/                          /root/.kube
   do-cfgmapping runner/secrets/email/mail.rc                  /etc/mail.rc
   do-cfgmapping runner/secrets/jira/acli.properties           /root/.jira/acli.properties
