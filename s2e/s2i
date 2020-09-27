@@ -239,7 +239,11 @@ function do_artifact_build_java()
         mvn clean package deploy ${SONAR_OPT} ${S2I_MVN_OPT}
         exit 0
     else
+        set +e
         mvn clean package ${SONAR_OPT} ${S2I_MVN_OPT}
+        rv=$?
+        set -e
+        if [[ ${rv} -ne 0 ]];then mvn package -U ${SONAR_OPT} ${S2I_MVN_OPT};fi
     fi
     set +e
     mvn dependency:tree -DoutputFile=java-dependency-tree.txt
@@ -490,7 +494,7 @@ function do_deploy_k8s_by_dockerfile()
     rv=$?
     set -e
     if [[ ${rv} -ne 0 ]];then
-        kubectl create  namespace ${K8S_NS}
+        echo kubectl create  namespace ${K8S_NS}
     fi
      
 
@@ -512,6 +516,11 @@ function do_deploy_k8s_by_dockerfile()
 function do_docker_action()
 {
     echo "$FUNCNAME"
+    local action=all
+    if [[ $# -gt 0 ]];then
+       action=$1
+    fi
+    
     
     echo "Detect Dockerfile"
     #DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
@@ -529,14 +538,14 @@ function do_docker_action()
             exit 0
         fi
         echo "########################################## ${ACTION_STAGE}"
-        case ${ACTION_STAGE} in
+        case ${action} in
             docker)
                 do_docker_build_by_dockerfile ${DOCKERFILE}
                 ;;
             deploy)
                 do_deploy_k8s_by_dockerfile ${DOCKERFILE}
                 ;;
-            ACTION_ALL)
+            all)
                 do_docker_build_by_dockerfile ${DOCKERFILE}
                 do_deploy_k8s_by_dockerfile ${DOCKERFILE}
                 ;;
@@ -579,31 +588,31 @@ case ${ACTION_STAGE} in
         do_artifact_build
         ;;
     docker)
-        do_docker_action
+        do_docker_action docker
         ;;
     deploy)
         export DEPLOYMENT_UPDATE_IMG=1
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
-        do_docker_action
+        do_docker_action deploy
         ;;
     deploy-update-default)
         export DEPLOYMENT_UPDATE_IMG=1
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
-        do_docker_action
+        do_docker_action deploy
         ;;
     deploy-update-blue)
         export DEPLOYMENT_UPDATE_IMG=1
         export DEPLOYMENT_DEFAULT=0
         export DEPLOYMENT_BLUE=1
-        do_docker_action
+        do_docker_action deploy
         ;;
     deploy-insert-default)
         export DEPLOYMENT_UPDATE_IMG=0
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
-        do_docker_action
+        do_docker_action deploy
         ;;
     ACTION_ALL*)
         echo "自动检测源码类型，并做artifact 构建，docker 构建, k8s 部署"
@@ -611,7 +620,15 @@ case ${ACTION_STAGE} in
         export DEPLOYMENT_UPDATE_IMG=1
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
-        do_docker_action
+        do_docker_action all
+        # uat env 
+        export K8S_NS=lxc-uat
+        export KUBECONFIG=/root/.kube/uat.config
+        export K8S_DOMAIN_INTERNAL=xd-scrm-uat.nxengine.com
+        export DEPLOYMENT_UPDATE_IMG=0
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
+        do_docker_action deploy
         ;;
     help*)
         echo "${USAGE}"
