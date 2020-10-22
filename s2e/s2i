@@ -34,7 +34,7 @@ USAGE="
     export K8S_NS=default
     export K8S_DOMAIN_INTERNAL=benload.cn
     export K8S_DOMAIN_PUBLIC=bu5-dev.tx
-    export INGRESS_INTERNAL_ENABLED=1
+    export INGRESS_INTERNAL_ENABLE=1
     export INGRESS_PUBLIC_ENABLED=1
     export INGRESS_CLASS_INTERNAL=nginx
     export INGRESS_CLASS_PUBLIC=nginx
@@ -140,8 +140,9 @@ function do_src_get_reponame()
         BUILD_COUNTER="t${BUILD_NUMBER}"
     elif [[ -n ${JENKINS_URL} ]];then
         echo "Jenkins CICD"
-        SRC_BRANCHER_NAME=${BRANCH_NAME:-$(git branch |egrep '\*' |  perl -n -e 'm/[*]\s+\W*(\w+)/g;print $1')}
-        SRC_REPO_NAME=$(git config remote.origin.url | perl -n -e 'm/.+\/([-_\w]+).git/g;print $1')
+#        SRC_BRANCHER_NAME=${BRANCH_NAME:-$(git branch |egrep '\*' |  perl -n -e 'm/[*]\s+\W*(\w+)/g;print $1')}
+        SRC_BRANCHER_NAME=$(echo ${GIT_BRANCH} | perl -n -e 'm/.*\/(\w+)/g;print $1')
+        SRC_REPO_NAME=$(git config remote.origin.url | perl -n -e 'm/.+\/([-_\w]+).git/g;print $1'| tr '_' '-')
         BUILD_COUNTER="j${BUILD_NUMBER}"
     elif [[ -n ${GITLAB_CI} ]];then
         echo "GITLAB CICD"
@@ -169,6 +170,7 @@ function do_src_get_reponame()
     else
       SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
     fi
+    SRC_REPO_NAME=$(echo ${SRC_REPO_NAME} | tr '_' '-')
     
     echo "# SRC_TOP=${SRC_TOP}"
     echo "# SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
@@ -240,7 +242,7 @@ function do_artifact_build_java()
         exit 0
     else
         set +e
-        mvn clean package ${SONAR_OPT} ${S2I_MVN_OPT}
+        mvn clean package ${SONAR_OPT} ${S2I_MVN_OPT} -U
         rv=$?
         set -e
         if [[ ${rv} -ne 0 ]];then mvn package -U ${SONAR_OPT} ${S2I_MVN_OPT};fi
@@ -320,19 +322,21 @@ function do_docker_get_imgurl_by_dockerfile()
     do_src_get_reponame
 
 
-
     if [[ "${DOCKER_THIS_DOCKERFILE}" =~ "." ]];then
       # got bld if dockerfile name is /path/to/Dockerfile.bld
       DOCKER_TAG_SUFFIX=$(echo "${DOCKER_THIS_DOCKERFILE}" | tr '[A-Z]' '[a-z]' | perl -ni -e 's/dockerfile.?(.*)/\1/g;print')
       DOCKER_TAG_DIGIST=$(sha256sum ${DOCKER_THIS_DOCKERFILE} | cut -c -5)
       DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${DOCKER_TAG_SUFFIX}-${DOCKER_TAG_DIGIST}
+      K8S_SVCNAMES=${K8S_SVCNAMES:-${SRC_REPO_NAME}}
     else
-      DOCKER_TAG_SUFFIX=""
-      if [[ "${DOCKERFILE_DIR}" == "${SRC_TOP}" ]];then
+      if [[ "${DOCKERFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
+          DOCKER_TAG_SUFFIX=${DOCKER_TAG_SUFFIX:-""}
           DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_VERSION}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+          K8S_SVCNAMES=${K8S_SVCNAMES:-${SRC_REPO_NAME}}
       else
-          DOCKER_TAG_SUFFIX=$(basename ${DOCKERFILE_DIR})
+          DOCKER_TAG_SUFFIX=${DOCKER_TAG_SUFFIX:-$(basename ${DOCKERFILE_DIR})}
           DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_VERSION}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+          K8S_SVCNAMES=${K8S_SVCNAMES:-$(basename ${DOCKERFILE_DIR})}
       fi
     fi
 
@@ -458,9 +462,6 @@ function do_deploy_k8s_by_dockerfile()
         K8S_DOMAIN_PUBLIC="bu5-idc.benload.com"
     fi
 
-    if [[ -z ${K8S_SVCNAMES} ]];then
-        K8S_SVCNAMES=${SRC_REPO_NAME}
-    fi
     if [[ -n ${K8S_KUBECONFIG} ]];then
         echo "custom kubeconfig, get from K8S_KUBECONFIG"
         export KUBECONFIG=${K8S_KUBECONFIG}
@@ -476,7 +477,18 @@ function do_deploy_k8s_by_dockerfile()
       mkdir -p $(dirname ${KUBECONFIG})
       echo ${K8S_KUBECONFIG_BASE64} |base64 --ignore-garbage --decode > ${KUBECONFIG} 2>/dev/null
     fi
-
+    set +e
+    if [[ -e java-dependency-tree.txt ]];then
+      egrep spring-boot-actuator java-dependency-tree.txt >/dev/null 2>&1
+      rv=$?
+      if [[ ${rv} -eq 0 ]];then
+        export SPRING_BOOT_ACTUATOR=1
+      else
+        export SPRING_BOOT_ACTUATOR=0
+        echo "Cant find actuator on dependency, Please enable spring-boot-actuator!"
+      fi
+    fi
+    set -e
     echo "K8S_AUTOCD=${K8S_AUTOCD}"
     echo "K8S_NS=${K8S_NS}"
     echo "K8S_SVCNAMES=${K8S_SVCNAMES}"
@@ -484,6 +496,7 @@ function do_deploy_k8s_by_dockerfile()
     echo "K8S_KUBECONFIG=${K8S_KUBECONFIG}"
     echo "K8S_DOMAIN_INTERNAL=${K8S_DOMAIN_INTERNAL}"
     echo "K8S_DOMAIN_PUBLIC=${K8S_DOMAIN_PUBLIC}"
+    echo "SPRING_BOOT_ACTUATOR=${SPRING_BOOT_ACTUATOR}"
     echo "##########################################"
 
     kubectl get node
@@ -497,7 +510,6 @@ function do_deploy_k8s_by_dockerfile()
         echo kubectl create  namespace ${K8S_NS}
     fi
      
-
     if [ ${K8S_AUTOCD} -gt 0 ];then
         for SVCNAME in ${K8S_SVCNAMES};do
             set -x
@@ -505,6 +517,14 @@ function do_deploy_k8s_by_dockerfile()
             set +x
             #report
             set +e
+#            kubectl -n ${K8S_NS} set env deployment/${SVCNAME} JAVA_TOOL_OPTIONS=-Dspring.profiles.active=${K8S_NS}
+#             kubectl -n ${K8S_NS} set env deployment/${SVCNAME} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
+#             kubectl -n ${K8S_NS} set env deployment/${SVCNAME} --keys=APM_JAR --from=configmap/java-tool-options
+#             kubectl -n ${K8S_NS} set env deployment/${SVCNAME} --keys=APM_COLLECTOR --from=configmap/java-tool-options
+#             if [[ ${SRC_TYPE} == "java" ]];then
+#               kubectl patch -n ${K8S_NS} deployment/${SVCNAME} --type='json' -p \
+#                 '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
+#             fi
             kubectl get ingress -n ${K8S_NS} |egrep ${SVCNAME} 2>/dev/null
             rv=$?
             set -e
@@ -538,6 +558,7 @@ function do_docker_action()
             exit 0
         fi
         echo "########################################## ${ACTION_STAGE}"
+        do_docker_get_imgurl_by_dockerfile ${DOCKERFILE}
         case ${action} in
             docker)
                 do_docker_build_by_dockerfile ${DOCKERFILE}
@@ -621,14 +642,6 @@ case ${ACTION_STAGE} in
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
         do_docker_action all
-        # uat env 
-        export K8S_NS=lxc-uat
-        export KUBECONFIG=/root/.kube/uat.config
-        export K8S_DOMAIN_INTERNAL=xd-scrm-uat.nxengine.com
-        export DEPLOYMENT_UPDATE_IMG=0
-        export DEPLOYMENT_DEFAULT=1
-        export DEPLOYMENT_BLUE=0
-        do_docker_action deploy
         ;;
     help*)
         echo "${USAGE}"
@@ -651,4 +664,78 @@ case ${ACTION_STAGE} in
         echo "unkown action"
         ;;
 esac
+set +e    
+#do_src_get_reponame
+#    if [[ -z ${K8S_SVCNAMES} ]];then
+#        K8S_SVCNAMES=${SRC_REPO_NAME}
+#    fi
+if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
+       # test env
+        export K8S_NS=lxc-test
+        export KUBECONFIG=/root/.kube/test.config
+        export K8S_DOMAIN_INTERNAL=xd-scrm-test.nxengine.com
+        export DEPLOYMENT_UPDATE_IMG=0
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
+        do_docker_action deploy
+        if [[ ${SRC_TYPE} == "java" ]];then
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
+          kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+            '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
 
+        fi
+         # uat env
+        export K8S_NS=lxc-uat
+        export KUBECONFIG=/root/.kube/uat.config
+        export K8S_DOMAIN_INTERNAL=xd-scrm-uat.nxengine.com
+        export DEPLOYMENT_UPDATE_IMG=0
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
+        do_docker_action deploy
+        if [[ ${SRC_TYPE} == "java" ]];then
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
+          kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+            '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
+        fi 
+        # beta env
+        export K8S_NS=lxc-beta
+        export KUBECONFIG=/root/.kube/.scrm-prd/scrm-prd-tke.config
+        export K8S_DOMAIN_INTERNAL=xd-scrm-beta.nxengine.com
+        export DEPLOYMENT_UPDATE_IMG=1
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
+        set +x
+        do_docker_action deploy
+        set -x
+        kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
+        kubectl -n ${K8S_NS} scale --replicas=0  deployment/${K8S_SVCNAMES}
+        # prd env
+        export K8S_NS=lxc-prd
+        export KUBECONFIG=/root/.kube/.scrm-prd/scrm-prd-tke.config
+        export INGRESS_INTERNAL_ENABLED=0
+        export INGRESS_PUBLIC_ENABLED=0
+        export K8S_DOMAIN_INTERNAL=xd-scrm-prd.nxengine.com
+        export DEPLOYMENT_UPDATE_IMG=0
+        export DEPLOYMENT_DEFAULT=1
+        export DEPLOYMENT_BLUE=0
+        set +x
+        do_docker_action deploy
+        set -x
+        if [[ ${SRC_TYPE} == "java" ]];then
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
+          kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+            '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
+          kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=900m,memory=2048Mi
+        fi 
+        if [[ ${SRC_TYPE} == "java" ]];then
+          kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=900m,memory=2048Mi
+        fi
+        kubectl -n ${K8S_NS} scale --replicas=2  deployment/${K8S_SVCNAMES}
+fi
+set -e

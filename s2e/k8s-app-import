@@ -3,6 +3,7 @@
 #jimin.huang@benload.com
 #jimminh@163.com
 #
+env
 echo "###########################################"
 set -e
 USAGE="
@@ -254,15 +255,20 @@ done
   set +e
   # detect helm version on k8s
   kubectl get pod --all-namespaces |egrep tiller >/dev/null 2>&1
-  rv=$?
+  helm2_rv=$?
+  helm3 list --all-namespaces >/dev/null
+  helm3_rv=$?
   set -e
   set -x
-  if [[ ${rv} -eq 0 ]];then
+  if [[ ${helm3_rv} -eq 0 ]];then
+     # helm 3.x
+     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME} --disable-openapi-validation
+  elif [[ ${helm2_rv} -eq 0 ]];then
      # helm 2.x
      helm2 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME}
   else
-     # helm 3.x
-     helm3 upgrade --force --install  --namespace ${K8S_NS} $(basename ${APPNAME}) ${APPNAME} --disable-openapi-validation
+     # 
+     echo "not support helm3 or helm2, willnot deploy!"
   fi
   set +x
   rm -rf ${APPNAME}
@@ -283,9 +289,11 @@ function do_update_deploy_img() {
         kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}.json
         kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}.json
       fi
+      set -x
       if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME} ${SVCNAME}=${DEFUALT_IMG}
       fi
+      set +x
     fi
     if [[ ${DEPLOYMENT_BLUE} -ne 0 ]];then
       BLUE_IMG=${IMG}
@@ -300,9 +308,11 @@ function do_update_deploy_img() {
         kubectl apply -n ${K8S_NS} -f deploy.${SVCNAME}-blue.json
         kubectl scale -n ${K8S_NS} --replicas=0 -f deploy.${SVCNAME}-blue.json
       fi
+      set -x
       if [[ ${DEPLOYMENT_UPDATE_IMG} -ne 0 ]];then
         kubectl set image -n ${K8S_NS} deployment ${SVCNAME}-blue ${SVCNAME}=${BLUE_IMG}
       fi
+      set +x
     fi
     set -x
 }
@@ -356,4 +366,6 @@ if [[ ${K8S_AUTOCD} -gt 0 ]];then
   fi
 
 fi
-
+set +e
+/bin/rm -rf ${APPNAME}
+set -e
