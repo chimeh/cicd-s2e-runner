@@ -173,6 +173,7 @@ function do_src_get_reponame()
     SRC_REPO_NAME=$(echo ${SRC_REPO_NAME} | tr '_' '-')
     
     echo "# SRC_TOP=${SRC_TOP}"
+    echo "# SRC_TYPE=${SRC_TYPE}"
     echo "# SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
     echo "# SRC_VERSION=${SRC_VERSION}"
     echo "# SRC_REPO_NAME=${SRC_REPO_NAME}"
@@ -194,7 +195,6 @@ function do_src_analysis()
 {
     echo "$FUNCNAME"
     echo "ENABLE_SONAR=${ENABLE_SONAR}"
-    do_src_get_srctype_by_topdir
     
     case ${SRC_TYPE} in
         nodejs)
@@ -274,7 +274,6 @@ function do_artifact_build()
     echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
     echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
 
-    do_src_get_srctype_by_topdir
     case ${SRC_TYPE} in
         nodejs)
             do_artifact_build_nodejs
@@ -601,6 +600,8 @@ export SRC_TOP
 ###################################################################
 
 
+do_src_get_srctype_by_topdir
+do_src_get_reponame
 case ${ACTION_STAGE} in
     anal*)
         do_src_analysis
@@ -669,7 +670,35 @@ set +e
 #    if [[ -z ${K8S_SVCNAMES} ]];then
 #        K8S_SVCNAMES=${SRC_REPO_NAME}
 #    fi
+do_docker_get_imgurl_by_dockerfile ./Dockerfile
+    set +e
+    if [[ -e java-dependency-tree.txt ]];then
+      egrep spring-boot-actuator java-dependency-tree.txt >/dev/null 2>&1
+      rv=$?
+      if [[ ${rv} -eq 0 ]];then
+        export SPRING_BOOT_ACTUATOR=1
+      else
+        export SPRING_BOOT_ACTUATOR=0
+        echo "Cant find actuator on dependency, Please enable spring-boot-actuator!"
+      fi
+    fi
+    set -e
 if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
+       # dev
+       set -x
+        if [[ ${SRC_TYPE} == "java" ]];then
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
+          kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
+          kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+            '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
+            CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
+           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
+             kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+             "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
+           fi
+        fi
+       set +x
        # test env
         export K8S_NS=lxc-test
         export KUBECONFIG=/root/.kube/test.config
@@ -684,8 +713,13 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
-
+            CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
+           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
+             kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+             "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
+           fi
         fi
+#         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=400m,memory=1600Mi
          # uat env
         export K8S_NS=lxc-uat
         export KUBECONFIG=/root/.kube/uat.config
@@ -701,6 +735,7 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
         fi 
+#         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=400m,memory=1600Mi
         # beta env
         export K8S_NS=lxc-beta
         export KUBECONFIG=/root/.kube/.scrm-prd/scrm-prd-tke.config
@@ -731,11 +766,15 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
-          kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=900m,memory=2048Mi
+            CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
+           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
+             kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+             "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
+           fi
         fi 
-        if [[ ${SRC_TYPE} == "java" ]];then
+          set +e 
           kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=900m,memory=2048Mi
-        fi
+          set -e
         kubectl -n ${K8S_NS} scale --replicas=2  deployment/${K8S_SVCNAMES}
 fi
 set -e
