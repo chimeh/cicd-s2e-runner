@@ -238,14 +238,14 @@ function do_artifact_build_java()
         SONAR_OPT=""
     fi
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-        mvn clean package deploy ${SONAR_OPT} ${S2I_MVN_OPT}
+        mvn clean package deploy ${SONAR_OPT} ${S2I_MVN_OPT} -D maven.test.skip=true
         exit 0
     else
         set +e
-        mvn clean package ${SONAR_OPT} ${S2I_MVN_OPT} -U
+        mvn clean package ${SONAR_OPT} ${S2I_MVN_OPT} -U -D maven.test.skip=true
         rv=$?
         set -e
-        if [[ ${rv} -ne 0 ]];then mvn package -U ${SONAR_OPT} ${S2I_MVN_OPT};fi
+        if [[ ${rv} -ne 0 ]];then mvn package -U ${SONAR_OPT} ${S2I_MVN_OPT} -D maven.test.skip=true;fi
     fi
     set +e
     mvn dependency:tree -DoutputFile=java-dependency-tree.txt
@@ -696,6 +696,8 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
            if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
              "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
+             kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+             "[{'op':'add','path':'/spec/template/metadata/annotations', 'value': {'prometheus.io/path':'/actuator/prometheus','prometheus.io/port':\"${CHECK_PORT}\",'prometheus.io/scrape':'true'}}]"
            fi
         fi
        set +x
@@ -713,13 +715,15 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
-            CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
            if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
+            CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
              "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
+             kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+             "[{'op':'add','path':'/spec/template/metadata/annotations', 'value': {'prometheus.io/path':'/actuator/prometheus','prometheus.io/port':\"${CHECK_PORT}\",'prometheus.io/scrape':'true'}}]"
            fi
         fi
-#         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=400m,memory=1600Mi
+#         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=400m,memory=1600Mi
          # uat env
         export K8S_NS=lxc-uat
         export KUBECONFIG=/root/.kube/uat.config
@@ -735,7 +739,7 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
         fi 
-#         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=400m,memory=1600Mi
+#         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=400m,memory=1600Mi
         # beta env
         export K8S_NS=lxc-beta
         export KUBECONFIG=/root/.kube/.scrm-prd/scrm-prd-tke.config
@@ -761,19 +765,24 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
         do_docker_action deploy
         set -x
         if [[ ${SRC_TYPE} == "java" ]];then
+          # config source inject
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
+          # apm inject
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
-            CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
+          # health check inject
            if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
+            CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
              "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
+             kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
+             "[{'op':'add','path':'/spec/template/metadata/annotations', 'value': {'prometheus.io/path':'/actuator/prometheus','prometheus.io/port':\"${CHECK_PORT}\",'prometheus.io/scrape':'true'}}]"
            fi
         fi 
           set +e 
-          kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=cpu=1000m,memory=2048Mi --requests=cpu=900m,memory=2048Mi
+          kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=900m,memory=2048Mi
           set -e
         kubectl -n ${K8S_NS} scale --replicas=2  deployment/${K8S_SVCNAMES}
 fi
