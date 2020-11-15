@@ -52,13 +52,6 @@ if [[ $# -lt 1 ]];then
 else
     SRC_TOP=$(realpath $1)
 fi
-# JONE 相关环境变量存在，执行JONE s2i
-if [[ -n ${JONE_RUN_ENV} ]];then
-    echo "JONE_RUN_ENV=${JONE_RUN_ENV} 非空，执行s2i-jone"
-    exec ${SCRIPT_DIR}/s2i-jone $*
-else
-    echo "单分支s2i"
-fi
 
 if [[ $# -gt 1 ]];then
     ACTION_STAGE=$2
@@ -96,97 +89,115 @@ mkdir -p ${S2I_REPORT_DIR}
 RUNNER_HOME=$(eval echo ~$USER)
 
 cd ${SRC_TOP}
-function do_src_get_srctype_by_topdir()
-{
-    echo "$FUNCNAME"
-    # try to guest java or nodejs, ...
-    echo "try to detect java/nodejs source"
-    DETECT_JAVA="find ${SRC_TOP} -maxdepth 1 -iname pom.xml"
-    DETECT_NODEJS="find ${SRC_TOP} -maxdepth 1 -iname package.json"
-    DETECT_DEFAULT_TOP="find ${SRC_TOP}   -maxdepth 1 -iname .TOP"
-    DETECT_DEFAULT_GIT="find ${SRC_TOP}   -maxdepth 1 -iname .git"
-    eval ${DETECT_JAVA}
-    eval ${DETECT_NODEJS}
-    if [[ -n $(eval ${DETECT_JAVA}) ]];then
-        pom=`echo $(eval ${DETECT_JAVA}) | head -n 1`
-        SRC_TYPE=java
-        echo "SRC_TYPE=${SRC_TYPE}"
-    elif [[ -n $(eval ${DETECT_NODEJS}) ]];then
-        SRC_TYPE=nodejs
-        echo "SRC_TYPE=${SRC_TYPE}"
-    elif [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
-        SRC_TYPE=none
-        echo "SRC_TYPE=${SRC_TYPE}"
-    else
-        SRC_TYPE=none
-        echo "SRC_TYPE=${SRC_TYPE}"
-        SRC_VERSION="v1"
-        echo "Warn can't detect SRC_VERSION !!!!"
-    fi
-    echo "检测为 SRC_TYPE=${SRC_TYPE}"
-    echo CI_PROJECT_REPOSITORY_LANGUAGES=${CI_PROJECT_REPOSITORY_LANGUAGES}
-    if [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
-        PWD_HAVE_DOT_GIT=1
-    else 
-        PWD_HAVE_DOT_GIT=0
-    fi
-    ###################################################################  
-}
 
-function do_src_get_reponame()
-{
-    echo "$FUNCNAME"
-    if [[ -z ${SRC_TOP} ]];then
-        echo "can't detect SRC_TOP"
-        exit 1
+# try to guest java or nodejs, ...
+echo "try to detect java/nodejs source"
+DETECT_JAVA="find ${SRC_TOP} -maxdepth 1 -iname pom.xml"
+DETECT_NODEJS="find ${SRC_TOP} -maxdepth 1 -iname package.json"
+DETECT_DEFAULT_TOP="find ${SRC_TOP}   -maxdepth 1 -iname .TOP"
+DETECT_DEFAULT_GIT="find ${SRC_TOP}   -maxdepth 1 -iname .git"
+eval ${DETECT_JAVA}
+eval ${DETECT_NODEJS}
+if [[ -n $(eval ${DETECT_JAVA}) ]];then
+    pom=`echo $(eval ${DETECT_JAVA}) | head -n 1`
+    SRC_TYPE=java
+    echo "SRC_TYPE=${SRC_TYPE}"
+elif [[ -n $(eval ${DETECT_NODEJS}) ]];then
+    SRC_TYPE=nodejs
+    echo "SRC_TYPE=${SRC_TYPE}"
+elif [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
+    SRC_TYPE=none
+    echo "SRC_TYPE=${SRC_TYPE}"
+else
+    SRC_TYPE=none
+    echo "SRC_TYPE=${SRC_TYPE}"
+fi
+echo "检测为 SRC_TYPE=${SRC_TYPE}"
+echo CI_PROJECT_REPOSITORY_LANGUAGES=${CI_PROJECT_REPOSITORY_LANGUAGES}
+if [[ -n $(eval ${DETECT_DEFAULT_GIT}) ]];then
+    PWD_HAVE_DOT_GIT=1
+else
+    PWD_HAVE_DOT_GIT=0
+fi
+###################################################################
+echo "# SRC_TYPE=${SRC_TYPE}"
+
+
+if [[ -n ${JENKINS_URL} ]];then
+    echo "Jenkins CICD"
+    SRC_REPO_NAME=$(git config remote.origin.url | perl -n -e 'm/.+\/([-_\w]+).git/g;print $1'| tr '_' '-')
+    BUILD_COUNTER="j${BUILD_NUMBER}"
+elif [[ -n ${GITLAB_CI} ]];then
+    echo "GITLAB CICD"
+    SRC_REPO_NAME="${CI_PROJECT_NAME}"
+    BUILD_COUNTER="g${CI_PIPELINE_ID}"
+elif [[ -n ${GITHUB_ACTIONS} ]];then
+    echo "GITHUB CICD"
+    SRC_REPO_NAME=$(basename $(realpath ${CI_PROJECT_PATH}))
+    BUILD_COUNTER="$(date +%Y%m%d)"
+else
+    echo "manual CICD"
+    SRC_REPO_NAME=$(basename $(realpath ${CI_PROJECT_PATH}))
+    BUILD_COUNTER="c1"
+fi
+SRC_REPO_NAME=$(echo ${SRC_REPO_NAME} | tr '_' '-')
+SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
+
+ # 基线分支设置为master
+BR_BASELINE=master
+## jone, aone 模式
+if [[ -z ${JONE_BRANCH_FEATRUE} ]];then
+# 特性分支为空时，集成部署分支名设置为master
+  CI_DST_BRANCHER_NAME=master-$(date +%Y%m%d)-${BUILD_NUMBER}
+elif [[ ${JONE_BRANCH_FEATRUE} =~ .*master ]] || [[ ${JONE_BRANCH_FEATRUE} =~ .*release* ]];then
+ # 特性分支不为空，且包含master或release报错
+ echo "特性分支不允许包含master，因为jone分支模型做分支集成时，基线分支就是master。"
+ echo "过程是从master最新拉取一个集成分支，然后依次把特性分支merge，再构建, 再部署"
+ exit -1
+elif [[ -n ${JONE_BRANCH_FEATRUE} ]] ;then
+ # 特性分支不为空, 且不包含master 或者release
+    BRS_FEATURE=($(echo ${JONE_BRANCH_FEATRUE} | perl -n  -e 'my $br=$_;my @brs= split /\,/, $br; foreach(@brs) { print  " $_\n"}' | egrep -v "master|release"))
+    BRS_FEATURE_NUM=${#BRS_FEATURE[*]}
+
+    if [[ ${BRS_FEATURE_NUM} -lt 1 ]];then
+        echo "BRS_FEATURE_NUM=${BRS_FEATURE_NUM}"
+        echo "JONE_BRANCH_FEATRUE=${JONE_BRANCH_FEATRUE}"
+        echo "Warn, JONE_BRANCH_FEATRUE 特性分支为空，（分支名中不含master，不含release）"
     fi
-    if [[ -n ${TEAMCITY_GIT_PATH} ]];then
-        echo "Teamcity CICD"
-        SRC_BRANCHER_NAME=${BRANCH_NAME:-$(git branch |egrep '\*' |  perl -n -e 'm/[*]\s+\W*(\w+)/g;print $1')}
-        SRC_REPO_NAME=${TEAMCITY_BUILDCONF_NAME}
-        BUILD_COUNTER="t${BUILD_NUMBER}"
-    elif [[ -n ${JENKINS_URL} ]];then
-        echo "Jenkins CICD"
-#        SRC_BRANCHER_NAME=${BRANCH_NAME:-$(git branch |egrep '\*' |  perl -n -e 'm/[*]\s+\W*(\w+)/g;print $1')}
-        SRC_BRANCHER_NAME=$(echo ${GIT_BRANCH} | perl -n -e 'm/.*\/(\w+)/g;print $1')
-        SRC_REPO_NAME=$(git config remote.origin.url | perl -n -e 'm/.+\/([-_\w]+).git/g;print $1'| tr '_' '-')
-        BUILD_COUNTER="j${BUILD_NUMBER}"
-    elif [[ -n ${GITLAB_CI} ]];then
-        echo "GITLAB CICD"
-        SRC_BRANCHER_NAME=${CI_COMMIT_REF_SLUG}
-        SRC_REPO_NAME="${CI_PROJECT_NAME}"
-        BUILD_COUNTER="g${CI_PIPELINE_ID}"
-    elif [[ -n ${GITHUB_ACTIONS} ]];then
-        echo "GITHUB CICD"
-        SRC_BRANCHER_NAME=$(git branch |egrep '\*' |  perl -n -e 'm/[*]\s+\W*(\w+)/g;print $1')
-        SRC_REPO_NAME=$(basename $(realpath ${CI_PROJECT_PATH}))
-        BUILD_COUNTER="$(date +%Y%m%d)"
+    if [[ "${JONE_BRANCH_BASE}" == "" ]];then
+        echo "JONE_BRANCH_BASE 请选择一个基线分支，（分支名中含master或者含release）"
+        echo "JONE_BRANCH_BASE=${JONE_BRANCH_BASE}"
+        echo "JONE_BRANCH_BASE 为空, 使用默认基线 master "
+        BR_BASELINE=origin/master
     else
-        echo "manual CICD"
-        SRC_BRANCHER_NAME=$(git branch |egrep '\*' |  perl -n -e 'm/[*]\s+\W*(\w+)/g;print $1')
-        SRC_REPO_NAME=$(basename $(realpath ${CI_PROJECT_PATH}))
-        BUILD_COUNTER="c1"
+       # 基线分支, 只能master 和各release分支的一个分支
+       BR_BASELINE=$(echo ${JONE_BRANCH_BASE} | perl -n  -e 'my $br=$_;my @brs= split /\,/, $br; foreach(@brs) { print  " $_\n"}' | egrep "master|release"| head -n 1)
     fi
     if [[ -f ${SRC_TOP}/VERSION ]]; then
         SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION | perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*).?(0|[1-9][0-9]*)*)/;print $1')
     else
         SRC_VERSION=$(date +%Y%m%d)
     fi
-    if [[ -n ${CI_COMMIT_SHORT_SHA} ]];then
-      SRC_GIT_COMMIT_ID=${CI_COMMIT_SHORT_SHA}
-    else
-      SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
-    fi
-    SRC_REPO_NAME=$(echo ${SRC_REPO_NAME} | tr '_' '-')
     
-    echo "# SRC_TOP=${SRC_TOP}"
-    echo "# SRC_TYPE=${SRC_TYPE}"
-    echo "# SRC_BRANCHER_NAME=${SRC_BRANCHER_NAME}"
-    echo "# SRC_VERSION=${SRC_VERSION}"
-    echo "# SRC_REPO_NAME=${SRC_REPO_NAME}"
-    echo "# SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
-    echo "# BUILD_COUNTER=${BUILD_COUNTER}"
-}
+   # 特性分支不为空时，集成部署分支设置为选取的环境 
+    CI_DST_BRANCHER_NAME="jone/$(echo ${JONE_RUN_ENV}| tr -d '_-')-$(date +%Y%m%d)-${BUILD_NUMBER}"
+    SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
+    BUILD_COUNTER=${BUILD_COUNTER}
+fi
+       
+echo "# SRC_TOP=${SRC_TOP}"
+
+echo "JONE_BRANCH_BASE=${JONE_BRANCH_BASE}"
+echo "JONE_BRANCH_FEATRUE=${JONE_BRANCH_FEATRUE}"
+echo "# BR_BASELINE=${BR_BASELINE}"
+echo '# ${BRS_FEATURE[*]}'"=${BRS_FEATURE[*]}"
+echo "# BRS_FEATURE_NUM=${BRS_FEATURE_NUM}"
+
+echo "# CI_DST_BRANCHER_NAME=${CI_DST_BRANCHER_NAME}"
+echo "# SRC_VERSION=${SRC_VERSION}"
+echo "# SRC_REPO_NAME=${SRC_REPO_NAME}"
+echo "# SRC_GIT_COMMIT_ID=${SRC_GIT_COMMIT_ID}"
+echo "# BUILD_COUNTER=${BUILD_COUNTER}"
 
 function do_src_analysis_nodejs()
 {
@@ -202,7 +213,7 @@ function do_src_analysis()
 {
     echo "$FUNCNAME"
     echo "ENABLE_SONAR=${ENABLE_SONAR}"
-    
+
     case ${SRC_TYPE} in
         nodejs)
             echo "nodejs,"
@@ -226,13 +237,35 @@ function do_src_analysis()
             ;;
     esac
 }
-
+function do_branch_jone_merge() {
+    echo "##########################################"
+    echo "分支集成开始："
+    echo "从${BR_BASELINE} 检出 ${CI_DST_BRANCHER_NAME}"
+    git checkout -f ${BR_BASELINE}
+    git checkout -b ${CI_DST_BRANCHER_NAME}
+    for br in ${BRS_FEATURE[*]};do
+        F_COMMITID=$(git rev-parse ${br})
+        echo "合并特性分支 ${br} ${F_COMMITID}"
+        git merge --no-edit -s recursive -Xignore-space-at-eol --no-ff ${F_COMMITID} 2>&1
+    done
+    echo "分支集成完毕"
+    SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
+    set +e
+    if [[  "${JONE_RUN_ENV}" =~ "uat" ]] || [[ "${JONE_RUN_ENV}" =~ "prd" ]];then
+        git push --set-upstream origin ${CI_DST_BRANCHER_NAME} >/dev/null 2>&1
+    fi
+    set -e
+    echo "##########################################"
+    
+}
+#        
 function do_artifact_build_nodejs()
 {
     echo "$FUNCNAME"
 }
 function do_artifact_build_java()
 {
+     do_branch_jone_merge
     echo "$FUNCNAME"
     if [[ ${ENABLE_SONAR} -ne 0 ]];then
         if [[ ${PWD_HAVE_DOT_GIT} -eq 1 ]];then
@@ -245,7 +278,7 @@ function do_artifact_build_java()
         SONAR_OPT=""
     fi
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
-        mvn clean package deploy ${SONAR_OPT} ${S2I_MVN_OPT} -D maven.test.skip=true
+        mvn clean package deploy ${SONAR_OPT} ${S2I_MVN_OPT} -D maven.test.skip=true -U
         exit 0
     else
         set +e
@@ -271,7 +304,6 @@ function do_artifact_build_java()
 function do_artifact_build()
 {
     echo "$FUNCNAME"
-    echo "自动检测源码类型，并做artifact 构建"
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
         ARTIFACT_DEPLOY=1
     else
@@ -307,7 +339,7 @@ function do_docker_get_imgurl_by_dockerfile()
       echo ".git" > .dockerignore
     fi
     DOCKER_THIS_DOCKERFILE=$(realpath $1)
-    
+
     echo "DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
     if [[ -z ${DOCKER_THIS_DOCKERFILE} ]];then
         echo "can't detect Dockerfile"
@@ -325,26 +357,26 @@ function do_docker_get_imgurl_by_dockerfile()
     if [[ "" == "${DOCKER_NS}" ]];then
     DOCKER_NS="default"
     fi
-    do_src_get_reponame
 
 
     if [[ "${DOCKER_THIS_DOCKERFILE}" =~ "." ]];then
       # got bld if dockerfile name is /path/to/Dockerfile.bld
       DOCKER_TAG_SUFFIX=$(echo "${DOCKER_THIS_DOCKERFILE}" | tr '[A-Z]' '[a-z]' | perl -ni -e 's/dockerfile.?(.*)/\1/g;print')
       DOCKER_TAG_DIGIST=$(sha256sum ${DOCKER_THIS_DOCKERFILE} | cut -c -5)
-      DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${DOCKER_TAG_SUFFIX}-${DOCKER_TAG_DIGIST}
+      DOCKER_IMG_TAG=${CI_DST_BRANCHER_NAME}-${DOCKER_TAG_SUFFIX}-${DOCKER_TAG_DIGIST}
       K8S_SVCNAMES=${K8S_SVCNAMES:-${SRC_REPO_NAME}}
     else
       if [[ "${DOCKERFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
           DOCKER_TAG_SUFFIX=${DOCKER_TAG_SUFFIX:-""}
-          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_VERSION}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+          DOCKER_IMG_TAG=${CI_DST_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
           K8S_SVCNAMES=${K8S_SVCNAMES:-${SRC_REPO_NAME}}
       else
           DOCKER_TAG_SUFFIX=${DOCKER_TAG_SUFFIX:-$(basename ${DOCKERFILE_DIR})}
-          DOCKER_IMG_TAG=${SRC_BRANCHER_NAME}-${SRC_VERSION}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+          DOCKER_IMG_TAG=${CI_DST_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
           K8S_SVCNAMES=${K8S_SVCNAMES:-$(basename ${DOCKERFILE_DIR})}
       fi
     fi
+    DOCKER_IMG_TAG=$(echo ${DOCKER_IMG_TAG} | tr '/' '-')
 
     DOCKER_URL_1=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
     # all img push to test with diff tag, because should have testing, then retag after tested
@@ -356,13 +388,13 @@ function do_docker_get_imgurl_by_dockerfile()
       DOCKER_URL=${DOCKER_URL_2}
     fi
     DOCKER_SVC_PORTS=$(egrep EXPOSE -i ${DOCKER_THIS_DOCKERFILE}|egrep -v '#' |awk '{print $2}'| awk '{for(i=1;i<=NF;i++){printf "%s,", $i}}' |   perl -ne 's/(.+)\,$/\1/g;print' )
-    
+
     if [[ -z ${DOCKER_SVC_PORTS} ]];then
         echo "NO EXPOSE in ${DOCKERFILE}"
         DOCKER_SVC_PORTS=""
     fi
-    DOCKER_URL_LATEST=$(echo ${DOCKER_URL} |perl -ni -e '{s|(.+):.+|\1:latest|;print}')
-    DOCKER_URL_LATEST_BRANCH=$(echo ${DOCKER_URL} |perl -ni -e "{s|(.+):.+|\1:latest-${SRC_BRANCHER_NAME}|;print}")
+    DOCKER_URL_LATEST=$(echo ${DOCKER_URL} |perl -ni -e '{s|(.+):.+|\1:latest|;print}' )
+    DOCKER_URL_LATEST_BRANCH=$(echo ${DOCKER_URL} |perl -ni -e "{s|(.+):.+|\1:latest-$(echo ${CI_DST_BRANCHER_NAME} | tr -d '/')|;print}")
 
     echo "# DOCKER_SVC_PORTS=${DOCKER_SVC_PORTS}"
     echo "# DOCKER_THIS_DOCKERFILE=${DOCKER_THIS_DOCKERFILE}"
@@ -514,8 +546,10 @@ function do_deploy_k8s_by_dockerfile()
     set -e
     if [[ ${rv} -ne 0 ]];then
         echo kubectl create  namespace ${K8S_NS}
+        echo "Error, namespace ${K8S_NS} not exist"
+        exit 1
     fi
-     
+
     if [ ${K8S_AUTOCD} -gt 0 ];then
         for SVCNAME in ${K8S_SVCNAMES};do
             set -x
@@ -546,8 +580,8 @@ function do_docker_action()
     if [[ $# -gt 0 ]];then
        action=$1
     fi
-    
-    
+
+
     echo "Detect Dockerfile"
     #DETECT_DOCKERFILE="find ${SRC_TOP}   -maxdepth 1 -iname Dockerfile | sort"
     if [[ ${S2I_MUTI_DOCKERFILE} -gt 0 ]];then
@@ -607,8 +641,6 @@ export SRC_TOP
 ###################################################################
 
 
-do_src_get_srctype_by_topdir
-do_src_get_reponame
 case ${ACTION_STAGE} in
     anal*)
         do_src_analysis
@@ -644,12 +676,11 @@ case ${ACTION_STAGE} in
         do_docker_action deploy
         ;;
     ACTION_ALL*)
-        echo "自动检测源码类型，并做artifact 构建，docker 构建, k8s 部署"
         do_artifact_build
         export DEPLOYMENT_UPDATE_IMG=1
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
-        do_docker_action all
+        do_docker_action docker
         ;;
     help*)
         echo "${USAGE}"
@@ -672,11 +703,8 @@ case ${ACTION_STAGE} in
         echo "unkown action"
         ;;
 esac
-set +e    
-#do_src_get_reponame
-#    if [[ -z ${K8S_SVCNAMES} ]];then
-#        K8S_SVCNAMES=${SRC_REPO_NAME}
-#    fi
+set +e
+
 do_docker_get_imgurl_by_dockerfile ./Dockerfile
     set +e
     if [[ -e java-dependency-tree.txt ]];then
@@ -692,6 +720,7 @@ do_docker_get_imgurl_by_dockerfile ./Dockerfile
     set -e
 if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
        # dev
+  if [[  "${JONE_RUN_ENV}" =~ "dev" ]];then
        set -x
         if [[ ${SRC_TYPE} == "java" ]];then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
@@ -707,12 +736,17 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
              "[{'op':'add','path':'/spec/template/metadata/annotations', 'value': {'prometheus.io/path':'/actuator/prometheus','prometheus.io/port':\"${CHECK_PORT}\",'prometheus.io/scrape':'true'}}]"
            fi
         fi
+  fi
        set +x
+  if [[  "${JONE_RUN_ENV}" =~ "test" ]];then
        # test env
         export K8S_NS=lxc-test
         export KUBECONFIG=/root/.kube/test.config
         export K8S_DOMAIN_INTERNAL=xd-scrm-test.nxengine.com
         export DEPLOYMENT_UPDATE_IMG=0
+        if [[  "${JONE_RUN_ENV}" =~ "test" ]];then
+        export DEPLOYMENT_UPDATE_IMG=1
+        fi
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
         do_docker_action deploy
@@ -730,12 +764,17 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
              "[{'op':'add','path':'/spec/template/metadata/annotations', 'value': {'prometheus.io/path':'/actuator/prometheus','prometheus.io/port':\"${CHECK_PORT}\",'prometheus.io/scrape':'true'}}]"
            fi
         fi
+  fi
 #         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=400m,memory=1600Mi
+  if [[  "${JONE_RUN_ENV}" =~ "uat" ]];then
          # uat env
         export K8S_NS=lxc-uat
         export KUBECONFIG=/root/.kube/uat.config
         export K8S_DOMAIN_INTERNAL=xd-scrm-uat.nxengine.com
         export DEPLOYMENT_UPDATE_IMG=0
+        if [[  "${JONE_RUN_ENV}" =~ "uat" ]];then
+        export DEPLOYMENT_UPDATE_IMG=1
+        fi
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
         do_docker_action deploy
@@ -745,11 +784,13 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
-        fi 
+        fi
 #         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=400m,memory=1600Mi
         # beta env
         export K8S_NS=lxc-beta
         export KUBECONFIG=/root/.kube/.scrm-prd/scrm-prd-tke.config
+        export INGRESS_INTERNAL_ENABLED=0
+        export INGRESS_PUBLIC_ENABLED=0
         export K8S_DOMAIN_INTERNAL=xd-scrm-beta.nxengine.com
         export DEPLOYMENT_UPDATE_IMG=1
         export DEPLOYMENT_DEFAULT=1
@@ -759,6 +800,8 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
         set -x
         kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
         kubectl -n ${K8S_NS} scale --replicas=0  deployment/${K8S_SVCNAMES}
+  fi
+  if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
         # prd env
         export K8S_NS=lxc-prd
         export KUBECONFIG=/root/.kube/.scrm-prd/scrm-prd-tke.config
@@ -766,6 +809,9 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
         export INGRESS_PUBLIC_ENABLED=0
         export K8S_DOMAIN_INTERNAL=xd-scrm-prd.nxengine.com
         export DEPLOYMENT_UPDATE_IMG=0
+        if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
+        export DEPLOYMENT_UPDATE_IMG=1
+        fi 
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
         set +x
@@ -787,10 +833,11 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
              "[{'op':'add','path':'/spec/template/metadata/annotations', 'value': {'prometheus.io/path':'/actuator/prometheus','prometheus.io/port':\"${CHECK_PORT}\",'prometheus.io/scrape':'true'}}]"
            fi
-        fi 
-          set +e 
+        fi
+          set +e
           kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=900m,memory=2048Mi
           set -e
         kubectl -n ${K8S_NS} scale --replicas=2  deployment/${K8S_SVCNAMES}
+  fi
 fi
 set -e
