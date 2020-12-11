@@ -53,11 +53,25 @@ else
     SRC_TOP=$(realpath $1)
 fi
 # JONE 相关环境变量存在，执行JONE s2i
+echo -e "\n\n"
 if [[ -n ${JONE_RUN_ENV} ]];then
-    echo "JONE_RUN_ENV=${JONE_RUN_ENV} 非空，执行s2i-jone"
+    echo "JONE_RUN_ENV=${JONE_RUN_ENV} 非空，执行s2i-jone 分支模型 CICD"
+    echo "你本次部署的源码是，以master基线分支拉取临时分支，依次把${JONE_BRANCH_FEATRUE} 合并后的代码"
+    echo "你本次部署 到 ${JONE_RUN_ENV} 环境"
+    if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
+      echo "部署prd"
+      export ENABLE_SONAR=0
+      export DOCKER_TAG_SUFFIX="${DOCKER_TAG_SUFFIX}-$(date +%Y%m%d)"
+    elif [[  "${JONE_RUN_ENV}" =~ "test" ]];then
+      export ENABLE_SONAR=1
+    else
+      export ENABLE_SONAR=0
+    fi
     exec ${SCRIPT_DIR}/s2i-jone $*
+    echo -e "\n\n"
 else
-    echo "单分支s2i"
+    echo "单分支 CICD s2i"
+    echo -e "\n\n"
 fi
 
 if [[ $# -gt 1 ]];then
@@ -165,7 +179,7 @@ function do_src_get_reponame()
         echo "manual CICD"
         SRC_BRANCHER_NAME=$(git branch |egrep '\*' |  perl -n -e 'm/[*]\s+\W*(\w+)/g;print $1')
         SRC_REPO_NAME=$(basename $(realpath ${CI_PROJECT_PATH}))
-        BUILD_COUNTER="c1"
+        BUILD_COUNTER="${BUILD_COUNTER:-c1}"
     fi
     if [[ -f ${SRC_TOP}/VERSION ]]; then
         SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION | perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*).?(0|[1-9][0-9]*)*)/;print $1')
@@ -236,11 +250,11 @@ function do_artifact_build_java()
     echo "$FUNCNAME"
     if [[ ${ENABLE_SONAR} -ne 0 ]];then
         if [[ ${PWD_HAVE_DOT_GIT} -eq 1 ]];then
-            SONAR_KEY="$(echo ${CI_PROJECT_PATH}| tr / .)"
+            SONAR_KEY="$(git config --get remote.origin.url | perl -ne 's|https?://(.+)|\1|g;print'| tr -d ':'| tr / .)"
         else
-            SONAR_KEY="$(echo ${CI_PROJECT_PATH}-$(basename $PWD)| tr / .)"
+            SONAR_KEY="$(echo $(basename ${CI_PROJECT_PATH})| tr / .)"
         fi
-        SONAR_OPT="sonar:sonar -Dsonar.projectKey=${SONAR_KEY} -Dsonar.projectName=${SONAR_KEY}"
+        SONAR_OPT="sonar:sonar -Dsonar.projectKey=${SONAR_KEY} -Dsonar.projectName=$(basename ${SRC_TOP})  -Dsonar.branch.name=${SRC_BRANCHER_NAME}"
     else
         SONAR_OPT=""
     fi
@@ -252,7 +266,7 @@ function do_artifact_build_java()
         mvn clean package ${SONAR_OPT} ${S2I_MVN_OPT} -U -D maven.test.skip=true
         rv=$?
         set -e
-        if [[ ${rv} -ne 0 ]];then mvn package -U ${SONAR_OPT} ${S2I_MVN_OPT} -D maven.test.skip=true;fi
+        if [[ ${rv} -ne 0 ]];then mvn package -U ${SONAR_OPT} ${S2I_MVN_OPT} -D maven.test.skip=true -X;fi
     fi
     set +e
     mvn dependency:tree -DoutputFile=java-dependency-tree.txt
@@ -265,6 +279,20 @@ function do_artifact_build_java()
     else
       export SPRING_BOOT_ACTUATOR=0
       echo "Cant find actuator on dependency, Please enable spring-boot-actuator!"
+    fi
+    egrep micrometer-registry-prometheus java-dependency-tree.txt >/dev/null 2>&1
+    rv0=$?
+    egrep spring-boot-starter-actuator java-dependency-tree.txt >/dev/null 2>&1
+    rv1=$?
+#    egrep apm-toolkit-trace java-dependency-tree.txt >/dev/null 2>&1
+    rv2=$?
+    rv=$((${rv0} + ${rv1} + ${rv2}))
+    if [[ ! ${rv} -eq 0 ]] && [[ ! ${SRC_REPO_NAME} =~ "gateway" ]] && [[ ! ${SRC_REPO_NAME} =~ "scrm-common-sdk" ]];then
+      echo "错误,检测到不满足cicd 规范。"
+      echo "需要引入micrometer-registry-prometheus spring-boot-starter-actuator 依赖，满足java 应用监控的需求"
+      echo "需要引入 org.apache.skywalking:apm-toolkit-logback-1.x org.apache.skywalking:apm-toolkit-trace"
+      echo "参考 https://git.code.tencent.com/cicd-refer/cicd-java-refer/blob/master/pom.xml, 并修改您的pom.xml"
+      exit  1
     fi
     set -e
 }
@@ -722,8 +750,8 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
-           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
             CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
+           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
              "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
@@ -780,8 +808,8 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
             '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
           # health check inject
-           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
             CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
+           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
              "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \

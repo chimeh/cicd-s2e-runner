@@ -144,11 +144,17 @@ SRC_REPO_NAME=$(echo ${SRC_REPO_NAME} | tr '_' '-')
 SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
 
  # 基线分支设置为master
-BR_BASELINE=master
+JONE_BRANCH_BASE=origin/master
+if [[ "${SRC_REPO_NAME}" =~ "scrm-common-sdk" ]];then
+  echo "scrm-common-sdk 比价特别，不使用任何基线"
+  JONE_BRANCH_BASE=${JONE_BRANCH_FEATRUE}
+fi
+BR_BASELINE=${JONE_BRANCH_BASE}
 ## jone, aone 模式
 if [[ -z ${JONE_BRANCH_FEATRUE} ]];then
 # 特性分支为空时，集成部署分支名设置为master
   CI_DST_BRANCHER_NAME=master-$(date +%Y%m%d)-${BUILD_NUMBER}
+  UNSTABLE=''
 elif [[ ${JONE_BRANCH_FEATRUE} =~ .*master ]] || [[ ${JONE_BRANCH_FEATRUE} =~ .*release* ]];then
  # 特性分支不为空，且包含master或release报错
  echo "特性分支不允许包含master，因为jone分支模型做分支集成时，基线分支就是master。"
@@ -156,6 +162,7 @@ elif [[ ${JONE_BRANCH_FEATRUE} =~ .*master ]] || [[ ${JONE_BRANCH_FEATRUE} =~ .*
  exit -1
 elif [[ -n ${JONE_BRANCH_FEATRUE} ]] ;then
  # 特性分支不为空, 且不包含master 或者release
+    UNSTABLE='unstable-'
     BRS_FEATURE=($(echo ${JONE_BRANCH_FEATRUE} | perl -n  -e 'my $br=$_;my @brs= split /\,/, $br; foreach(@brs) { print  " $_\n"}' | egrep -v "master|release"))
     BRS_FEATURE_NUM=${#BRS_FEATURE[*]}
 
@@ -171,7 +178,8 @@ elif [[ -n ${JONE_BRANCH_FEATRUE} ]] ;then
         BR_BASELINE=origin/master
     else
        # 基线分支, 只能master 和各release分支的一个分支
-       BR_BASELINE=$(echo ${JONE_BRANCH_BASE} | perl -n  -e 'my $br=$_;my @brs= split /\,/, $br; foreach(@brs) { print  " $_\n"}' | egrep "master|release"| head -n 1)
+       # BR_BASELINE=$(echo ${JONE_BRANCH_BASE} | perl -n  -e 'my $br=$_;my @brs= split /\,/, $br; foreach(@brs) { print  " $_\n"}' | egrep "master|release"| head -n 1)
+       echo "${BR_BASELINE}"
     fi
     if [[ -f ${SRC_TOP}/VERSION ]]; then
         SRC_VERSION=$(head -n 1 ${SRC_TOP}/VERSION | perl -ne '$_ =~ /((0|[1-9][0-9]*).(0|[1-9][0-9]*).?(0|[1-9][0-9]*)*)/;print $1')
@@ -180,19 +188,47 @@ elif [[ -n ${JONE_BRANCH_FEATRUE} ]] ;then
     fi
     
    # 特性分支不为空时，集成部署分支设置为选取的环境 
-    CI_DST_BRANCHER_NAME="jone/$(echo ${JONE_RUN_ENV}| tr -d '_-')-$(date +%Y%m%d)-${BUILD_NUMBER}"
+   # 需要push回git server的集成分支名，不引入动态变化变量，保障多个特性分支名的集成分支唯一
+    CI_DST_BRANCHER_NAME="i-$(echo ${JONE_RUN_ENV}| tr -d '_-')-${BRS_FEATURE_NUM}-$(echo ${JONE_BRANCH_FEATRUE}| tr ',' '_' |perl -ne 's|origin/||g;print')"
+    if [[ ${JONE_RUN_ENV} =~ "dev" ]] || [[ ${JONE_RUN_ENV} =~ "test" ]];then
+    # 目的地为dev，或者 test时，增加动态变量，防止分支已存在
+        CI_DST_BRANCHER_NAME=${CI_DST_BRANCHER_NAME}-${BUILD_COUNTER}   
+    fi
     SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
     BUILD_COUNTER=${BUILD_COUNTER}
+fi
+TAG_BR_BASE="$(echo ${JONE_BRANCH_BASE} | perl -ne 's|origin/||g;print')-$(git rev-parse --short ${JONE_BRANCH_BASE})"
+if [[ ${BRS_FEATURE_NUM} -gt 0 ]];then
+    TAG_BR_FEATURES="-${BRS_FEATURE_NUM}-$(echo ${JONE_BRANCH_FEATRUE}| tr ',' '_' |perl -ne 's|origin/||g;print')"
+    for br in ${BRS_FEATURE[*]};do
+        TAG_BR_FEATURES=${TAG_BR_FEATURES}-$(git rev-parse --short ${br}) 
+        if ! [[ "$(echo ${br} |perl -ne 's|origin/||g;print')" =~ (feature|bugfix) ]];then
+           echo "\n\n"
+           echo "你好，分支名 ${br} 不符合分支命名规范:"
+           echo "新功能、新特性分支的分支名必须feature开头，比如  feature-xxx 或者 feature-xx-STROYID等"
+           echo "解决生产环境bug拉取的分支必须bugfix开头，比如  bugfix-xxx 或者 feature-xx-JIRAID等"
+           echo "\n\n"
+           echo "tips: 啥叫feature 分支： 就是那些还没有部署进生产环境的新功能代码分支，就是还没合入master的新功能分支"
+           echo "feature 分支会部署dev、test环境。dev、test发现的缺陷继续在feature上解决,直到可以合入master，然后删除"
+           echo "feature 分支或者bugfix分支合入master后请及时删除"
+#           exit 1
+        fi
+    done
+elif [[ ${BRS_FEATURE_NUM} -eq 0 ]] &&  [[ ! ${JONE_RUN_ENV} =~ 'prd' ]];then
+    # 不选特性分支，且部署到非生产
+     TAG_BR_FEATURES="-$(date +%Y%m%d)-${BUILD_COUNTER}"
 fi
        
 echo "# SRC_TOP=${SRC_TOP}"
 
 echo "JONE_BRANCH_BASE=${JONE_BRANCH_BASE}"
 echo "JONE_BRANCH_FEATRUE=${JONE_BRANCH_FEATRUE}"
+
 echo "# BR_BASELINE=${BR_BASELINE}"
 echo '# ${BRS_FEATURE[*]}'"=${BRS_FEATURE[*]}"
 echo "# BRS_FEATURE_NUM=${BRS_FEATURE_NUM}"
-
+echo "# TAG_BR_BASE=${TAG_BR_BASE}"
+echo "# TAG_BR_FEATURES=${TAG_BR_FEATURES}"
 echo "# CI_DST_BRANCHER_NAME=${CI_DST_BRANCHER_NAME}"
 echo "# SRC_VERSION=${SRC_VERSION}"
 echo "# SRC_REPO_NAME=${SRC_REPO_NAME}"
@@ -240,20 +276,57 @@ function do_src_analysis()
 function do_branch_jone_merge() {
     echo "##########################################"
     echo "分支集成开始："
-    echo "从${BR_BASELINE} 检出 ${CI_DST_BRANCHER_NAME}"
+    echo "从生产环境对应的基线分支${BR_BASELINE} 检出 ${CI_DST_BRANCHER_NAME}"
+    prev_br=${BR_BASELINE}
     git checkout -f ${BR_BASELINE}
+    set +e
     git checkout -b ${CI_DST_BRANCHER_NAME}
+    set -e
     for br in ${BRS_FEATURE[*]};do
+        if [[ ${JONE_RUN_ENV} =~ "prd" ]];then
+            echo "部署prd 生产只能由默认基线分支(master)部署，不允许选择任何特性分支"
+            echo "特性分支只能先部署到uat, 并将自动生成的uat集成分支人工合并到master, 再部署到prd生产"
+            exit 1
+        fi
         F_COMMITID=$(git rev-parse ${br})
-        echo "合并特性分支 ${br} ${F_COMMITID}"
+        echo "临时合并feature或bugfix分支 ${br} ${F_COMMITID}"
+        set +e
         git merge --no-edit -s recursive -Xignore-space-at-eol --no-ff ${F_COMMITID} 2>&1
+        rv=$?
+        set -e
+        if [[ ${rv} -ne 0 ]];then
+          echo "冲突内容如下:"
+          git diff | cat
+          echo -e "\n\n\n"
+          echo "多个特性分支冲突解决建议："
+          echo "修改冲突的文件的人拉在一起沟通一下，由某一个人汇总修改，修改好了后发给所有需要修改这个文件的人，都提交一遍自己的分支，这样就不会冲突了"
+          echo "场景举例：多个特性分支，每个特性都要修改pom.xml 容易冲突。比较好的处理办法是：这种情况多个feature分支的人沟通一下，由某一个人改好pom.xml，发个各个feature分支的人都提交一遍就不会冲突了。"
+          echo -e "\n\n"
+          echo "多个特性分支开发工程实践建议: "
+          echo "1. 冲突避免: 两个新特性实现, 代码修设法体现成两个目录、两个文件。尽量避免修改同个文件"
+          echo "2. 冲突避免：避免修改同个文件的，尽量两个特性之间不同方法。"
+          echo "3. 必须要修改同一个文件同一行的，多沟通，最好由其中一个人修改好,各个分支提交一遍"
+          echo -e  "\n\n\n"
+          echo "和master冲突解决参考命令# "
+          echo "git checkout ${F_COMMITED}"
+          echo "git merge ${BR_BASELINE}"
+          echo "解决冲突"
+          echo "git commit"
+          echo "git push"
+          exit 1
+        fi
     done
     echo "分支集成完毕"
+    echo "你本次部署到 ${JONE_RUN_ENV} 的应用将是 ${BR_BASELINE}分支 先后合入 ${BRS_FEATURE[*]}分支的代码编译出来的镜像"
     SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
     set +e
-    if [[  "${JONE_RUN_ENV}" =~ "uat" ]] || [[ "${JONE_RUN_ENV}" =~ "prd" ]];then
-        git push --set-upstream origin ${CI_DST_BRANCHER_NAME} >/dev/null 2>&1
-    fi
+#    if [[  "${JONE_RUN_ENV}" =~ "uat" ]];then
+#        set +e
+#        git checkout -b rc0.9
+#        git push --set-upstream origin ${CI_DST_BRANCHER_NAME} >/dev/null 2>&1
+#        rv=$?
+#        set -e
+#    fi
     set -e
     echo "##########################################"
     
@@ -265,18 +338,18 @@ function do_artifact_build_nodejs()
 }
 function do_artifact_build_java()
 {
-     do_branch_jone_merge
     echo "$FUNCNAME"
     if [[ ${ENABLE_SONAR} -ne 0 ]];then
         if [[ ${PWD_HAVE_DOT_GIT} -eq 1 ]];then
-            SONAR_KEY="$(echo ${CI_PROJECT_PATH}| tr / .)"
+            SONAR_KEY="$(git config --get remote.origin.url | perl -ne 's|https?://(.+)|\1|g;print'| tr -d ':'| tr / .)"
         else
-            SONAR_KEY="$(echo ${CI_PROJECT_PATH}-$(basename $PWD)| tr / .)"
+            SONAR_KEY="$(echo $(basename ${CI_PROJECT_PATH})| tr / .)"
         fi
-        SONAR_OPT="sonar:sonar -Dsonar.projectKey=${SONAR_KEY} -Dsonar.projectName=${SONAR_KEY}"
+        SONAR_OPT="sonar:sonar -Dsonar.projectKey=${SONAR_KEY} -Dsonar.projectName=$(basename ${SRC_TOP}) -Dsonar.branch.name=$(echo ${JONE_BRANCH_FEATRUE:-master} |tr '/' '-'| tr ',' '-') -Dsonar.ws.timeout=30"
     else
         SONAR_OPT=""
     fi
+    echo SONAR_OPT=${SONAR_OPT}
     if [[ ${ARTIFACT_DEPLOY} -gt 0 ]];then
         mvn clean package deploy ${SONAR_OPT} ${S2I_MVN_OPT} -D maven.test.skip=true -U
         exit 0
@@ -293,7 +366,7 @@ function do_artifact_build_java()
     cat java-dependency-tree.txt
     egrep spring-boot-actuator java-dependency-tree.txt >/dev/null 2>&1
     rv=$?
-    if [[ ${rv} -eq 0 ]];then
+    if [[ ${rv} -eq 0 ]] ;then
       export SPRING_BOOT_ACTUATOR=1
     else
       export SPRING_BOOT_ACTUATOR=0
@@ -313,6 +386,7 @@ function do_artifact_build()
     echo "NEXUS_RELEASE=${NEXUS_RELEASE}"
     echo "ARTIFACT_DEPLOY=${ARTIFACT_DEPLOY}"
 
+    do_branch_jone_merge
     case ${SRC_TYPE} in
         nodejs)
             do_artifact_build_nodejs
@@ -368,17 +442,17 @@ function do_docker_get_imgurl_by_dockerfile()
     else
       if [[ "${DOCKERFILE_DIR}" == "${CI_PROJECT_PATH}" ]];then
           DOCKER_TAG_SUFFIX=${DOCKER_TAG_SUFFIX:-""}
-          DOCKER_IMG_TAG=${CI_DST_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+          DOCKER_IMG_TAG=${TAG_BR_BASE}${TAG_BR_FEATURES}${DOCKER_TAG_SUFFIX}
           K8S_SVCNAMES=${K8S_SVCNAMES:-${SRC_REPO_NAME}}
       else
           DOCKER_TAG_SUFFIX=${DOCKER_TAG_SUFFIX:-$(basename ${DOCKERFILE_DIR})}
-          DOCKER_IMG_TAG=${CI_DST_BRANCHER_NAME}-${SRC_GIT_COMMIT_ID}-${BUILD_COUNTER}${DOCKER_TAG_SUFFIX}
+          DOCKER_IMG_TAG=${TAG_BR_BASE}${TAG_BR_FEATURES}${DOCKER_TAG_SUFFIX}
           K8S_SVCNAMES=${K8S_SVCNAMES:-$(basename ${DOCKERFILE_DIR})}
       fi
     fi
     DOCKER_IMG_TAG=$(echo ${DOCKER_IMG_TAG} | tr '/' '-')
 
-    DOCKER_URL_1=${DOCKER_REPO}/${DOCKER_NS}/${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
+    DOCKER_URL_1=${DOCKER_REPO}/${DOCKER_NS}/${UNSTABLE}${SRC_REPO_NAME}:${DOCKER_IMG_TAG}
     # all img push to test with diff tag, because should have testing, then retag after tested
     DOCKER_URL_2=${DOCKER_REPO}/${DOCKER_NS}/test:${SRC_REPO_NAME}-${DOCKER_IMG_TAG}
     DOCKER_URL_METHOD=${DOCKER_URL_METHOD:-${DOCKER_URL_METHOD:-1}} #default compatibility
@@ -410,6 +484,9 @@ function do_docker_get_imgurl_by_dockerfile()
     echo "# DOCKER_URL=${DOCKER_URL}"
     echo "# DOCKER_URL_LATEST=${DOCKER_URL_LATEST}"
     echo "##########################################"
+    set +e
+    echo ${DOCKER_URL} > docker-url.txt
+    set -e
 }
 
 function do_docker_build_by_dockerfile()
@@ -457,8 +534,8 @@ function do_docker_build_by_dockerfile()
     docker login -u "${DOCKER_USER}" -p  "${DOCKER_PASS}" ${DOCKER_REPO}/${DOCKER_NS}
     docker push ${DOCKER_URL}
   fi
-  docker push ${DOCKER_URL_LATEST}
   set +e
+  docker push ${DOCKER_URL_LATEST}
   docker push ${DOCKER_URL_LATEST_BRANCH}
   docker rmi ${DOCKER_URL}
   docker rmi ${DOCKER_URL_LATEST}
@@ -718,16 +795,20 @@ do_docker_get_imgurl_by_dockerfile ./Dockerfile
       fi
     fi
     set -e
+# 前端强制启用健康检查
+if [[ ${SRC_TYPE} == "nodejs" ]];then
+  export SPRING_BOOT_ACTUATOR=1
+fi
 if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
        # dev
   if [[  "${JONE_RUN_ENV}" =~ "dev" ]];then
-       set -x
-        if [[ ${SRC_TYPE} == "java" ]];then
+        do_docker_action deploy
+        if [[ ${SRC_TYPE} == "java" ]] || [[ ${SRC_TYPE} == "nodejs" ]] ;then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
-            '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
+            "[{'op':'add','path':'/spec/template/spec/containers/0/volumeMounts', 'value': [{'mountPath': '/host/run/skywalking-agent','name': 'apm-agent'},{'mountPath': '/cfg/','name': "$K8S_SVCNAMES"}]}, {'op':'add','path':'/spec/template/spec/volumes', 'value': [{'hostPath': {'path': '/run/skywalking-agent', 'type': '' }, 'name': 'apm-agent'},{'configMap': {'defaultMode': 421, 'name': "$K8S_SVCNAMES"}, 'name': "$K8S_SVCNAMES"}]}]"
             CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
            if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
@@ -750,14 +831,14 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
         do_docker_action deploy
-        if [[ ${SRC_TYPE} == "java" ]];then
+        if [[ ${SRC_TYPE} == "java" ]] || [[ ${SRC_TYPE} == "nodejs" ]] ;then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
-            '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
-           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
+            "[{'op':'add','path':'/spec/template/spec/containers/0/volumeMounts', 'value': [{'mountPath': '/host/run/skywalking-agent','name': 'apm-agent'},{'mountPath': '/cfg/','name': "$K8S_SVCNAMES"}]}, {'op':'add','path':'/spec/template/spec/volumes', 'value': [{'hostPath': {'path': '/run/skywalking-agent', 'type': '' }, 'name': 'apm-agent'},{'configMap': {'defaultMode': 421, 'name': "$K8S_SVCNAMES"}, 'name': "$K8S_SVCNAMES"}]}]"
             CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
+           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
              "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
@@ -778,15 +859,17 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
         export DEPLOYMENT_DEFAULT=1
         export DEPLOYMENT_BLUE=0
         do_docker_action deploy
-        if [[ ${SRC_TYPE} == "java" ]];then
+        if [[ ${SRC_TYPE} == "java" ]] || [[ ${SRC_TYPE} == "nodejs" ]] ;then
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
-            '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
+            "[{'op':'add','path':'/spec/template/spec/containers/0/volumeMounts', 'value': [{'mountPath': '/host/run/skywalking-agent','name': 'apm-agent'},{'mountPath': '/cfg/','name': "$K8S_SVCNAMES"}]}, {'op':'add','path':'/spec/template/spec/volumes', 'value': [{'hostPath': {'path': '/run/skywalking-agent', 'type': '' }, 'name': 'apm-agent'},{'configMap': {'defaultMode': 421, 'name': "$K8S_SVCNAMES"}, 'name': "$K8S_SVCNAMES"}]}]"
         fi
 #         kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=400m,memory=1600Mi
-        # beta env
+  fi
+  if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
+       # beta
         export K8S_NS=lxc-beta
         export KUBECONFIG=/root/.kube/.scrm-prd/scrm-prd-tke.config
         export INGRESS_INTERNAL_ENABLED=0
@@ -798,36 +881,18 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
         set +x
         do_docker_action deploy
         set -x
-        kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
         kubectl -n ${K8S_NS} scale --replicas=0  deployment/${K8S_SVCNAMES}
-  fi
-  if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
-        # prd env
-        export K8S_NS=lxc-prd
-        export KUBECONFIG=/root/.kube/.scrm-prd/scrm-prd-tke.config
-        export INGRESS_INTERNAL_ENABLED=0
-        export INGRESS_PUBLIC_ENABLED=0
-        export K8S_DOMAIN_INTERNAL=xd-scrm-prd.nxengine.com
-        export DEPLOYMENT_UPDATE_IMG=0
-        if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
-        export DEPLOYMENT_UPDATE_IMG=1
-        fi 
-        export DEPLOYMENT_DEFAULT=1
-        export DEPLOYMENT_BLUE=0
-        set +x
-        do_docker_action deploy
-        set -x
-        if [[ ${SRC_TYPE} == "java" ]];then
+        if [[ ${SRC_TYPE} == "java" ]] || [[ ${SRC_TYPE} == "nodejs" ]] ;then
           # config source inject
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=JAVA_TOOL_OPTIONS --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_JAR --from=configmap/java-tool-options
           kubectl -n ${K8S_NS} set env deployment/${K8S_SVCNAMES} --keys=APM_COLLECTOR --from=configmap/java-tool-options
           # apm inject
           kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
-            '[{"op":"add","path":"/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/host/run/skywalking-agent","name": "apm-agent"}]}, {"op":"add","path":"/spec/template/spec/volumes", "value": [{"hostPath": {"path": "/run/skywalking-agent", "type": "" }, "name": "apm-agent"}]}]'
+            "[{'op':'add','path':'/spec/template/spec/containers/0/volumeMounts', 'value': [{'mountPath': '/host/run/skywalking-agent','name': 'apm-agent'},{'mountPath': '/cfg/','name': "$K8S_SVCNAMES"}]}, {'op':'add','path':'/spec/template/spec/volumes', 'value': [{'hostPath': {'path': '/run/skywalking-agent', 'type': '' }, 'name': 'apm-agent'},{'configMap': {'defaultMode': 421, 'name': "$K8S_SVCNAMES"}, 'name': "$K8S_SVCNAMES"}]}]"
           # health check inject
-           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
             CHECK_PORT=$(kubectl get -n ${K8S_NS} svc/${K8S_SVCNAMES} -o=jsonpath='{.spec.ports[0].targetPort}')
+           if [[ ${SPRING_BOOT_ACTUATOR} -ne 0 ]] && [[ -n ${CHECK_PORT} ]];then
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
              "[{'op':'add','path':'/spec/template/spec/containers/0/livenessProbe', 'value': {'failureThreshold':10,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}, {'op':'add','path':'/spec/template/spec/containers/0/readinessProbe', 'value': {'failureThreshold':20,'httpGet':{'httpHeaders':[{'name':'User-Agent','value':'s2i-health-check'}],'path':'/actuator/health','port':${CHECK_PORT},'scheme':'HTTP'},'initialDelaySeconds':15,'periodSeconds':10,'successThreshold':1,'timeoutSeconds':3}}]"
              kubectl patch -n ${K8S_NS} deployment/${K8S_SVCNAMES} --type='json' -p \
@@ -835,9 +900,79 @@ if [[ ${ACTION_STAGE} =~ "ACTION_ALL" || ${ACTION_STAGE} =~ "deploy" ]];then
            fi
         fi
           set +e
-          kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=900m,memory=2048Mi
+#          kubectl -n ${K8S_NS} set resources deployment ${K8S_SVCNAMES} --limits=memory=2048Mi --requests=cpu=900m,memory=2048Mi
           set -e
-        kubectl -n ${K8S_NS} scale --replicas=2  deployment/${K8S_SVCNAMES}
+        set +e
+        kubectl -n ${K8S_NS} get  deployment/${K8S_SVCNAMES} -o wide
+        rv=$?
+        if [[ ${rv} -eq 0 ]];then
+          echo "你好，应用${K8S_SVCNAMES} 已部署在beta生产环境"
+          echo "beta 环境 "
+          echo "请移步 填写发布单，由运维人员手动发布"
+        else
+           echo "第一次部署应用${K8S_SVCNAMES} 到生产, 将自动部署"
+        fi
+        set -e
   fi
+fi
+set -e
+set +x
+set +e
+echo "进行镜像发布"
+echo "你本次部署到 ${JONE_RUN_ENV} 的应用 ${K8S_SVCNAMES} 对应的源码是 ${BR_BASELINE}分支为基线 先后合入 ${BRS_FEATURE[*]}分支的代码编译出来的镜像 $(head -n 1 docker-url.txt)"
+set -e
+RC_NUM=rc09
+set +e
+if [[  "${JONE_RUN_ENV}" =~ "test" ]];then
+    set +e
+    echo "进行临时源码发布"
+    RC_NAME=env/test-${RC_NUM}
+    git checkout -b ${RC_NAME}
+    git push origin --delete ${RC_NAME} >/dev/null 2>&1
+    git push --set-upstream origin -f ${RC_NAME}
+    rv=$?
+    set -e
+    if [[ ${rv} -ne 0 ]];then
+       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 删除再重复一遍"
+       exit 1
+    else
+       echo "恭喜，临时集成分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
+       echo "可找leader进行代码Review"
+    fi
+fi
+set -e
+set +e
+if [[  "${JONE_RUN_ENV}" =~ "uat" ]];then
+    set +e
+    echo "进行源码发布"
+    RC_NAME=env/uat-${RC_NUM}
+    git checkout -b ${RC_NAME}
+    git push origin --delete ${RC_NAME} >/dev/null 2>&1
+    git push --set-upstream origin -f ${RC_NAME} 
+    rv=$?
+    set -e
+    if [[ ${rv} -ne 0 ]];then
+       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 删除再重复一遍"
+       exit 1
+    else
+       echo "恭喜，临时集成分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
+       echo "请尽快验收，验收通过后，请将${RC_NAME} 尽快合入master"
+    fi
+fi
+if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
+    set +e
+    echo ""
+    RC_NUM=rc08
+    RC_NAME=release-${RC_NUM}
+    git checkout -b ${RC_NAME}
+   # git push origin --delete ${RC_NAME} >/dev/null 2>&1
+    git push --set-upstream origin -f ${RC_NAME}
+    rv=$?
+    set -e
+    if [[ ${rv} -ne 0 ]];then
+       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 查看 "
+    else
+       echo "恭喜，新分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
+    fi
 fi
 set -e
