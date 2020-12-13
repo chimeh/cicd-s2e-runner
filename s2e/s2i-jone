@@ -143,6 +143,94 @@ fi
 SRC_REPO_NAME=$(echo ${SRC_REPO_NAME} | tr '_' '-')
 SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
 
+#### 分支检查
+echo -e "\n\n\n\n"
+if [[ -n ${JONE_RUN_ENV} ]];then
+    if [[  "${JONE_RUN_ENV}" =~ "test" ]] || [[ "${JONE_RUN_ENV}" =~ "uat" ]];then
+
+        # 确保 RC_NAME 已创建
+        set +e
+        git fetch origin feature-testing >/dev/null 2>&1
+        rv=$?
+        set -e
+        if [[ ${rv} -ne 0 ]];then
+            set +e
+            git pull origin/master >/dev/null 2>&1
+            git checkout -f origin/master >/dev/null 2>&1
+            git checkout -B feature-testing >/dev/null 2>&1
+            git push --set-upstream origin feature-testing && echo "你好，已帮你创建好feature-testing 分支"
+            set -e
+        else
+            echo echo "你好，feature-testing 已存在"
+        fi
+        
+        # 如果不是只勾选 feature-testing，报错，并提示 
+        if [[ ${JONE_BRANCH_FEATRUE} =~ .+ ]] && [[ ! ${JONE_BRANCH_FEATRUE} =~ feature-testing$ ]];then
+            echo "你好，部署 test、uat请按照以下步骤:"
+            echo "1. 登陆工蜂或gitlab，创建MergeRequest，源分支你的转测分支, 目的分支feature-testing, 审核人为小组负责人"
+            echo "2. 通知小组负责人，进行Review并合入进feature-testing"
+            echo "3. 登陆Jenkins，分支只勾选 feature-testing , 环境勾选test、或者uat"
+            echo "4. 单击构建完成部署"
+            echo "5. Tapd/Jira 更新状态，通知QA进行测试"
+            TIPS_EXIT=1
+        fi
+    fi
+    if [[  "${JONE_RUN_ENV}" =~ "prd" ]] && [[ -n ${JONE_BRANCH_FEATRUE} ]];then
+        echo "你好，发布流程不符合流程"
+        echo "部署生产只部署master分支，不允许勾选任何分支"
+        echo "请不勾选后，重试"
+        echo -e "\n"
+        echo "部署 prd，发布新特性步骤如下："
+        echo "1. 登陆Jenkins,不勾选分支，环境选 prd，单击构建完成部署"
+        echo "2. 登陆Tapd状态, 填写发布评审单，通知运维准备进行发布，通知QA准备进行生产验收 "
+        echo "3. 运维发布完成"
+        echo "4. QA验收完成"
+        echo "5. 运维关闭发布评审单"
+        echo -e "\n"
+        echo "前期自测、提测工作步骤:"
+        echo "0. 开发人员合入feature-testing 分支的特性，并在test、uat环境经过验证"
+        echo "0. 开发人员,工蜂或gitlab创建MergeRequest，源分支feature-testing, 目的分支master, 审核人为小组负责人"
+        echo "1. 小组负责人跟QA确认，feature-testing 已经在test环境经过质量测试，在uat环境经过用户测试"
+        echo "2. 小组负责人MergeRequest 通过，删除feature-testing 分支"
+
+        echo -e "\n"
+        echo "部署 prd，解决生产缺陷步骤如下："
+        echo "1. 开发人员 登陆工蜂或Gitlab，创建MergeRequest，源分支hotfix-xxx, 目的分支master, 审核人为小组负责人"
+        echo "2. 小组负责人 MergeRequest 通过，删除hotfix-xxx分支"
+        echo "3. 小组负责人 登陆Jenkins,不勾选分支，环境选 prd，单击构建完成部署，通知运维发布"
+        echo "4. 运维发布完成，通知QA，验收"
+        echo "5. QA生产环境验收完成，QA关闭tapd/jira缺陷单"
+
+        echo -e "\n"
+        echo -e "\n"
+        echo -e "前期生产bug验证工作："
+        echo "0. 开发人员从master拉取hotfix-xxx 分支，并修改代码提交"
+        echo "0. 开发人员在只勾选hotfix-xxx，并部署到dev环境"
+        echo "0. 开发人员协调QA、产品等人在dev环境，验证缺陷解决"
+        TIPS_EXIT=1
+    fi
+    set -e
+    if [[ ${TIPS_EXIT} -ne 0 ]];then
+        echo -e "\n\n\n\n\n"
+        echo "分支模型tips#############################################################################"
+        echo "tips: 部署dev环境，      建议 只勾选feature-testing和你自己的feature-xxx特性分支"
+        echo "tips: 部署test、uat环境，强制 要求只能勾选feature-testing分支进行部署，或者一个分支都不勾"
+        echo "tips: 部署prd环境，      强制 要求只能一个分支都不勾"
+        echo -e "\n\n"
+        echo "Jenkins CI 的构建部署过程"
+        echo  "勾部署dev，      从最新master分支拉取临时分支，合入feature-testing和其他勾选featrue分支后，构建出docker镜像，部署到 dev"
+        echo  "勾部署test或uat，从最新master分支拉取临时分支，合入feature-testing后，构建出docker镜像，部署到test或uat"
+        echo  "勾部署prd，      从最新master分支，构建出出docker镜像，部署到 dev"
+        echo -e "\n\n"
+        echo "环境与分支对应关系如下："
+        echo "master 分支        ---------------------  对应 prd环境"
+        echo "feature-testing 分支 ---------------------  对应 test、uat环境"
+        echo "feature-testing和其他勾选featrue 分支 ----  对应 dev环境"
+#        exit 1
+    fi
+fi
+
+
  # 基线分支设置为master
 JONE_BRANCH_BASE=origin/master
 if [[ "${SRC_REPO_NAME}" =~ "scrm-common-sdk" ]];then
@@ -153,7 +241,7 @@ BR_BASELINE=${JONE_BRANCH_BASE}
 ## jone, aone 模式
 if [[ -z ${JONE_BRANCH_FEATRUE} ]];then
 # 特性分支为空时，集成部署分支名设置为master
-  CI_DST_BRANCHER_NAME=master-$(date +%Y%m%d)-${BUILD_NUMBER}
+  CI_DST_BRANCHER_NAME=master-$(date +%Y%m%d)
   UNSTABLE=''
 elif [[ ${JONE_BRANCH_FEATRUE} =~ .*master ]] || [[ ${JONE_BRANCH_FEATRUE} =~ .*release* ]];then
  # 特性分支不为空，且包含master或release报错
@@ -189,34 +277,36 @@ elif [[ -n ${JONE_BRANCH_FEATRUE} ]] ;then
     
    # 特性分支不为空时，集成部署分支设置为选取的环境 
    # 需要push回git server的集成分支名，不引入动态变化变量，保障多个特性分支名的集成分支唯一
-    CI_DST_BRANCHER_NAME="i-$(echo ${JONE_RUN_ENV}| tr -d '_-')-${BRS_FEATURE_NUM}-$(echo ${JONE_BRANCH_FEATRUE}| tr ',' '_' |perl -ne 's|origin/||g;print')"
+   # CI_DST_BRANCHER_NAME="i-$(echo ${JONE_RUN_ENV}| tr -d '_-')-$(echo ${JONE_BRANCH_FEATRUE}| tr ',' '_' |perl -ne 's|origin/||g;print')"
+    CI_DST_BRANCHER_NAME="$(echo ${JONE_RUN_ENV}| tr -d '_-')-jone"
     if [[ ${JONE_RUN_ENV} =~ "dev" ]] || [[ ${JONE_RUN_ENV} =~ "test" ]];then
     # 目的地为dev，或者 test时，增加动态变量，防止分支已存在
-        CI_DST_BRANCHER_NAME=${CI_DST_BRANCHER_NAME}-${BUILD_COUNTER}   
+        CI_DST_BRANCHER_NAME=${CI_DST_BRANCHER_NAME}
     fi
     SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
     BUILD_COUNTER=${BUILD_COUNTER}
 fi
-TAG_BR_BASE="$(echo ${JONE_BRANCH_BASE} | perl -ne 's|origin/||g;print')-$(git rev-parse --short ${JONE_BRANCH_BASE})"
-if [[ ${BRS_FEATURE_NUM} -gt 0 ]];then
-    TAG_BR_FEATURES="-${BRS_FEATURE_NUM}-$(echo ${JONE_BRANCH_FEATRUE}| tr ',' '_' |perl -ne 's|origin/||g;print')"
+
+if [[ ${BRS_FEATURE_NUM} -eq 0 ]];then
+    TAG_BR_BASE="$(echo ${JONE_BRANCH_BASE} | perl -ne 's|origin/||g;print')-$(git rev-parse --short ${JONE_BRANCH_BASE})"
+    TAG_BR_FEATURES="-$(date +%Y%m%d)-${BUILD_COUNTER}"
+elif [[ ${BRS_FEATURE_NUM} -eq 1 ]];then
+    TAG_BR_BASE=""
+    TAG_BR_FEATURES="$(echo ${BRS_FEATURE[*]}| perl -ne 's|origin/||g;print' | tr -d  '[:space:]')-$(git rev-parse --short ${BRS_FEATURE[*]})-$(date +%Y%m%d)"
+elif [[ ${BRS_FEATURE_NUM} -gt 1 ]];then
     for br in ${BRS_FEATURE[*]};do
-        TAG_BR_FEATURES=${TAG_BR_FEATURES}-$(git rev-parse --short ${br}) 
-        if ! [[ "$(echo ${br} |perl -ne 's|origin/||g;print')" =~ (feature|bugfix) ]];then
+        if ! [[ "$(echo ${br} |perl -ne 's|origin/||g;print')" =~ (feature|hotfix) ]];then
            echo "\n\n"
            echo "你好，分支名 ${br} 不符合分支命名规范:"
            echo "新功能、新特性分支的分支名必须feature开头，比如  feature-xxx 或者 feature-xx-STROYID等"
-           echo "解决生产环境bug拉取的分支必须bugfix开头，比如  bugfix-xxx 或者 feature-xx-JIRAID等"
+           echo "解决生产环境bug拉取的分支必须hotfix开头，比如  hotfix-xxx 或者 feature-xx-JIRAID等"
            echo "\n\n"
-           echo "tips: 啥叫feature 分支： 就是那些还没有部署进生产环境的新功能代码分支，就是还没合入master的新功能分支"
-           echo "feature 分支会部署dev、test环境。dev、test发现的缺陷继续在feature上解决,直到可以合入master，然后删除"
-           echo "feature 分支或者bugfix分支合入master后请及时删除"
+           echo "feature 分支或者hotfix分支合入master后请及时删除"
 #           exit 1
         fi
     done
-elif [[ ${BRS_FEATURE_NUM} -eq 0 ]] &&  [[ ! ${JONE_RUN_ENV} =~ 'prd' ]];then
-    # 不选特性分支，且部署到非生产
-     TAG_BR_FEATURES="-$(date +%Y%m%d)-${BUILD_COUNTER}"
+    TAG_BR_BASE="${JONE_RUN_ENV}"
+    TAG_BR_FEATURES="-f${BRS_FEATURE_NUM}-$(date +%Y%m%d)"
 fi
        
 echo "# SRC_TOP=${SRC_TOP}"
@@ -278,9 +368,9 @@ function do_branch_jone_merge() {
     echo "分支集成开始："
     echo "从生产环境对应的基线分支${BR_BASELINE} 检出 ${CI_DST_BRANCHER_NAME}"
     prev_br=${BR_BASELINE}
-    git checkout -f ${BR_BASELINE}
     set +e
-    git checkout -b ${CI_DST_BRANCHER_NAME}
+    git checkout -f ${BR_BASELINE} >/dev/null
+    git checkout -B ${CI_DST_BRANCHER_NAME}
     set -e
     for br in ${BRS_FEATURE[*]};do
         if [[ ${JONE_RUN_ENV} =~ "prd" ]];then
@@ -289,7 +379,7 @@ function do_branch_jone_merge() {
             exit 1
         fi
         F_COMMITID=$(git rev-parse ${br})
-        echo "临时合并feature或bugfix分支 ${br} ${F_COMMITID}"
+        echo "临时合并feature分支 ${br} ${F_COMMITID}"
         set +e
         git merge --no-edit -s recursive -Xignore-space-at-eol --no-ff ${F_COMMITID} 2>&1
         rv=$?
@@ -318,17 +408,13 @@ function do_branch_jone_merge() {
     done
     echo "分支集成完毕"
     echo "你本次部署到 ${JONE_RUN_ENV} 的应用将是 ${BR_BASELINE}分支 先后合入 ${BRS_FEATURE[*]}分支的代码编译出来的镜像"
-    SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
-    set +e
-#    if [[  "${JONE_RUN_ENV}" =~ "uat" ]];then
-#        set +e
-#        git checkout -b rc0.9
-#        git push --set-upstream origin ${CI_DST_BRANCHER_NAME} >/dev/null 2>&1
-#        rv=$?
-#        set -e
-#    fi
-    set -e
     echo "##########################################"
+    echo -e '\n\n'
+    set +e
+    git --no-pager log --graph --first-parent --oneline -n10 --branches="feature/*" --remotes="origin"  ${CI_DST_BRANCHER_NAME}
+    set -e
+    echo -e '\n\n'
+    SRC_GIT_COMMIT_ID="$(cd ${SRC_TOP};git rev-parse --short HEAD )"
     
 }
 #        
@@ -923,56 +1009,56 @@ echo "你本次部署到 ${JONE_RUN_ENV} 的应用 ${K8S_SVCNAMES} 对应的源�
 set -e
 RC_NUM=rc09
 set +e
-if [[  "${JONE_RUN_ENV}" =~ "test" ]];then
-    set +e
-    echo "进行临时源码发布"
-    RC_NAME=env/test-${RC_NUM}
-    git checkout -b ${RC_NAME}
-    git push origin --delete ${RC_NAME} >/dev/null 2>&1
-    git push --set-upstream origin -f ${RC_NAME}
-    rv=$?
-    set -e
-    if [[ ${rv} -ne 0 ]];then
-       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 删除再重复一遍"
-       exit 1
-    else
-       echo "恭喜，临时集成分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
-       echo "可找leader进行代码Review"
-    fi
-fi
-set -e
-set +e
-if [[  "${JONE_RUN_ENV}" =~ "uat" ]];then
-    set +e
-    echo "进行源码发布"
-    RC_NAME=env/uat-${RC_NUM}
-    git checkout -b ${RC_NAME}
-    git push origin --delete ${RC_NAME} >/dev/null 2>&1
-    git push --set-upstream origin -f ${RC_NAME} 
-    rv=$?
-    set -e
-    if [[ ${rv} -ne 0 ]];then
-       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 删除再重复一遍"
-       exit 1
-    else
-       echo "恭喜，临时集成分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
-       echo "请尽快验收，验收通过后，请将${RC_NAME} 尽快合入master"
-    fi
-fi
-if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
-    set +e
-    echo ""
-    RC_NUM=rc08
-    RC_NAME=release-${RC_NUM}
-    git checkout -b ${RC_NAME}
+#if [[  "${JONE_RUN_ENV}" =~ "test" ]];then
+#    set +e
+#    echo "进行临时源码发布"
+#    RC_NAME=env/test-${RC_NUM}
+#    git checkout -b ${RC_NAME}
+#    git push origin --delete ${RC_NAME} >/dev/null 2>&1
+#    git push --set-upstream origin ${RC_NAME}
+#    rv=$?
+#    set -e
+#    if [[ ${rv} -ne 0 ]];then
+#       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 删除再重复一遍"
+#       exit 1
+#    else
+#       echo "恭喜，临时集成分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
+#       echo "可找leader进行代码Review"
+#    fi
+#fi
+#set -e
+#set +e
+#if [[  "${JONE_RUN_ENV}" =~ "uat" ]];then
+#    set +e
+#    echo "进行源码发布"
+#    RC_NAME=env/uat-${RC_NUM}
+#    git checkout -b ${RC_NAME}
+#    git push origin --delete ${RC_NAME} >/dev/null 2>&1
+#    git push --set-upstream origin  ${RC_NAME} 
+#    rv=$?
+#    set -e
+#    if [[ ${rv} -ne 0 ]];then
+#       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 删除再重复一遍"
+#       exit 1
+#    else
+#       echo "恭喜，临时集成分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
+#       echo "请尽快验收，验收通过后，请将${RC_NAME} 尽快合入master"
+#    fi
+#fi
+#if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
+#    set +e
+#    echo ""
+#    RC_NUM=rc08
+#    RC_NAME=release-${RC_NUM}
+#    git checkout -b ${RC_NAME}
    # git push origin --delete ${RC_NAME} >/dev/null 2>&1
-    git push --set-upstream origin -f ${RC_NAME}
-    rv=$?
-    set -e
-    if [[ ${rv} -ne 0 ]];then
-       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 查看 "
-    else
-       echo "恭喜，新分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
-    fi
-fi
-set -e
+#    git push --set-upstream origin -f ${RC_NAME}
+#    rv=$?
+#    set -e
+#    if [[ ${rv} -ne 0 ]];then
+#       echo "错误，${RC_NAME} 可能已存在，请移步$(git config remote.origin.url) 查看 "
+#    else
+#       echo "恭喜，新分支 ${RC_NAME} 已 push 回$(git config remote.origin.url) "
+#    fi
+#fi
+#set -e

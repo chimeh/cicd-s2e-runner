@@ -61,14 +61,14 @@ if [[ -n ${JONE_RUN_ENV} ]];then
     if [[  "${JONE_RUN_ENV}" =~ "prd" ]];then
       echo "部署prd"
       export ENABLE_SONAR=0
-      export DOCKER_TAG_SUFFIX="${DOCKER_TAG_SUFFIX}-$(date +%Y%m%d)"
+      export DOCKER_TAG_SUFFIX="${DOCKER_TAG_SUFFIX}"
     elif [[  "${JONE_RUN_ENV}" =~ "test" ]];then
       export ENABLE_SONAR=1
     else
       export ENABLE_SONAR=0
     fi
-    exec ${SCRIPT_DIR}/s2i-jone $*
     echo -e "\n\n"
+    exec ${SCRIPT_DIR}/s2i-jone $*
 else
     echo "单分支 CICD s2i"
     echo -e "\n\n"
