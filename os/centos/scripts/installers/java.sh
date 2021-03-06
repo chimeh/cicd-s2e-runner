@@ -6,7 +6,7 @@ source ${SCRIPT_DIR}/0helper-document.sh
 source ${SCRIPT_DIR}/0helper-etc-environment.sh 
 
 #jdk
-yum install -y java-1.8.0-openjdk-devel
+yum install -y java-11-openjdk-devel
 
 #maven
 MAVEN_VERSION=3.6.3
