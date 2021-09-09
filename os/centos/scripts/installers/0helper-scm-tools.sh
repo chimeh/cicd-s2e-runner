@@ -7,6 +7,7 @@ source ${SCRIPT_DIR}/0helper-document.sh
 
 DocumentInstalledItem "Scm Tools:"
 ##################################################git
+yum erase -y git
 GIT_VERSION=2.24.1
 ## Install git
 mkdir -p /root/ts
@@ -15,7 +16,6 @@ wget -q -P /root/ts "http://mirrors.ustc.edu.cn/kernel.org/software/scm/git/git-
 tar -xzf /root/ts/git-${GIT_VERSION}.tar.gz -C /root/ts
 make -j2 prefix=/usr/local install -C /root/ts/git-${GIT_VERSION}
 rm -rf /root/ts
-yum erase -y git
 
 # Install git-lfs
 yum install --nogpgcheck -y git-lfs
